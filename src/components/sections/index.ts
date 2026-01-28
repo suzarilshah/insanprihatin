@@ -1,0 +1,5 @@
+export { default as Hero } from './Hero'
+export { default as About } from './About'
+export { default as Impact } from './Impact'
+export { default as Programs } from './Programs'
+export { default as CTA } from './CTA'
