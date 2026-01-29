@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { db, projects } from '@/db'
 import { eq, desc, and } from 'drizzle-orm'
 import { requireAuth } from '@/lib/auth'
+import { createVersion, logActivity } from '@/lib/versioning'
 
 export async function getProjects(options?: { published?: boolean; category?: string; status?: string; limit?: number }) {
   const conditions = []
@@ -55,12 +56,29 @@ export async function createProject(data: {
   metaDescription?: string
   isPublished?: boolean
 }) {
-  await requireAuth()
+  const user = await requireAuth()
 
   const project = await db.insert(projects).values({
     ...data,
     gallery: data.gallery,
   }).returning()
+
+  // Create version record
+  await createVersion(
+    'projects',
+    project[0].id,
+    project[0] as Record<string, unknown>,
+    'create',
+    { id: user.id, email: user.email, name: user.name }
+  )
+
+  // Log activity
+  await logActivity('content_create', `Created project: ${data.title}`, {
+    contentType: 'projects',
+    contentId: project[0].id,
+    contentTitle: data.title,
+    user: { id: user.id, email: user.email, name: user.name },
+  })
 
   revalidatePath('/projects')
   return { success: true, project: project[0] }
@@ -85,12 +103,51 @@ export async function updateProject(id: string, data: {
   metaDescription?: string
   isPublished?: boolean
 }) {
-  await requireAuth()
+  const user = await requireAuth()
+
+  // Get existing data for version comparison
+  const existing = await db.query.projects.findFirst({
+    where: eq(projects.id, id),
+  })
+
+  if (!existing) {
+    return { success: false, error: 'Project not found' }
+  }
+
+  // Determine change type
+  let changeType: 'update' | 'publish' | 'unpublish' = 'update'
+  if (data.isPublished !== undefined && data.isPublished !== existing.isPublished) {
+    changeType = data.isPublished ? 'publish' : 'unpublish'
+  }
 
   await db
     .update(projects)
     .set({ ...data, updatedAt: new Date() })
     .where(eq(projects.id, id))
+
+  // Get updated data
+  const updated = await db.query.projects.findFirst({
+    where: eq(projects.id, id),
+  })
+
+  // Create version record
+  await createVersion(
+    'projects',
+    id,
+    updated as Record<string, unknown>,
+    changeType,
+    { id: user.id, email: user.email, name: user.name },
+    { previousData: existing as Record<string, unknown> }
+  )
+
+  // Log activity
+  const actionText = changeType === 'publish' ? 'Published' : changeType === 'unpublish' ? 'Unpublished' : 'Updated'
+  await logActivity(`content_${changeType}`, `${actionText} project: ${existing.title}`, {
+    contentType: 'projects',
+    contentId: id,
+    contentTitle: existing.title,
+    user: { id: user.id, email: user.email, name: user.name },
+  })
 
   revalidatePath('/projects')
   if (data.slug) {
@@ -101,7 +158,35 @@ export async function updateProject(id: string, data: {
 }
 
 export async function deleteProject(id: string) {
-  await requireAuth()
+  const user = await requireAuth()
+
+  // Get existing data before deletion
+  const existing = await db.query.projects.findFirst({
+    where: eq(projects.id, id),
+  })
+
+  if (!existing) {
+    return { success: false, error: 'Project not found' }
+  }
+
+  // Create version record BEFORE deletion
+  await createVersion(
+    'projects',
+    id,
+    existing as Record<string, unknown>,
+    'delete',
+    { id: user.id, email: user.email, name: user.name },
+    { customSummary: `Deleted project: ${existing.title}` }
+  )
+
+  // Log activity
+  await logActivity('content_delete', `Deleted project: ${existing.title}`, {
+    contentType: 'projects',
+    contentId: id,
+    contentTitle: existing.title,
+    user: { id: user.id, email: user.email, name: user.name },
+    metadata: { deletedData: existing },
+  })
 
   await db.delete(projects).where(eq(projects.id, id))
 

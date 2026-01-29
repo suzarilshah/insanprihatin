@@ -195,3 +195,48 @@ export const pages = pgTable('pages', {
   isPublished: boolean('is_published').default(true),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
+
+// Content version history for audit trail and restoration
+export const contentVersions = pgTable('content_versions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  // Content identification
+  contentType: text('content_type').notNull(), // 'blog_posts', 'projects', 'team_members', etc.
+  contentId: uuid('content_id').notNull(), // ID of the original content
+  // Version info
+  versionNumber: integer('version_number').notNull().default(1),
+  // Full snapshot of the content at this version
+  data: jsonb('data').notNull(),
+  // Change metadata
+  changeType: text('change_type').notNull(), // 'create', 'update', 'delete', 'restore', 'publish', 'unpublish'
+  changeSummary: text('change_summary'), // Optional description of what changed
+  changedFields: jsonb('changed_fields'), // Array of field names that changed
+  // User tracking
+  changedBy: uuid('changed_by'), // Admin user ID who made the change
+  changedByEmail: text('changed_by_email'), // Email for display (in case user is deleted)
+  changedByName: text('changed_by_name'), // Name for display
+  // Timestamps
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+// Activity log for general system events
+export const activityLog = pgTable('activity_log', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  // Event details
+  eventType: text('event_type').notNull(), // 'login', 'logout', 'content_create', 'content_update', 'content_delete', 'content_restore', 'settings_change'
+  eventDescription: text('event_description').notNull(),
+  // Related entities
+  contentType: text('content_type'), // Optional: which content type was affected
+  contentId: uuid('content_id'), // Optional: which content item was affected
+  contentTitle: text('content_title'), // Store title for easy display
+  // User info
+  userId: uuid('user_id'),
+  userEmail: text('user_email'),
+  userName: text('user_name'),
+  // Request metadata
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
+  // Additional data
+  metadata: jsonb('metadata'), // Any extra data about the event
+  // Timestamp
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
