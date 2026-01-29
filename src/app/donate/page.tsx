@@ -15,7 +15,7 @@ export default function DonatePage() {
   return (
     <>
       <Header />
-      <main className="pt-24">
+      <main>
         <DonateContent />
       </main>
       <Footer />

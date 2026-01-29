@@ -15,7 +15,7 @@ export default function ProjectsPage() {
   return (
     <>
       <Header />
-      <main className="pt-24">
+      <main>
         <ProjectsContent />
       </main>
       <Footer />

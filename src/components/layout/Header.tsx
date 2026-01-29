@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
@@ -15,11 +14,7 @@ const navigation = [
   { name: 'Contact', href: '/contact' },
 ]
 
-// Pages that have a dark hero section and need white text initially
-const DARK_HERO_PAGES = ['/']
-
 export default function Header() {
-  const pathname = usePathname()
   const [isScrolled, setIsScrolled] = useState(false)
   const [isVisible, setIsVisible] = useState(true)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -27,12 +22,6 @@ export default function Header() {
   const mobileMenuRef = useRef<HTMLDivElement>(null)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const firstMenuItemRef = useRef<HTMLAnchorElement>(null)
-
-  // Check if current page has a dark hero section
-  const hasDarkHero = DARK_HERO_PAGES.includes(pathname)
-
-  // Use dark text if: scrolled OR on a page without dark hero
-  const useDarkText = isScrolled || !hasDarkHero
 
   // Handle scroll behavior: show on scroll up, hide on scroll down
   const handleScroll = useCallback(() => {
@@ -115,8 +104,8 @@ export default function Header() {
       <header
         className={cn(
           'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
-          // Show white background: when scrolled OR on pages without dark hero
-          useDarkText
+          // Show white background when scrolled
+          isScrolled
             ? 'bg-white/98 backdrop-blur-xl shadow-elegant'
             : 'bg-transparent',
           isVisible ? 'translate-y-0' : '-translate-y-full'
@@ -127,8 +116,8 @@ export default function Header() {
           <nav
             className={cn(
               'flex items-center justify-between transition-all duration-300',
-              // Compact padding when scrolled OR on pages without dark hero
-              useDarkText ? 'py-2' : 'py-4 md:py-6'
+              // Compact padding when scrolled
+              isScrolled ? 'py-2' : 'py-4 md:py-6'
             )}
             role="navigation"
             aria-label="Main navigation"
@@ -142,8 +131,8 @@ export default function Header() {
               <div
                 className={cn(
                   'relative transition-all duration-300 group-hover:scale-105',
-                  // Smaller logo when scrolled OR on pages without dark hero
-                  useDarkText ? 'w-10 h-10' : 'w-12 h-12'
+                  // Smaller logo when scrolled
+                  isScrolled ? 'w-10 h-10' : 'w-12 h-12'
                 )}
               >
                 <Image
@@ -159,13 +148,13 @@ export default function Header() {
                 <span
                   className={cn(
                     'font-display font-bold tracking-tight transition-all duration-300 block',
-                    useDarkText
+                    isScrolled
                       ? 'text-lg text-foundation-charcoal'
                       : 'text-xl text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]'
                   )}
                   style={{
                     // Ensure text is always visible with text shadow on dark backgrounds
-                    textShadow: useDarkText
+                    textShadow: isScrolled
                       ? 'none'
                       : '0 1px 3px rgba(0,0,0,0.4)',
                   }}
@@ -175,7 +164,7 @@ export default function Header() {
                 <span
                   className={cn(
                     'block font-heading font-medium -mt-1 transition-all duration-300',
-                    useDarkText ? 'text-xs text-amber-600' : 'text-sm text-amber-400'
+                    isScrolled ? 'text-xs text-amber-600' : 'text-sm text-amber-400'
                   )}
                 >
                   Insan Prihatin
@@ -192,7 +181,7 @@ export default function Header() {
                   className={cn(
                     'relative font-medium text-sm tracking-wide transition-all duration-300',
                     'hover:text-teal-500 group py-2',
-                    useDarkText
+                    isScrolled
                       ? 'text-foundation-charcoal'
                       : 'text-white drop-shadow-sm'
                   )}
@@ -224,7 +213,7 @@ export default function Header() {
               className={cn(
                 'lg:hidden relative z-10 p-2 -mr-2 rounded-lg transition-colors duration-300',
                 'focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2',
-                useDarkText || isMobileMenuOpen
+                isScrolled || isMobileMenuOpen
                   ? 'text-foundation-charcoal hover:bg-gray-100'
                   : 'text-white hover:bg-white/10'
               )}
