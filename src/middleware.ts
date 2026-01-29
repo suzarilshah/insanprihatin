@@ -21,7 +21,7 @@ export function middleware(request: NextRequest) {
 
   // Check if accessing protected admin routes (except login page)
   if (pathname.startsWith('/admin/dashboard') || pathname.startsWith('/admin/api')) {
-    const authToken = request.cookies.get('auth_token')?.value
+    const authToken = request.cookies.get('admin_session')?.value
 
     // No token - redirect to login
     if (!authToken) {
@@ -46,7 +46,7 @@ export function middleware(request: NextRequest) {
       const redirectResponse = NextResponse.redirect(loginUrl)
 
       // Clear invalid cookies
-      redirectResponse.cookies.delete('auth_token')
+      redirectResponse.cookies.delete('admin_session')
       redirectResponse.cookies.delete('user_info')
 
       Object.entries(securityHeaders).forEach(([key, value]) => {
@@ -65,7 +65,7 @@ export function middleware(request: NextRequest) {
         const loginUrl = new URL('/admin?error=invalid_session', request.url)
         const redirectResponse = NextResponse.redirect(loginUrl)
 
-        redirectResponse.cookies.delete('auth_token')
+        redirectResponse.cookies.delete('admin_session')
         redirectResponse.cookies.delete('user_info')
 
         Object.entries(securityHeaders).forEach(([key, value]) => {
@@ -87,7 +87,7 @@ export function middleware(request: NextRequest) {
 
   // If on login page but already authenticated, redirect to dashboard
   if (pathname === '/admin') {
-    const authToken = request.cookies.get('auth_token')?.value
+    const authToken = request.cookies.get('admin_session')?.value
     const redirect = request.nextUrl.searchParams.get('redirect')
 
     if (authToken && authToken.length > 10) {

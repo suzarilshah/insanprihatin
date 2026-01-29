@@ -1,15 +1,22 @@
 import { NextResponse } from 'next/server'
-import { getSession } from '@/lib/auth'
+import { getSession } from '@/lib/auth-server'
 
 export async function GET() {
   try {
-    const user = await getSession()
+    const session = await getSession()
 
-    if (!user) {
+    if (!session) {
       return NextResponse.json({ user: null })
     }
 
-    return NextResponse.json({ user })
+    return NextResponse.json({
+      user: {
+        id: session.userId,
+        email: session.email,
+        name: session.name,
+        role: session.role,
+      },
+    })
   } catch (error) {
     console.error('Session error:', error)
     return NextResponse.json({ user: null })

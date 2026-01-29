@@ -1,19 +1,9 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
-
-// Clear all auth-related cookies
-async function clearAuthCookies() {
-  const cookieStore = await cookies()
-
-  // Delete all auth-related cookies
-  cookieStore.delete('auth_token')
-  cookieStore.delete('user_info')
-  cookieStore.delete('csrf_token')
-}
+import { clearSession } from '@/lib/auth-server'
 
 export async function POST() {
   try {
-    await clearAuthCookies()
+    await clearSession()
 
     const response = NextResponse.json({
       success: true,
@@ -37,7 +27,7 @@ export async function GET() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
   try {
-    await clearAuthCookies()
+    await clearSession()
 
     // Redirect to login page with cache control
     const response = NextResponse.redirect(new URL('/admin', siteUrl))

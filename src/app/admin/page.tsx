@@ -10,9 +10,9 @@ const isDevelopment = process.env.NODE_ENV === 'development'
 
 function LoginForm() {
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const [emailSent, setEmailSent] = useState(false)
   const [rateLimitInfo, setRateLimitInfo] = useState<{ retryAfter?: number } | null>(null)
   const searchParams = useSearchParams()
 
@@ -22,11 +22,7 @@ function LoginForm() {
       const errorMessages: Record<string, string> = {
         auth_failed: 'Authentication failed. Please try again.',
         unauthorized: 'You are not authorized to access the admin portal.',
-        no_code: 'Invalid authentication response.',
-        token_exchange_failed: 'Failed to verify your identity. Please try again.',
-        callback_failed: 'An error occurred during login. Please try again.',
-        invalid_state: 'Session expired. Please try again.',
-        email_mismatch: 'Email verification failed. Please try again.',
+        invalid_credentials: 'Invalid email or password.',
         account_disabled: 'Your account has been disabled. Contact support.',
         invalid_session: 'Your session is invalid. Please log in again.',
         config_error: 'System configuration error. Please contact support.',
@@ -45,7 +41,10 @@ function LoginForm() {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          password: password,
+        }),
       })
 
       const data = await response.json()
@@ -59,11 +58,11 @@ function LoginForm() {
         return
       }
 
-      if (data.authUrl) {
-        // Redirect to Neon Auth
-        window.location.href = data.authUrl
+      if (data.success && data.redirect) {
+        // Redirect to dashboard
+        window.location.href = data.redirect
       } else {
-        setEmailSent(true)
+        setError('Login failed. Please try again.')
       }
     } catch (err) {
       console.error('Login error:', err)
@@ -86,111 +85,99 @@ function LoginForm() {
       name: 'System Administrator',
       role: 'admin',
     })};path=/;max-age=86400;samesite=lax`
-    document.cookie = 'auth_token=dev-token;path=/;max-age=86400;samesite=lax'
+    document.cookie = 'admin_session=dev-token;path=/;max-age=86400;samesite=lax'
     window.location.href = '/admin/dashboard'
   }
 
   return (
-    <>
-      {emailSent ? (
+    <form onSubmit={handleLogin} className="space-y-5">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Email Address
+        </label>
+        <input
+          type="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="admin@insanprihatin.org"
+          className="input-elegant"
+          disabled={isLoading}
+          autoComplete="email"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Password
+        </label>
+        <input
+          type="password"
+          required
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Enter your password"
+          className="input-elegant"
+          disabled={isLoading}
+          autoComplete="current-password"
+        />
+      </div>
+
+      {error && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-3 bg-red-50 border border-red-100 rounded-lg text-red-600 text-sm"
         >
-          <div className="w-16 h-16 mx-auto mb-6 bg-emerald-100 rounded-full flex items-center justify-center">
-            <svg className="w-8 h-8 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 19v-8.93a2 2 0 01.89-1.664l7-4.666a2 2 0 012.22 0l7 4.666A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-1.14.76a2 2 0 01-2.22 0l-1.14-.76" />
-            </svg>
-          </div>
-          <h2 className="font-heading text-xl font-semibold text-foundation-charcoal mb-2">
-            Check Your Email
-          </h2>
-          <p className="text-gray-600 mb-6">
-            We've sent a login link to<br />
-            <span className="font-medium text-foundation-charcoal">{email}</span>
-          </p>
-          <button
-            onClick={() => setEmailSent(false)}
-            className="text-teal-600 font-medium hover:text-teal-700 transition-colors"
-          >
-            Use a different email
-          </button>
+          {error}
+          {rateLimitInfo?.retryAfter && (
+            <p className="mt-1 text-xs text-red-500">
+              Please wait {Math.ceil(rateLimitInfo.retryAfter / 60)} minutes before trying again.
+            </p>
+          )}
         </motion.div>
-      ) : (
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email Address
-            </label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@insanprihatin.org"
-              className="input-elegant"
-              disabled={isLoading}
-            />
-          </div>
-
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="p-3 bg-red-50 border border-red-100 rounded-lg text-red-600 text-sm"
-            >
-              {error}
-              {rateLimitInfo?.retryAfter && (
-                <p className="mt-1 text-xs text-red-500">
-                  Please wait {Math.ceil(rateLimitInfo.retryAfter / 60)} minutes before trying again.
-                </p>
-              )}
-            </motion.div>
-          )}
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="btn-primary w-full disabled:opacity-50"
-          >
-            {isLoading ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                Authenticating...
-              </span>
-            ) : (
-              'Continue with Email'
-            )}
-          </button>
-
-          <p className="text-center text-gray-500 text-xs">
-            Only authorized administrators can access this portal.
-            <br />
-            Contact IT support if you need access.
-          </p>
-
-          {/* Development bypass - only shown in development mode */}
-          {isDevelopment && (
-            <div className="pt-4 border-t border-gray-100">
-              <p className="text-center text-gray-400 text-xs mb-2">
-                Development Mode Only
-              </p>
-              <button
-                type="button"
-                onClick={handleDevLogin}
-                className="w-full py-2 px-4 text-sm text-gray-500 hover:text-gray-700 border border-dashed border-amber-300 rounded-lg hover:bg-amber-50 transition-colors"
-              >
-                Skip Authentication (Dev Only)
-              </button>
-            </div>
-          )}
-        </form>
       )}
-    </>
+
+      <button
+        type="submit"
+        disabled={isLoading}
+        className="btn-primary w-full disabled:opacity-50"
+      >
+        {isLoading ? (
+          <span className="flex items-center justify-center gap-2">
+            <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+            Signing in...
+          </span>
+        ) : (
+          'Sign In'
+        )}
+      </button>
+
+      <p className="text-center text-gray-500 text-xs">
+        Only authorized administrators can access this portal.
+        <br />
+        Contact IT support if you need access.
+      </p>
+
+      {/* Development bypass - only shown in development mode */}
+      {isDevelopment && (
+        <div className="pt-4 border-t border-gray-100">
+          <p className="text-center text-gray-400 text-xs mb-2">
+            Development Mode Only
+          </p>
+          <button
+            type="button"
+            onClick={handleDevLogin}
+            className="w-full py-2 px-4 text-sm text-gray-500 hover:text-gray-700 border border-dashed border-amber-300 rounded-lg hover:bg-amber-50 transition-colors"
+          >
+            Skip Authentication (Dev Only)
+          </button>
+        </div>
+      )}
+    </form>
   )
 }
 
@@ -231,7 +218,7 @@ export default function AdminLoginPage() {
         </div>
 
         <p className="text-center text-gray-500 text-xs mt-6">
-          Secured by Neon Auth
+          Secure Admin Authentication
         </p>
       </motion.div>
     </div>
