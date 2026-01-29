@@ -1,15 +1,29 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 
+// Clear all auth-related cookies
+async function clearAuthCookies() {
+  const cookieStore = await cookies()
+
+  // Delete all auth-related cookies
+  cookieStore.delete('auth_token')
+  cookieStore.delete('user_info')
+  cookieStore.delete('csrf_token')
+}
+
 export async function POST() {
   try {
-    const cookieStore = await cookies()
+    await clearAuthCookies()
 
-    // Clear auth cookies
-    cookieStore.delete('auth_token')
-    cookieStore.delete('user_info')
+    const response = NextResponse.json({
+      success: true,
+      message: 'Logged out successfully',
+    })
 
-    return NextResponse.json({ success: true })
+    // Prevent caching of logout response
+    response.headers.set('Cache-Control', 'no-store, max-age=0')
+
+    return response
   } catch (error) {
     console.error('Logout error:', error)
     return NextResponse.json(
@@ -20,17 +34,19 @@ export async function POST() {
 }
 
 export async function GET() {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+
   try {
-    const cookieStore = await cookies()
+    await clearAuthCookies()
 
-    // Clear auth cookies
-    cookieStore.delete('auth_token')
-    cookieStore.delete('user_info')
+    // Redirect to login page with cache control
+    const response = NextResponse.redirect(new URL('/admin', siteUrl))
+    response.headers.set('Cache-Control', 'no-store, max-age=0')
 
-    // Redirect to login page
-    return NextResponse.redirect(new URL('/admin', process.env.NEXT_PUBLIC_SITE_URL))
+    return response
   } catch (error) {
     console.error('Logout error:', error)
-    return NextResponse.redirect(new URL('/admin', process.env.NEXT_PUBLIC_SITE_URL))
+    // Even on error, redirect to login
+    return NextResponse.redirect(new URL('/admin', siteUrl))
   }
 }

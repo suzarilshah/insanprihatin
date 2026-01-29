@@ -1,22 +1,88 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+// Security headers for all responses
+const securityHeaders = {
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'X-XSS-Protection': '1; mode=block',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+  const response = NextResponse.next()
+
+  // Add security headers to all responses
+  Object.entries(securityHeaders).forEach(([key, value]) => {
+    response.headers.set(key, value)
+  })
 
   // Check if accessing protected admin routes (except login page)
-  if (pathname.startsWith('/admin/dashboard')) {
+  if (pathname.startsWith('/admin/dashboard') || pathname.startsWith('/admin/api')) {
     const authToken = request.cookies.get('auth_token')?.value
 
+    // No token - redirect to login
     if (!authToken) {
-      // Redirect to login page
       const loginUrl = new URL('/admin', request.url)
       loginUrl.searchParams.set('redirect', pathname)
-      return NextResponse.redirect(loginUrl)
+      const redirectResponse = NextResponse.redirect(loginUrl)
+
+      // Add security headers to redirect response
+      Object.entries(securityHeaders).forEach(([key, value]) => {
+        redirectResponse.headers.set(key, value)
+      })
+
+      return redirectResponse
     }
 
-    // Token exists, allow access (full verification happens in the page)
-    return NextResponse.next()
+    // Basic token validation (format check)
+    // Full JWT verification happens in API routes/server components
+    // Edge runtime has limited crypto capabilities
+    if (authToken.length < 10) {
+      // Token is too short to be valid
+      const loginUrl = new URL('/admin?error=invalid_session', request.url)
+      const redirectResponse = NextResponse.redirect(loginUrl)
+
+      // Clear invalid cookies
+      redirectResponse.cookies.delete('auth_token')
+      redirectResponse.cookies.delete('user_info')
+
+      Object.entries(securityHeaders).forEach(([key, value]) => {
+        redirectResponse.headers.set(key, value)
+      })
+
+      return redirectResponse
+    }
+
+    // Development token validation
+    if (authToken === 'dev-token') {
+      // Only allow dev token in development environment
+      const isDev = process.env.NODE_ENV === 'development'
+      if (!isDev) {
+        // Dev token not allowed in production
+        const loginUrl = new URL('/admin?error=invalid_session', request.url)
+        const redirectResponse = NextResponse.redirect(loginUrl)
+
+        redirectResponse.cookies.delete('auth_token')
+        redirectResponse.cookies.delete('user_info')
+
+        Object.entries(securityHeaders).forEach(([key, value]) => {
+          redirectResponse.headers.set(key, value)
+        })
+
+        return redirectResponse
+      }
+    }
+
+    // Token exists and passes basic validation
+    return response
+  }
+
+  // API routes - add CORS headers for auth endpoints
+  if (pathname.startsWith('/api/auth')) {
+    response.headers.set('Cache-Control', 'no-store, max-age=0')
   }
 
   // If on login page but already authenticated, redirect to dashboard
@@ -24,16 +90,26 @@ export function middleware(request: NextRequest) {
     const authToken = request.cookies.get('auth_token')?.value
     const redirect = request.nextUrl.searchParams.get('redirect')
 
-    if (authToken) {
-      // User is authenticated, redirect to dashboard or requested page
+    if (authToken && authToken.length > 10) {
+      // User appears to be authenticated, redirect to dashboard
+      // Full verification will happen on the dashboard page
       const redirectUrl = new URL(redirect || '/admin/dashboard', request.url)
-      return NextResponse.redirect(redirectUrl)
+      const redirectResponse = NextResponse.redirect(redirectUrl)
+
+      Object.entries(securityHeaders).forEach(([key, value]) => {
+        redirectResponse.headers.set(key, value)
+      })
+
+      return redirectResponse
     }
   }
 
-  return NextResponse.next()
+  return response
 }
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: [
+    '/admin/:path*',
+    '/api/auth/:path*',
+  ],
 }
