@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
         hostname: 'sgp.cloud.appwrite.io',
         pathname: '/v1/storage/buckets/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        pathname: '/**',
+      },
     ],
   },
   experimental: {

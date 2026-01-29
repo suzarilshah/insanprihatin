@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Playfair_Display, Cormorant_Garamond, Source_Sans_3, JetBrains_Mono } from 'next/font/google'
+import { Playfair_Display, Cormorant_Garamond, Outfit, JetBrains_Mono, Inter } from 'next/font/google'
 import '@/styles/globals.css'
 
 const playfair = Playfair_Display({
@@ -15,9 +15,16 @@ const cormorant = Cormorant_Garamond({
   display: 'swap',
 })
 
-const sourceSans = Source_Sans_3({
+const outfit = Outfit({
   subsets: ['latin'],
-  variable: '--font-source-sans',
+  variable: '--font-outfit',
+  display: 'swap',
+  weight: ['300', '400', '500', '600', '700', '800'],
+})
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
   display: 'swap',
 })
 
@@ -118,7 +125,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${playfair.variable} ${cormorant.variable} ${sourceSans.variable} ${jetbrains.variable}`}
+      className={`${playfair.variable} ${cormorant.variable} ${outfit.variable} ${inter.variable} ${jetbrains.variable}`}
     >
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />

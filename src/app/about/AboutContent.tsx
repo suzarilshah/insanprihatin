@@ -1,39 +1,46 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { motion, useScroll, useTransform } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useRef } from 'react'
 
 const timeline = [
   {
     year: '2010',
     title: 'Foundation Established',
     description: 'Yayasan Insan Prihatin was founded with a mission to serve underprivileged communities.',
+    icon: '🌱',
   },
   {
     year: '2013',
     title: 'First Major Project',
     description: 'Launched our first nationwide scholarship program, supporting 100 students.',
+    icon: '🎓',
   },
   {
     year: '2016',
     title: 'Healthcare Initiative',
     description: 'Introduced mobile medical camps to reach rural communities without healthcare access.',
+    icon: '🏥',
   },
   {
     year: '2019',
     title: 'Environmental Focus',
     description: 'Started the Green Malaysia Initiative with a goal of planting 100,000 trees.',
+    icon: '🌳',
   },
   {
     year: '2022',
     title: 'Community Centers',
     description: 'Opened skill training centers in multiple states to empower local communities.',
+    icon: '🏢',
   },
   {
     year: '2025',
     title: 'Major Milestone',
     description: 'Reached RM 15 million in total impact and 50,000 lives transformed.',
+    icon: '🏆',
   },
 ]
 
@@ -42,49 +49,49 @@ const leadership = [
     name: 'Dato\' Ahmad Rahman',
     position: 'Chairman',
     department: 'Board of Trustees',
-    image: null,
+    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face',
   },
   {
     name: 'Puan Sri Fatimah Hassan',
     position: 'Deputy Chairman',
     department: 'Board of Trustees',
-    image: null,
+    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop&crop=face',
   },
   {
     name: 'Dr. Lee Wei Ming',
     position: 'Chief Executive Officer',
     department: 'Executive Leadership',
-    image: null,
+    image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face',
   },
   {
     name: 'Encik Mohd Azlan',
     position: 'Chief Operating Officer',
     department: 'Executive Leadership',
-    image: null,
+    image: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&h=400&fit=crop&crop=face',
   },
   {
     name: 'Cik Nurul Aisyah',
     position: 'Director of Programs',
     department: 'Program Management',
-    image: null,
+    image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop&crop=face',
   },
   {
     name: 'Mr. Rajesh Kumar',
     position: 'Director of Finance',
     department: 'Finance & Administration',
-    image: null,
+    image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop&crop=face',
   },
   {
     name: 'Puan Siti Aminah',
     position: 'Director of Communications',
     department: 'Communications & PR',
-    image: null,
+    image: 'https://images.unsplash.com/photo-1598550874175-4d0ef436c909?w=400&h=400&fit=crop&crop=face',
   },
   {
     name: 'Encik Abdullah Ibrahim',
     position: 'Director of Partnerships',
     department: 'Strategic Partnerships',
-    image: null,
+    image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=400&fit=crop&crop=face',
   },
 ]
 
@@ -97,159 +104,380 @@ const departments = [
   { name: 'Strategic Partnerships', color: 'from-rose-500 to-rose-600' },
 ]
 
+const impactStats = [
+  { value: '50K+', label: 'Lives Impacted', description: 'Individuals directly benefited from our programs' },
+  { value: 'RM 15M', label: 'Funds Channeled', description: 'Transparently managed for maximum impact' },
+  { value: '13', label: 'States Covered', description: 'Reaching communities across Malaysia' },
+  { value: '98%', label: 'Fund Utilization', description: 'Directly supporting our programs' },
+]
+
 export default function AboutContent() {
+  const heroRef = useRef<HTMLElement>(null)
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ['start start', 'end start'],
+  })
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
+  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1])
+
   return (
     <div>
-      {/* Hero Section */}
-      <section className="relative py-32 bg-gradient-to-br from-teal-700 via-teal-600 to-sky-600 overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0 bg-[url('/images/pattern.svg')] bg-repeat opacity-30" />
-        </div>
-        <div className="absolute top-0 right-0 w-1/2 h-full bg-amber-400/10 rounded-full blur-[200px]" />
+      {/* Premium Hero Section */}
+      <section ref={heroRef} className="relative min-h-[80vh] flex items-center overflow-hidden">
+        {/* Background Image with Parallax */}
+        <motion.div style={{ scale: heroScale }} className="absolute inset-0">
+          <Image
+            src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=2670"
+            alt="Team collaboration"
+            fill
+            className="object-cover"
+            priority
+            quality={90}
+          />
+        </motion.div>
 
-        <div className="relative container-wide">
+        {/* Premium gradient overlays */}
+        <div className="absolute inset-0 bg-gradient-to-br from-teal-900/95 via-teal-800/90 to-sky-900/85" />
+        <div className="absolute inset-0 bg-gradient-to-t from-foundation-charcoal/50 via-transparent to-transparent" />
+
+        {/* Decorative elements */}
+        <div className="absolute inset-0 bg-dots opacity-10" />
+        <div className="grain" />
+
+        {/* Animated orbs */}
+        <motion.div
+          animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.3, 0.2] }}
+          transition={{ duration: 8, repeat: Infinity }}
+          className="absolute top-1/4 right-1/4 w-[400px] h-[400px] bg-amber-400/20 rounded-full blur-[100px]"
+        />
+
+        <motion.div style={{ opacity: heroOpacity }} className="relative container-wide py-32 z-10">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
             className="max-w-3xl"
           >
-            <div className="inline-flex items-center gap-2 mb-6">
-              <span className="w-8 h-0.5 bg-amber-400 rounded-full" />
-              <span className="text-amber-400 font-medium uppercase tracking-wider text-sm">About Us</span>
-            </div>
-            <h1 className="heading-display text-white mb-6">
-              Our Story of{' '}
-              <span className="text-gradient-amber">Compassion</span>
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="badge-premium bg-white/10 text-white/90 mb-8"
+            >
+              <span className="accent-dot" />
+              <span className="text-sm font-medium tracking-wide">Our Story</span>
+            </motion.div>
+
+            <h1 className="heading-display text-white mb-8">
+              <motion.span
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="block"
+              >
+                A Journey of
+              </motion.span>
+              <motion.span
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="text-gradient-amber"
+              >
+                Compassion
+              </motion.span>
             </h1>
-            <p className="text-xl text-white/80 leading-relaxed">
+
+            <motion.p
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="body-large text-white/80 max-w-2xl"
+            >
               For over a decade, Yayasan Insan Prihatin has been at the forefront of
               community service, creating sustainable impact through education, healthcare,
-              and development programs.
-            </p>
+              and development programs across Malaysia.
+            </motion.p>
           </motion.div>
+        </motion.div>
+
+        {/* Scroll indicator */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1 }}
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10"
+        >
+          <motion.div
+            animate={{ y: [0, 8, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="flex flex-col items-center gap-2"
+          >
+            <span className="text-white/40 text-xs uppercase tracking-widest">Scroll</span>
+            <div className="w-5 h-8 rounded-full border border-white/30 flex justify-center pt-1.5">
+              <motion.div
+                animate={{ y: [0, 8, 0], opacity: [1, 0.3, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="w-1 h-1 bg-white/60 rounded-full"
+              />
+            </div>
+          </motion.div>
+        </motion.div>
+      </section>
+
+      {/* Impact Stats Section */}
+      <section className="relative py-20 bg-white -mt-20 rounded-t-[3rem] z-20">
+        <div className="container-wide">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {impactStats.map((stat, index) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                className="card-elegant p-8 text-center group"
+              >
+                <div className="font-display text-4xl lg:text-5xl font-bold text-gradient mb-2">
+                  {stat.value}
+                </div>
+                <div className="font-heading text-lg font-semibold text-foundation-charcoal mb-2">
+                  {stat.label}
+                </div>
+                <p className="text-gray-500 text-sm">{stat.description}</p>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Mission & Vision */}
+      {/* Mission & Vision - Premium */}
       <section className="section-padding bg-white">
         <div className="container-wide">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <motion.div
-              initial={{ opacity: 0, x: -40 }}
+              initial={{ opacity: 0, x: -60 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              className="relative"
             >
-              <div className="relative aspect-square rounded-3xl overflow-hidden bg-gradient-to-br from-teal-100 to-teal-200">
-                <Image
-                  src="/images/logo-light.png"
-                  alt="Yayasan Insan Prihatin"
-                  fill
-                  className="object-contain p-16"
-                />
+              {/* Premium image composition */}
+              <div className="relative">
+                {/* Background decorative shape */}
+                <div className="absolute -inset-4 bg-gradient-to-br from-teal-100 to-teal-50 rounded-[2.5rem] -rotate-3" />
+
+                {/* Main image */}
+                <div className="relative aspect-[4/3] rounded-3xl overflow-hidden shadow-dramatic">
+                  <Image
+                    src="https://images.unsplash.com/photo-1559027615-cd4628902d4a?q=80&w=2574"
+                    alt="Community gathering"
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-teal-900/40 via-transparent to-transparent" />
+                </div>
+
+                {/* Floating stat card */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.4 }}
+                  className="absolute -bottom-8 -right-8 card-glass p-6 shadow-elevated"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-amber-400 to-amber-500 rounded-2xl flex items-center justify-center">
+                      <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="font-display text-2xl font-bold text-foundation-charcoal">14+</div>
+                      <div className="text-gray-500 text-sm">Years of Service</div>
+                    </div>
+                  </div>
+                </motion.div>
               </div>
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, x: 40 }}
+              initial={{ opacity: 0, x: 60 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
             >
-              <h2 className="heading-section text-foundation-charcoal mb-8">
-                What Drives Us
+              <div className="badge-premium mb-6">
+                <span className="accent-dot" />
+                <span className="text-sm font-medium text-teal-700">What Drives Us</span>
+              </div>
+
+              <h2 className="heading-section text-foundation-charcoal mb-10">
+                Our Purpose & Values
               </h2>
 
-              <div className="space-y-8">
-                <div className="p-6 bg-teal-50 rounded-2xl border-l-4 border-teal-500">
-                  <h3 className="font-heading text-xl font-semibold text-teal-700 mb-3">
-                    Our Mission
-                  </h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    To empower underprivileged communities through sustainable programs in
-                    education, healthcare, and economic development, creating lasting positive
-                    change across Malaysia.
-                  </p>
-                </div>
+              <div className="space-y-6">
+                {/* Mission */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.2 }}
+                  className="relative p-8 rounded-2xl bg-gradient-to-br from-teal-50 to-white border border-teal-100 overflow-hidden group hover:shadow-elevated transition-all duration-500"
+                >
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-teal-100/50 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-500" />
+                  <div className="relative">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-teal-500 rounded-xl flex items-center justify-center">
+                        <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                      </div>
+                      <h3 className="font-heading text-xl font-semibold text-teal-700">Our Mission</h3>
+                    </div>
+                    <p className="text-gray-600 leading-relaxed">
+                      To empower underprivileged communities through sustainable programs in
+                      education, healthcare, and economic development, creating lasting positive
+                      change across Malaysia.
+                    </p>
+                  </div>
+                </motion.div>
 
-                <div className="p-6 bg-amber-50 rounded-2xl border-l-4 border-amber-500">
-                  <h3 className="font-heading text-xl font-semibold text-amber-700 mb-3">
-                    Our Vision
-                  </h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    A Malaysia where every individual has equal opportunities to thrive,
-                    contribute to society, and live with dignity regardless of their
-                    background or circumstances.
-                  </p>
-                </div>
+                {/* Vision */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.3 }}
+                  className="relative p-8 rounded-2xl bg-gradient-to-br from-amber-50 to-white border border-amber-100 overflow-hidden group hover:shadow-elevated transition-all duration-500"
+                >
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-amber-100/50 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-500" />
+                  <div className="relative">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center">
+                        <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      </div>
+                      <h3 className="font-heading text-xl font-semibold text-amber-700">Our Vision</h3>
+                    </div>
+                    <p className="text-gray-600 leading-relaxed">
+                      A Malaysia where every individual has equal opportunities to thrive,
+                      contribute to society, and live with dignity regardless of their
+                      background or circumstances.
+                    </p>
+                  </div>
+                </motion.div>
 
-                <div className="p-6 bg-sky-50 rounded-2xl border-l-4 border-sky-500">
-                  <h3 className="font-heading text-xl font-semibold text-sky-700 mb-3">
-                    Our Values
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {['Compassion', 'Integrity', 'Excellence', 'Collaboration', 'Innovation'].map((value) => (
-                      <span
+                {/* Values */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.4 }}
+                  className="pt-4"
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-sky-500 rounded-xl flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                      </svg>
+                    </div>
+                    <h3 className="font-heading text-xl font-semibold text-sky-700">Our Values</h3>
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    {['Compassion', 'Integrity', 'Excellence', 'Collaboration', 'Innovation'].map((value, i) => (
+                      <motion.span
                         key={value}
-                        className="px-3 py-1 bg-white rounded-full text-sm font-medium text-gray-700"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.5 + i * 0.1 }}
+                        className="px-5 py-2.5 bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:border-teal-300 hover:shadow-md transition-all duration-300"
                       >
                         {value}
-                      </span>
+                      </motion.span>
                     ))}
                   </div>
-                </div>
+                </motion.div>
               </div>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Timeline */}
-      <section className="section-padding bg-foundation-cream">
-        <div className="container-wide">
+      {/* Timeline - Premium */}
+      <section className="section-padding bg-foundation-cream relative overflow-hidden">
+        {/* Background decorations */}
+        <div className="absolute inset-0 bg-grid opacity-30" />
+        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-teal-200/20 rounded-full blur-[150px]" />
+        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-amber-200/20 rounded-full blur-[120px]" />
+
+        <div className="relative container-wide">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-20"
           >
-            <div className="inline-flex items-center gap-2 mb-6">
-              <span className="accent-line" />
-              <span className="text-teal-600 font-medium uppercase tracking-wider text-sm">Our Journey</span>
+            <div className="badge-premium mx-auto mb-6">
+              <span className="accent-dot" />
+              <span className="text-sm font-medium text-teal-700">Our Journey</span>
             </div>
-            <h2 className="heading-section text-foundation-charcoal">
+            <h2 className="heading-section text-foundation-charcoal mb-6">
               A Decade of Impact
             </h2>
+            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+              From humble beginnings to a nationally recognized foundation,
+              our journey has been marked by countless stories of transformation.
+            </p>
           </motion.div>
 
-          <div className="relative">
+          <div className="relative max-w-5xl mx-auto">
             {/* Timeline line */}
-            <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-teal-500 via-teal-400 to-amber-400 hidden lg:block" />
+            <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-teal-400 via-teal-500 to-amber-400 hidden lg:block rounded-full" />
 
-            <div className="space-y-12">
+            <div className="space-y-16">
               {timeline.map((item, index) => (
                 <motion.div
                   key={item.year}
-                  initial={{ opacity: 0, y: 30 }}
+                  initial={{ opacity: 0, y: 50 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                  className={`relative flex items-center gap-8 ${
+                  viewport={{ once: true, margin: '-100px' }}
+                  transition={{ duration: 0.6 }}
+                  className={`relative flex items-center gap-12 ${
                     index % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse'
                   }`}
                 >
                   <div className={`flex-1 ${index % 2 === 0 ? 'lg:text-right' : 'lg:text-left'}`}>
-                    <div className="card-elegant p-6 inline-block">
-                      <div className="font-display text-3xl font-bold text-teal-600 mb-2">
-                        {item.year}
+                    <motion.div
+                      whileHover={{ y: -5 }}
+                      className="card-elegant p-8 inline-block hover:shadow-dramatic transition-all duration-500"
+                    >
+                      <div className="flex items-center gap-4 mb-4 lg:justify-end">
+                        <span className="text-4xl">{item.icon}</span>
+                        <div className="font-display text-4xl font-bold text-gradient">
+                          {item.year}
+                        </div>
                       </div>
-                      <h3 className="font-heading text-xl font-semibold text-foundation-charcoal mb-2">
+                      <h3 className="font-heading text-xl font-semibold text-foundation-charcoal mb-3">
                         {item.title}
                       </h3>
-                      <p className="text-gray-600 text-sm">{item.description}</p>
-                    </div>
+                      <p className="text-gray-600">{item.description}</p>
+                    </motion.div>
                   </div>
 
-                  {/* Center dot */}
-                  <div className="absolute left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-teal-500 border-4 border-white shadow-lg hidden lg:block" />
+                  {/* Center node */}
+                  <div className="absolute left-1/2 -translate-x-1/2 hidden lg:flex items-center justify-center">
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      whileInView={{ scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: 0.3, type: 'spring' }}
+                      className="w-6 h-6 bg-white rounded-full border-4 border-teal-500 shadow-lg z-10"
+                    />
+                    <div className="absolute w-12 h-12 bg-teal-400/20 rounded-full animate-ping" />
+                  </div>
 
                   <div className="flex-1 hidden lg:block" />
                 </motion.div>
@@ -259,18 +487,20 @@ export default function AboutContent() {
         </div>
       </section>
 
-      {/* Leadership / Organization Chart */}
-      <section id="leadership" className="section-padding bg-white">
-        <div className="container-wide">
+      {/* Leadership Section - Premium */}
+      <section id="leadership" className="section-padding bg-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-dots opacity-30" />
+
+        <div className="relative container-wide">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <div className="inline-flex items-center gap-2 mb-6">
-              <span className="accent-line" />
-              <span className="text-teal-600 font-medium uppercase tracking-wider text-sm">Leadership</span>
+            <div className="badge-premium mx-auto mb-6">
+              <span className="accent-dot" />
+              <span className="text-sm font-medium text-teal-700">Leadership</span>
             </div>
             <h2 className="heading-section text-foundation-charcoal mb-6">
               Meet Our Team
@@ -281,40 +511,72 @@ export default function AboutContent() {
             </p>
           </motion.div>
 
-          {/* Department Legend */}
-          <div className="flex flex-wrap justify-center gap-4 mb-12">
-            {departments.map((dept) => (
-              <div key={dept.name} className="flex items-center gap-2">
+          {/* Department Legend - Premium Pills */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="flex flex-wrap justify-center gap-3 mb-16"
+          >
+            {departments.map((dept, i) => (
+              <motion.div
+                key={dept.name}
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05 }}
+                className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-gray-200 shadow-sm"
+              >
                 <div className={`w-3 h-3 rounded-full bg-gradient-to-r ${dept.color}`} />
-                <span className="text-sm text-gray-600">{dept.name}</span>
-              </div>
+                <span className="text-sm text-gray-600 font-medium">{dept.name}</span>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
 
-          {/* Leadership Grid */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Leadership Grid - Premium Cards */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {leadership.map((member, index) => {
               const deptColor = departments.find((d) => d.name === member.department)?.color || 'from-gray-500 to-gray-600'
 
               return (
                 <motion.div
                   key={member.name}
-                  initial={{ opacity: 0, y: 30 }}
+                  initial={{ opacity: 0, y: 40 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.05 }}
-                  className="card-elegant p-6 text-center group"
+                  whileHover={{ y: -8 }}
+                  className="card-elegant overflow-hidden group"
                 >
-                  {/* Avatar */}
-                  <div className={`w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br ${deptColor} flex items-center justify-center text-white text-2xl font-display font-bold`}>
-                    {member.name.split(' ').map((n) => n[0]).slice(0, 2).join('')}
-                  </div>
+                  {/* Top color bar */}
+                  <div className={`h-1.5 bg-gradient-to-r ${deptColor}`} />
 
-                  <h3 className="font-heading text-lg font-semibold text-foundation-charcoal mb-1">
-                    {member.name}
-                  </h3>
-                  <p className="text-teal-600 text-sm font-medium mb-2">{member.position}</p>
-                  <p className="text-gray-500 text-xs">{member.department}</p>
+                  <div className="p-8 text-center">
+                    {/* Avatar */}
+                    <div className="relative w-28 h-28 mx-auto mb-6">
+                      <div className={`absolute inset-0 rounded-full bg-gradient-to-br ${deptColor} opacity-20 group-hover:opacity-30 transition-opacity`} />
+                      <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-white shadow-elevated">
+                        {member.image ? (
+                          <Image
+                            src={member.image}
+                            alt={member.name}
+                            fill
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className={`w-full h-full bg-gradient-to-br ${deptColor} flex items-center justify-center text-white text-2xl font-display font-bold`}>
+                            {member.name.split(' ').map((n) => n[0]).slice(0, 2).join('')}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <h3 className="font-heading text-lg font-semibold text-foundation-charcoal mb-1 group-hover:text-teal-600 transition-colors">
+                      {member.name}
+                    </h3>
+                    <p className="text-teal-600 text-sm font-medium mb-2">{member.position}</p>
+                    <p className="text-gray-400 text-xs font-medium uppercase tracking-wide">{member.department}</p>
+                  </div>
                 </motion.div>
               )
             })}
@@ -322,93 +584,178 @@ export default function AboutContent() {
         </div>
       </section>
 
-      {/* Annual Reports */}
-      <section id="reports" className="section-padding bg-foundation-charcoal">
-        <div className="container-wide">
+      {/* Annual Reports - Premium Dark Section */}
+      <section id="reports" className="section-padding bg-foundation-charcoal relative overflow-hidden">
+        {/* Premium background */}
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-foundation-charcoal via-gray-900 to-foundation-charcoal" />
+          <div className="absolute inset-0 bg-grid opacity-5" />
+          <motion.div
+            animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.15, 0.1] }}
+            transition={{ duration: 10, repeat: Infinity }}
+            className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-teal-500/10 rounded-full blur-[150px]"
+          />
+        </div>
+
+        <div className="relative container-wide">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <motion.div
-              initial={{ opacity: 0, x: -40 }}
+              initial={{ opacity: 0, x: -60 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
             >
-              <div className="inline-flex items-center gap-2 mb-6">
-                <span className="w-8 h-0.5 bg-amber-400 rounded-full" />
-                <span className="text-amber-400 font-medium uppercase tracking-wider text-sm">Transparency</span>
+              <div className="badge-premium bg-white/5 border-white/10 mb-6">
+                <span className="w-2 h-2 bg-amber-400 rounded-full" />
+                <span className="text-sm font-medium text-white/80">Transparency</span>
               </div>
+
               <h2 className="heading-section text-white mb-6">
                 Annual Reports
               </h2>
-              <p className="text-gray-400 text-lg leading-relaxed mb-8">
+              <p className="text-gray-400 text-lg leading-relaxed mb-10">
                 We believe in complete transparency. Our annual reports provide detailed
                 insights into our programs, financial allocation, and the impact we've
                 created together with our donors and partners.
               </p>
+
               <div className="space-y-4">
-                {['2025', '2024', '2023'].map((year) => (
-                  <a
+                {['2025', '2024', '2023'].map((year, i) => (
+                  <motion.a
                     key={year}
                     href={`/reports/annual-report-${year}.pdf`}
-                    className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors group"
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.2 + i * 0.1 }}
+                    whileHover={{ x: 4 }}
+                    className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300 group"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-amber-400/20 rounded-lg flex items-center justify-center">
+                    <div className="flex items-center gap-5">
+                      <div className="w-14 h-14 bg-gradient-to-br from-amber-400/20 to-amber-500/20 rounded-xl flex items-center justify-center group-hover:from-amber-400/30 group-hover:to-amber-500/30 transition-all">
                         <svg className="w-6 h-6 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                       </div>
                       <div>
-                        <div className="text-white font-medium">Annual Report {year}</div>
-                        <div className="text-gray-500 text-sm">PDF • 2.5 MB</div>
+                        <div className="text-white font-semibold text-lg">Annual Report {year}</div>
+                        <div className="text-gray-500 text-sm">PDF Document • 2.5 MB</div>
                       </div>
                     </div>
-                    <svg className="w-5 h-5 text-gray-500 group-hover:text-amber-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-6 h-6 text-gray-500 group-hover:text-amber-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
-                  </a>
+                  </motion.a>
                 ))}
               </div>
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, x: 40 }}
+              initial={{ opacity: 0, x: 60 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
               className="relative"
             >
-              <div className="relative aspect-square rounded-3xl overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-teal-600 to-teal-800" />
-                <div className="absolute inset-0 flex items-center justify-center">
+              <div className="relative aspect-square max-w-md mx-auto">
+                {/* Decorative rings */}
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
+                  className="absolute inset-0 rounded-full border border-white/5"
+                />
+                <motion.div
+                  animate={{ rotate: -360 }}
+                  transition={{ duration: 80, repeat: Infinity, ease: 'linear' }}
+                  className="absolute inset-8 rounded-full border border-teal-500/20"
+                />
+
+                {/* Central content */}
+                <div className="absolute inset-16 rounded-full bg-gradient-to-br from-teal-600 to-teal-800 flex items-center justify-center shadow-glow-teal">
                   <div className="text-center">
-                    <div className="font-display text-7xl font-bold text-white mb-4">100%</div>
-                    <div className="text-xl text-white/80">Transparency</div>
-                    <div className="text-teal-300 mt-2">Audited Annually</div>
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      whileInView={{ scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: 0.3, type: 'spring' }}
+                      className="font-display text-6xl lg:text-7xl font-bold text-white mb-2"
+                    >
+                      100%
+                    </motion.div>
+                    <div className="text-xl text-white/90 font-medium">Transparency</div>
+                    <div className="text-teal-300 text-sm mt-1">Audited Annually</div>
                   </div>
                 </div>
+
+                {/* Floating badges */}
+                <motion.div
+                  animate={{ y: [0, -10, 0] }}
+                  transition={{ duration: 4, repeat: Infinity }}
+                  className="absolute top-4 right-4 card-glass-dark px-4 py-2"
+                >
+                  <span className="text-white/80 text-sm font-medium">ISO Certified</span>
+                </motion.div>
+                <motion.div
+                  animate={{ y: [0, 10, 0] }}
+                  transition={{ duration: 5, repeat: Infinity }}
+                  className="absolute bottom-4 left-4 card-glass-dark px-4 py-2"
+                >
+                  <span className="text-white/80 text-sm font-medium">SSM Registered</span>
+                </motion.div>
               </div>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-20 bg-gradient-to-r from-teal-600 to-teal-700">
-        <div className="container-wide text-center">
+      {/* CTA Section - Premium */}
+      <section className="relative py-32 overflow-hidden">
+        {/* Background */}
+        <div className="absolute inset-0">
+          <Image
+            src="https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=2670"
+            alt="Team collaboration"
+            fill
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-800/95 via-teal-700/90 to-sky-700/95" />
+          <div className="absolute inset-0 bg-dots opacity-10" />
+        </div>
+
+        <div className="relative container-wide text-center z-10">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
           >
-            <h2 className="heading-subsection text-white mb-6">
+            <motion.span
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="inline-block text-6xl mb-6"
+            >
+              🤝
+            </motion.span>
+
+            <h2 className="heading-section text-white mb-6">
               Ready to Make a Difference?
             </h2>
-            <p className="text-white/80 text-lg mb-8 max-w-xl mx-auto">
+            <p className="text-white/80 text-xl mb-10 max-w-2xl mx-auto">
               Join us in our mission to create lasting positive change for communities across Malaysia.
             </p>
+
             <div className="flex flex-wrap justify-center gap-4">
               <Link href="/donate" className="btn-secondary">
                 Donate Now
+                <svg className="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
               </Link>
-              <Link href="/contact" className="btn-outline border-white/30 text-white hover:bg-white hover:text-teal-600">
+              <Link
+                href="/contact"
+                className="btn-outline border-white/40 text-white hover:bg-white hover:text-teal-700 hover:border-white"
+              >
                 Contact Us
               </Link>
             </div>
