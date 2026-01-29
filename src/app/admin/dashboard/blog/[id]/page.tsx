@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { getBlogPost, createBlogPost, updateBlogPost } from '@/lib/actions/blog'
+import ImageUpload from '@/components/admin/ImageUpload'
 
 function generateSlug(title: string) {
   return title
@@ -289,24 +290,13 @@ export default function BlogPostEditor({ params }: { params: Promise<{ id: strin
 
           {/* Featured Image */}
           <div className="bg-white rounded-2xl p-6 border border-gray-100">
-            <h3 className="font-medium text-foundation-charcoal mb-4">Featured Image</h3>
-            <input
-              type="text"
+            <ImageUpload
               value={formData.featuredImage}
-              onChange={(e) => setFormData({ ...formData, featuredImage: e.target.value })}
-              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 text-sm"
-              placeholder="Image URL"
+              onChange={(url) => setFormData({ ...formData, featuredImage: url })}
+              label="Featured Image"
+              aspectRatio="video"
+              maxSizeMB={10}
             />
-            {formData.featuredImage && (
-              <div className="mt-3 aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                <img
-                  src={formData.featuredImage}
-                  alt="Featured"
-                  className="w-full h-full object-cover"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                />
-              </div>
-            )}
           </div>
 
           {/* Category */}

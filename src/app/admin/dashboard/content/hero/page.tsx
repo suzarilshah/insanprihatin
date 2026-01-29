@@ -4,6 +4,7 @@ import { useState, useEffect, useTransition } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { getHeroContent, updateHeroContent } from '@/lib/actions/content'
+import ImageUpload from '@/components/admin/ImageUpload'
 
 export default function EditHeroContent() {
   const [isPending, startTransition] = useTransition()
@@ -210,24 +211,13 @@ export default function EditHeroContent() {
             </div>
 
             <div className="border-t border-gray-100 pt-6">
-              <h3 className="font-medium text-foundation-charcoal mb-4">
-                Background Image
-              </h3>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Image URL
-                </label>
-                <input
-                  type="text"
-                  value={formData.backgroundImage}
-                  onChange={(e) => setFormData({ ...formData, backgroundImage: e.target.value })}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
-                  placeholder="https://... or /images/..."
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Enter a URL or upload an image in the Media Library
-                </p>
-              </div>
+              <ImageUpload
+                value={formData.backgroundImage}
+                onChange={(url) => setFormData({ ...formData, backgroundImage: url })}
+                label="Background Image"
+                aspectRatio="wide"
+                maxSizeMB={15}
+              />
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { Client, Storage, ID } from 'appwrite'
+import { Client, Storage, ID, Query } from 'appwrite'
 
 const client = new Client()
   .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
@@ -7,6 +7,15 @@ const client = new Client()
 export const storage = new Storage(client)
 
 export const BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID!
+
+export interface AppwriteFile {
+  $id: string
+  name: string
+  mimeType: string
+  sizeOriginal: number
+  $createdAt: string
+  $updatedAt: string
+}
 
 export async function uploadFile(file: File): Promise<string> {
   const response = await storage.createFile(BUCKET_ID, ID.unique(), file)
@@ -34,6 +43,27 @@ export function getFilePreview(
 
 export async function deleteFile(fileId: string): Promise<void> {
   await storage.deleteFile(BUCKET_ID, fileId)
+}
+
+export async function listFiles(limit = 25, offset = 0): Promise<{
+  files: AppwriteFile[]
+  total: number
+}> {
+  const queries = [
+    Query.limit(limit),
+    Query.offset(offset),
+    Query.orderDesc('$createdAt')
+  ]
+  const response = await storage.listFiles(BUCKET_ID, queries)
+  return {
+    files: response.files as AppwriteFile[],
+    total: response.total,
+  }
+}
+
+export async function getFile(fileId: string): Promise<AppwriteFile> {
+  const file = await storage.getFile(BUCKET_ID, fileId)
+  return file as AppwriteFile
 }
 
 export { ID }

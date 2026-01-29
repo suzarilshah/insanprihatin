@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getTeamMembers, createTeamMember, updateTeamMember, deleteTeamMember, getDepartments } from '@/lib/actions/team'
+import ImageUpload from '@/components/admin/ImageUpload'
 
 type TeamMember = {
   id: string
@@ -364,16 +365,13 @@ export default function TeamManagement() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Photo URL</label>
-                  <input
-                    type="text"
-                    value={formData.image}
-                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                    className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
-                    placeholder="https://..."
-                  />
-                </div>
+                <ImageUpload
+                  value={formData.image}
+                  onChange={(url) => setFormData({ ...formData, image: url })}
+                  label="Photo"
+                  aspectRatio="square"
+                  maxSizeMB={5}
+                />
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
