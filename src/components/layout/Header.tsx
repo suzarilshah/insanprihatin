@@ -104,8 +104,8 @@ export default function Header() {
       <header
         className={cn(
           'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
-          // Show white background when scrolled
-          isScrolled
+          // Show white background when scrolled OR when mobile menu is open
+          (isScrolled || isMobileMenuOpen)
             ? 'bg-white/98 backdrop-blur-xl shadow-elegant'
             : 'bg-transparent',
           isVisible ? 'translate-y-0' : '-translate-y-full'
@@ -116,8 +116,8 @@ export default function Header() {
           <nav
             className={cn(
               'flex items-center justify-between transition-all duration-300',
-              // Compact padding when scrolled
-              isScrolled ? 'py-2' : 'py-4 md:py-6'
+              // Compact padding when scrolled or mobile menu open
+              (isScrolled || isMobileMenuOpen) ? 'py-2' : 'py-4 md:py-6'
             )}
             role="navigation"
             aria-label="Main navigation"
@@ -131,8 +131,8 @@ export default function Header() {
               <div
                 className={cn(
                   'relative transition-all duration-300 group-hover:scale-105',
-                  // Smaller logo when scrolled
-                  isScrolled ? 'w-10 h-10' : 'w-12 h-12'
+                  // Smaller logo when scrolled or mobile menu open
+                  (isScrolled || isMobileMenuOpen) ? 'w-10 h-10' : 'w-12 h-12'
                 )}
               >
                 <Image
@@ -148,13 +148,13 @@ export default function Header() {
                 <span
                   className={cn(
                     'font-display font-bold tracking-tight transition-all duration-300 block',
-                    isScrolled
+                    (isScrolled || isMobileMenuOpen)
                       ? 'text-lg text-foundation-charcoal'
                       : 'text-xl text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]'
                   )}
                   style={{
                     // Ensure text is always visible with text shadow on dark backgrounds
-                    textShadow: isScrolled
+                    textShadow: (isScrolled || isMobileMenuOpen)
                       ? 'none'
                       : '0 1px 3px rgba(0,0,0,0.4)',
                   }}
@@ -164,7 +164,7 @@ export default function Header() {
                 <span
                   className={cn(
                     'block font-heading font-medium -mt-1 transition-all duration-300',
-                    isScrolled ? 'text-xs text-amber-600' : 'text-sm text-amber-400'
+                    (isScrolled || isMobileMenuOpen) ? 'text-xs text-amber-600' : 'text-sm text-amber-400'
                   )}
                 >
                   Insan Prihatin
@@ -181,7 +181,7 @@ export default function Header() {
                   className={cn(
                     'relative font-medium text-sm tracking-wide transition-all duration-300',
                     'hover:text-teal-500 group py-2',
-                    isScrolled
+                    (isScrolled || isMobileMenuOpen)
                       ? 'text-foundation-charcoal'
                       : 'text-white drop-shadow-sm'
                   )}
@@ -258,54 +258,102 @@ export default function Header() {
           </nav>
         </div>
 
-        {/* Mobile Menu - Full Screen Overlay */}
-        <AnimatePresence>
-          {isMobileMenuOpen && (
+      </header>
+
+      {/* Mobile Menu - Full Screen Overlay (outside header for proper z-index stacking) */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            id="mobile-menu"
+            ref={mobileMenuRef}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="lg:hidden fixed inset-0 z-[60] bg-white"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Mobile navigation menu"
+          >
+            {/* Menu Header - matches main header */}
+            <div className="bg-white border-b border-gray-100">
+              <div className="container-wide py-2">
+                <div className="flex items-center justify-between">
+                  <Link
+                    href="/"
+                    onClick={closeMobileMenu}
+                    className="flex items-center gap-3"
+                  >
+                    <div className="relative w-10 h-10">
+                      <Image
+                        src="/images/logo.png"
+                        alt="Yayasan Insan Prihatin"
+                        fill
+                        className="object-contain"
+                      />
+                    </div>
+                    <div>
+                      <span className="font-display text-lg font-bold text-foundation-charcoal">
+                        Yayasan
+                      </span>
+                      <span className="block font-heading text-xs font-medium -mt-1 text-amber-600">
+                        Insan Prihatin
+                      </span>
+                    </div>
+                  </Link>
+                  <button
+                    onClick={closeMobileMenu}
+                    className="p-2 -mr-2 rounded-lg text-foundation-charcoal hover:bg-gray-100 transition-colors"
+                    aria-label="Close menu"
+                  >
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Menu Content */}
             <motion.div
-              id="mobile-menu"
-              ref={mobileMenuRef}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="lg:hidden fixed inset-0 top-0 z-40 bg-white"
-              role="dialog"
-              aria-modal="true"
-              aria-label="Mobile navigation menu"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="container-wide py-8 overflow-y-auto"
+              style={{ maxHeight: 'calc(100vh - 80px)' }}
             >
-              {/* Menu Header - matches main header */}
-              <div className="bg-white border-b border-gray-100">
-                <div className="container-wide py-2">
-                  <div className="flex items-center justify-between">
+              <nav className="space-y-1" aria-label="Mobile menu">
+                {navigation.map((item, index) => (
+                  <motion.div
+                    key={item.name}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 + index * 0.05 }}
+                  >
                     <Link
-                      href="/"
+                      ref={index === 0 ? firstMenuItemRef : null}
+                      href={item.href}
                       onClick={closeMobileMenu}
-                      className="flex items-center gap-3"
+                      className={cn(
+                        'flex items-center justify-between py-4 px-4 -mx-4 text-lg font-medium',
+                        'text-foundation-charcoal hover:text-teal-500 hover:bg-gray-50',
+                        'rounded-xl transition-all duration-200',
+                        'focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400'
+                      )}
                     >
-                      <div className="relative w-10 h-10">
-                        <Image
-                          src="/images/logo.png"
-                          alt="Yayasan Insan Prihatin"
-                          fill
-                          className="object-contain"
-                        />
-                      </div>
-                      <div>
-                        <span className="font-display text-lg font-bold text-foundation-charcoal">
-                          Yayasan
-                        </span>
-                        <span className="block font-heading text-xs font-medium -mt-1 text-amber-600">
-                          Insan Prihatin
-                        </span>
-                      </div>
-                    </Link>
-                    <button
-                      onClick={closeMobileMenu}
-                      className="p-2 -mr-2 rounded-lg text-foundation-charcoal hover:bg-gray-100 transition-colors"
-                      aria-label="Close menu"
-                    >
+                      {item.name}
                       <svg
-                        className="w-6 h-6"
+                        className="w-5 h-5 text-gray-400"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -314,122 +362,75 @@ export default function Header() {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
+                          d="M9 5l7 7-7 7"
                         />
                       </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </nav>
 
-              {/* Menu Content */}
+              {/* CTA Section */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="container-wide py-8 overflow-y-auto"
-                style={{ maxHeight: 'calc(100vh - 80px)' }}
+                transition={{ delay: 0.3 }}
+                className="mt-8 pt-8 border-t border-gray-100"
               >
-                <nav className="space-y-1" aria-label="Mobile menu">
-                  {navigation.map((item, index) => (
-                    <motion.div
-                      key={item.name}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.1 + index * 0.05 }}
-                    >
-                      <Link
-                        ref={index === 0 ? firstMenuItemRef : null}
-                        href={item.href}
-                        onClick={closeMobileMenu}
-                        className={cn(
-                          'flex items-center justify-between py-4 px-4 -mx-4 text-lg font-medium',
-                          'text-foundation-charcoal hover:text-teal-500 hover:bg-gray-50',
-                          'rounded-xl transition-all duration-200',
-                          'focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400'
-                        )}
-                      >
-                        {item.name}
-                        <svg
-                          className="w-5 h-5 text-gray-400"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 5l7 7-7 7"
-                          />
-                        </svg>
-                      </Link>
-                    </motion.div>
-                  ))}
-                </nav>
-
-                {/* CTA Section */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="mt-8 pt-8 border-t border-gray-100"
+                <Link
+                  href="/donate"
+                  onClick={closeMobileMenu}
+                  className="btn-secondary w-full text-center"
                 >
-                  <Link
-                    href="/donate"
-                    onClick={closeMobileMenu}
-                    className="btn-secondary w-full text-center"
-                  >
-                    Donate Now
-                  </Link>
+                  Donate Now
+                </Link>
 
-                  {/* Contact Info */}
-                  <div className="mt-8 space-y-4 text-sm text-gray-500">
-                    <a
-                      href="mailto:info@insanprihatin.org"
-                      className="flex items-center gap-3 hover:text-teal-500 transition-colors"
+                {/* Contact Info */}
+                <div className="mt-8 space-y-4 text-sm text-gray-500">
+                  <a
+                    href="mailto:info@insanprihatin.org"
+                    className="flex items-center gap-3 hover:text-teal-500 transition-colors"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
                     >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={1.5}
-                          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                        />
-                      </svg>
-                      info@insanprihatin.org
-                    </a>
-                    <a
-                      href="tel:+60123456789"
-                      className="flex items-center gap-3 hover:text-teal-500 transition-colors"
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                      />
+                    </svg>
+                    info@insanprihatin.org
+                  </a>
+                  <a
+                    href="tel:+60123456789"
+                    className="flex items-center gap-3 hover:text-teal-500 transition-colors"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
                     >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={1.5}
-                          d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                        />
-                      </svg>
-                      +60 12-345 6789
-                    </a>
-                  </div>
-                </motion.div>
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                      />
+                    </svg>
+                    +60 12-345 6789
+                  </a>
+                </div>
               </motion.div>
             </motion.div>
-          )}
-        </AnimatePresence>
-      </header>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Backdrop for mobile menu */}
       <AnimatePresence>
@@ -438,7 +439,7 @@ export default function Header() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/20 z-30 lg:hidden"
+            className="fixed inset-0 bg-black/20 z-[55] lg:hidden"
             onClick={closeMobileMenu}
             aria-hidden="true"
           />
