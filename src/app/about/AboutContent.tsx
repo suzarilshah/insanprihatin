@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRef } from 'react'
+import { OrgChart } from '@/components/org-chart'
 
 type TeamMember = {
   id: string
@@ -509,7 +510,7 @@ export default function AboutContent({ teamMembers, aboutData, impactStats }: Ab
         </div>
       </section>
 
-      {/* Leadership Section - Premium */}
+      {/* Leadership Section - Premium Org Chart */}
       <section id="leadership" className="section-padding bg-white relative overflow-hidden">
         <div className="absolute inset-0 bg-dots opacity-30" />
 
@@ -518,14 +519,14 @@ export default function AboutContent({ teamMembers, aboutData, impactStats }: Ab
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-12"
           >
             <div className="badge-premium mx-auto mb-6">
               <span className="accent-dot" />
-              <span className="text-sm font-medium text-teal-700">Leadership</span>
+              <span className="text-sm font-medium text-teal-700">Our People</span>
             </div>
             <h2 className="heading-section text-foundation-charcoal mb-6">
-              Meet Our Team
+              Organizational Structure
             </h2>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
               Our dedicated leadership team brings together decades of experience in
@@ -533,93 +534,19 @@ export default function AboutContent({ teamMembers, aboutData, impactStats }: Ab
             </p>
           </motion.div>
 
-          {/* Department Legend - Premium Pills */}
-          {departments.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="flex flex-wrap justify-center gap-3 mb-16"
-            >
-              {departments.map((dept, i) => (
-                <motion.div
-                  key={dept.name}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.05 }}
-                  className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-gray-200 shadow-sm"
-                >
-                  <div className={`w-3 h-3 rounded-full bg-gradient-to-r ${dept.color}`} />
-                  <span className="text-sm text-gray-600 font-medium">{dept.name}</span>
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
-
-          {/* Leadership Grid - Premium Cards */}
-          {teamMembers.length > 0 ? (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {teamMembers.map((member, index) => {
-                const deptIndex = departments.findIndex(d => d.name === member.department)
-                const deptColor = deptIndex >= 0 ? departments[deptIndex].color : 'from-gray-500 to-gray-600'
-
-                return (
-                  <motion.div
-                    key={member.id}
-                    initial={{ opacity: 0, y: 40 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.05 }}
-                    whileHover={{ y: -8 }}
-                    className="card-elegant overflow-hidden group"
-                  >
-                    {/* Top color bar */}
-                    <div className={`h-1.5 bg-gradient-to-r ${deptColor}`} />
-
-                    <div className="p-8 text-center">
-                      {/* Avatar */}
-                      <div className="relative w-28 h-28 mx-auto mb-6">
-                        <div className={`absolute inset-0 rounded-full bg-gradient-to-br ${deptColor} opacity-20 group-hover:opacity-30 transition-opacity`} />
-                        <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-white shadow-elevated">
-                          {member.image ? (
-                            <Image
-                              src={member.image}
-                              alt={member.name}
-                              fill
-                              className="object-cover"
-                            />
-                          ) : (
-                            <div className={`w-full h-full bg-gradient-to-br ${deptColor} flex items-center justify-center text-white text-2xl font-display font-bold`}>
-                              {member.name.split(' ').map((n) => n[0]).slice(0, 2).join('')}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <h3 className="font-heading text-lg font-semibold text-foundation-charcoal mb-1 group-hover:text-teal-600 transition-colors">
-                        {member.name}
-                      </h3>
-                      <p className="text-teal-600 text-sm font-medium mb-2">{member.position}</p>
-                      {member.department && (
-                        <p className="text-gray-400 text-xs font-medium uppercase tracking-wide">{member.department}</p>
-                      )}
-                    </div>
-                  </motion.div>
-                )
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-16">
-              <div className="text-6xl mb-4">👥</div>
-              <h3 className="font-heading text-xl font-semibold text-foundation-charcoal mb-2">
-                Team Coming Soon
-              </h3>
-              <p className="text-gray-500 mb-6">
-                Our team information is being updated. Check back soon!
-              </p>
-            </div>
-          )}
+          {/* Premium Org Chart Component */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+          >
+            <OrgChart
+              members={teamMembers as Parameters<typeof OrgChart>[0]['members']}
+              variant="department"
+              showFilters={true}
+            />
+          </motion.div>
         </div>
       </section>
 

@@ -47,7 +47,11 @@ export const teamMembers = pgTable('team_members', {
   linkedin: text('linkedin'),
   sortOrder: integer('sort_order').default(0),
   parentId: uuid('parent_id'),
+  hierarchyLevel: integer('hierarchy_level').default(0), // 0 = top level, 1 = reports to level 0, etc.
   isActive: boolean('is_active').default(true),
+  // M365 Integration fields (for future use)
+  microsoftId: text('microsoft_id'), // Azure AD Object ID for M365 sync
+  microsoftSyncedAt: timestamp('microsoft_synced_at'), // Last sync timestamp
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })

@@ -173,3 +173,51 @@ export async function getDepartments() {
   const departments = [...new Set(members.map((m) => m.department).filter(Boolean))]
   return departments
 }
+
+// Get team members in hierarchical structure
+export async function getTeamHierarchy() {
+  const members = await db.query.teamMembers.findMany({
+    where: eq(teamMembers.isActive, true),
+    orderBy: [asc(teamMembers.sortOrder), asc(teamMembers.name)],
+  })
+
+  return members
+}
+
+// Get direct reports of a team member
+export async function getDirectReports(parentId: string) {
+  const reports = await db.query.teamMembers.findMany({
+    where: and(
+      eq(teamMembers.parentId, parentId),
+      eq(teamMembers.isActive, true)
+    ),
+    orderBy: [asc(teamMembers.sortOrder), asc(teamMembers.name)],
+  })
+
+  return reports
+}
+
+// Get all potential parent members (for dropdown in admin)
+export async function getPotentialParents(excludeId?: string) {
+  const conditions = [eq(teamMembers.isActive, true)]
+
+  // If excluding a member (e.g., when editing), also exclude that member's descendants
+  // to prevent circular references
+
+  const members = await db.query.teamMembers.findMany({
+    where: and(...conditions),
+    orderBy: [asc(teamMembers.department), asc(teamMembers.sortOrder), asc(teamMembers.name)],
+  })
+
+  // If we have an excludeId, filter out the member and their descendants
+  if (excludeId) {
+    const getDescendantIds = (parentId: string): string[] => {
+      const children = members.filter(m => m.parentId === parentId)
+      return [parentId, ...children.flatMap(c => getDescendantIds(c.id))]
+    }
+    const excludeIds = getDescendantIds(excludeId)
+    return members.filter(m => !excludeIds.includes(m.id))
+  }
+
+  return members
+}
