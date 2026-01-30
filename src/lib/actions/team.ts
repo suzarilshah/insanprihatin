@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { db, teamMembers } from '@/db'
 import { eq, asc, and } from 'drizzle-orm'
-import { requireAuth } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth-server'
 import { createVersion, logActivity } from '@/lib/versioning'
 
 export async function getTeamMembers(options?: { department?: string; active?: boolean }) {

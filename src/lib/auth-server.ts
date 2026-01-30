@@ -23,6 +23,14 @@ export interface SessionPayload {
   exp: number
 }
 
+// Auth user type (compatible with action files)
+export interface AuthUser {
+  id: string
+  email: string
+  name: string
+  role: string
+}
+
 // Create a session token
 export async function createSession(user: {
   id: string
@@ -193,7 +201,7 @@ async function verifyPassword(password: string, email: string): Promise<boolean>
 }
 
 // Check if user is authenticated admin
-export async function requireAuth(): Promise<SessionPayload> {
+export async function requireAuth(): Promise<AuthUser> {
   const session = await getSession()
 
   if (!session) {
@@ -210,5 +218,11 @@ export async function requireAuth(): Promise<SessionPayload> {
     throw new Error('Session invalid')
   }
 
-  return session
+  // Return AuthUser format (with id instead of userId)
+  return {
+    id: session.userId,
+    email: session.email,
+    name: session.name,
+    role: session.role,
+  }
 }

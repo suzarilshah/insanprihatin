@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { db, projects } from '@/db'
 import { eq, desc, and } from 'drizzle-orm'
-import { requireAuth } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth-server'
 import { createVersion, logActivity } from '@/lib/versioning'
 
 export async function getProjects(options?: { published?: boolean; category?: string; status?: string; limit?: number }) {
