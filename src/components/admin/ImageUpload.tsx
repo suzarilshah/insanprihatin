@@ -2,7 +2,9 @@
 
 import { useState, useRef, useCallback } from 'react'
 import Image from 'next/image'
+import { motion, AnimatePresence } from 'framer-motion'
 import { uploadFile, getFileUrl, deleteFile } from '@/lib/appwrite'
+import StockPhotoSelector from './StockPhotoSelector'
 
 interface ImageUploadProps {
   value: string
@@ -12,6 +14,7 @@ interface ImageUploadProps {
   aspectRatio?: 'square' | 'video' | 'portrait' | 'wide'
   maxSizeMB?: number
   className?: string
+  showStockPhotos?: boolean
 }
 
 const aspectRatioClasses = {
@@ -21,6 +24,8 @@ const aspectRatioClasses = {
   wide: 'aspect-[21/9]',
 }
 
+type Tab = 'upload' | 'stock'
+
 export default function ImageUpload({
   value,
   onChange,
@@ -29,7 +34,9 @@ export default function ImageUpload({
   aspectRatio = 'video',
   maxSizeMB = 10,
   className = '',
+  showStockPhotos = true,
 }: ImageUploadProps) {
+  const [activeTab, setActiveTab] = useState<Tab>('upload')
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
@@ -160,6 +167,18 @@ export default function ImageUpload({
     }
   }
 
+  const handleStockPhotoSelect = (url: string) => {
+    // Delete previous image if exists
+    const previousFileId = extractFileId(value)
+    if (previousFileId) {
+      deleteFile(previousFileId).catch(() => {
+        console.log('Previous file deletion failed, continuing...')
+      })
+    }
+    onChange(url)
+    setActiveTab('upload') // Switch back to upload tab to show preview
+  }
+
   return (
     <div className={className}>
       {label && (
@@ -227,50 +246,110 @@ export default function ImageUpload({
           </div>
         </div>
       ) : (
-        // Upload mode
-        <div
-          onClick={handleClick}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          className={`relative ${aspectRatioClasses[aspectRatio]} border-2 border-dashed rounded-xl transition-all cursor-pointer ${
-            isDragging
-              ? 'border-teal-500 bg-teal-50'
-              : 'border-gray-200 hover:border-teal-300 hover:bg-gray-50'
-          } ${isUploading ? 'pointer-events-none' : ''}`}
-        >
-          <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
-            {isUploading ? (
-              // Upload progress
-              <>
-                <div className="w-12 h-12 mb-3 rounded-full border-4 border-teal-500 border-t-transparent animate-spin" />
-                <p className="text-gray-600 text-sm mb-2">Uploading... {uploadProgress}%</p>
-                <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-teal-500 transition-all duration-300"
-                    style={{ width: `${uploadProgress}%` }}
-                  />
+        // Upload/Stock mode with tabs
+        <div className="border border-gray-200 rounded-xl overflow-hidden">
+          {/* Tab Header */}
+          {showStockPhotos && (
+            <div className="flex border-b border-gray-200">
+              <button
+                type="button"
+                onClick={() => setActiveTab('upload')}
+                className={`flex-1 px-4 py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+                  activeTab === 'upload'
+                    ? 'text-teal-600 bg-teal-50 border-b-2 border-teal-500 -mb-px'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                Upload
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('stock')}
+                className={`flex-1 px-4 py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+                  activeTab === 'stock'
+                    ? 'text-teal-600 bg-teal-50 border-b-2 border-teal-500 -mb-px'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Stock Photos
+              </button>
+            </div>
+          )}
+
+          {/* Tab Content */}
+          <AnimatePresence mode="wait">
+            {activeTab === 'upload' ? (
+              <motion.div
+                key="upload"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.15 }}
+              >
+                <div
+                  onClick={handleClick}
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  className={`relative ${aspectRatioClasses[aspectRatio]} transition-all cursor-pointer ${
+                    isDragging
+                      ? 'bg-teal-50'
+                      : 'bg-gray-50 hover:bg-gray-100'
+                  } ${isUploading ? 'pointer-events-none' : ''}`}
+                >
+                  <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
+                    {isUploading ? (
+                      // Upload progress
+                      <>
+                        <div className="w-12 h-12 mb-3 rounded-full border-4 border-teal-500 border-t-transparent animate-spin" />
+                        <p className="text-gray-600 text-sm mb-2">Uploading... {uploadProgress}%</p>
+                        <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-teal-500 transition-all duration-300"
+                            style={{ width: `${uploadProgress}%` }}
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      // Default upload UI
+                      <>
+                        <div className="w-12 h-12 mb-3 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                          <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                          </svg>
+                        </div>
+                        <p className="text-gray-600 text-sm text-center">
+                          <span className="text-teal-600 font-medium">Click to upload</span>
+                          <br />
+                          <span className="text-gray-400">or drag and drop</span>
+                        </p>
+                        <p className="text-gray-400 text-xs mt-2">
+                          PNG, JPG, GIF, WebP up to {maxSizeMB}MB
+                        </p>
+                      </>
+                    )}
+                  </div>
                 </div>
-              </>
+              </motion.div>
             ) : (
-              // Default upload UI
-              <>
-                <div className="w-12 h-12 mb-3 bg-gray-100 rounded-xl flex items-center justify-center">
-                  <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <p className="text-gray-600 text-sm text-center">
-                  <span className="text-teal-600 font-medium">Click to upload</span>
-                  <br />
-                  <span className="text-gray-400">or drag and drop</span>
-                </p>
-                <p className="text-gray-400 text-xs mt-2">
-                  PNG, JPG, GIF, WebP up to {maxSizeMB}MB
-                </p>
-              </>
+              <motion.div
+                key="stock"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.15 }}
+                className="p-4"
+              >
+                <StockPhotoSelector onSelect={handleStockPhotoSelect} />
+              </motion.div>
             )}
-          </div>
+          </AnimatePresence>
         </div>
       )}
 

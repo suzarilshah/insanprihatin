@@ -40,7 +40,8 @@
     "rehype-raw": "^7.0.0",
     "rehype-sanitize": "^6.0.0",
     "remark-gfm": "^4.0.1",
-    "resend": "^6.9.1"
+    "resend": "^6.9.1",
+    "unsplash-js": "^7.0.20"
   },
   "devDependencies": {
     "@types/node": "^25.0.10",
