@@ -5,6 +5,51 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRef } from 'react'
 
+type TeamMember = {
+  id: string
+  name: string
+  position: string
+  department: string | null
+  bio: string | null
+  image: string | null
+  email: string | null
+  phone: string | null
+  linkedin: string | null
+  sortOrder: number | null
+  parentId: string | null
+  isActive: boolean | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+type AboutData = {
+  id: string
+  title: string
+  content: string
+  mission: string | null
+  vision: string | null
+  values: unknown
+  image: string | null
+  updatedAt: Date
+} | null
+
+type ImpactStat = {
+  id: string
+  label: string
+  value: string
+  suffix: string | null
+  icon: string | null
+  sortOrder: number | null
+  isActive: boolean | null
+  updatedAt: Date
+}
+
+interface AboutContentProps {
+  teamMembers: TeamMember[]
+  aboutData: AboutData
+  impactStats: ImpactStat[]
+}
+
 const timeline = [
   {
     year: '2010',
@@ -44,58 +89,7 @@ const timeline = [
   },
 ]
 
-const leadership = [
-  {
-    name: 'Dato\' Ahmad Rahman',
-    position: 'Chairman',
-    department: 'Board of Trustees',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face',
-  },
-  {
-    name: 'Puan Sri Fatimah Hassan',
-    position: 'Deputy Chairman',
-    department: 'Board of Trustees',
-    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop&crop=face',
-  },
-  {
-    name: 'Dr. Lee Wei Ming',
-    position: 'Chief Executive Officer',
-    department: 'Executive Leadership',
-    image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face',
-  },
-  {
-    name: 'Encik Mohd Azlan',
-    position: 'Chief Operating Officer',
-    department: 'Executive Leadership',
-    image: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&h=400&fit=crop&crop=face',
-  },
-  {
-    name: 'Cik Nurul Aisyah',
-    position: 'Director of Programs',
-    department: 'Program Management',
-    image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop&crop=face',
-  },
-  {
-    name: 'Mr. Rajesh Kumar',
-    position: 'Director of Finance',
-    department: 'Finance & Administration',
-    image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop&crop=face',
-  },
-  {
-    name: 'Puan Siti Aminah',
-    position: 'Director of Communications',
-    department: 'Communications & PR',
-    image: 'https://images.unsplash.com/photo-1598550874175-4d0ef436c909?w=400&h=400&fit=crop&crop=face',
-  },
-  {
-    name: 'Encik Abdullah Ibrahim',
-    position: 'Director of Partnerships',
-    department: 'Strategic Partnerships',
-    image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=400&fit=crop&crop=face',
-  },
-]
-
-const departments = [
+const defaultDepartments = [
   { name: 'Board of Trustees', color: 'from-amber-500 to-amber-600' },
   { name: 'Executive Leadership', color: 'from-teal-500 to-teal-600' },
   { name: 'Program Management', color: 'from-sky-500 to-sky-600' },
@@ -104,14 +98,25 @@ const departments = [
   { name: 'Strategic Partnerships', color: 'from-rose-500 to-rose-600' },
 ]
 
-const impactStats = [
+const defaultImpactStats = [
   { value: '50K+', label: 'Lives Impacted', description: 'Individuals directly benefited from our programs' },
   { value: 'RM 15M', label: 'Funds Channeled', description: 'Transparently managed for maximum impact' },
   { value: '13', label: 'States Covered', description: 'Reaching communities across Malaysia' },
   { value: '98%', label: 'Fund Utilization', description: 'Directly supporting our programs' },
 ]
 
-export default function AboutContent() {
+const departmentColors = [
+  'from-amber-500 to-amber-600',
+  'from-teal-500 to-teal-600',
+  'from-sky-500 to-sky-600',
+  'from-emerald-500 to-emerald-600',
+  'from-purple-500 to-purple-600',
+  'from-rose-500 to-rose-600',
+  'from-blue-500 to-blue-600',
+  'from-pink-500 to-pink-600',
+]
+
+export default function AboutContent({ teamMembers, aboutData, impactStats }: AboutContentProps) {
   const heroRef = useRef<HTMLElement>(null)
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -119,6 +124,27 @@ export default function AboutContent() {
   })
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
   const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1])
+
+  // Get unique departments from team members
+  const uniqueDepartments = [...new Set(teamMembers.map(m => m.department).filter(Boolean))]
+  const departments = uniqueDepartments.map((dept, i) => ({
+    name: dept!,
+    color: departmentColors[i % departmentColors.length]
+  }))
+
+  // Use database impact stats if available, otherwise fallback to defaults
+  const displayImpactStats = impactStats.length > 0
+    ? impactStats.map(stat => ({
+        value: stat.value + (stat.suffix || ''),
+        label: stat.label,
+        description: `${stat.label}`,
+      }))
+    : defaultImpactStats
+
+  // Use about data if available
+  const mission = aboutData?.mission || 'To empower underprivileged communities through sustainable programs in education, healthcare, and economic development, creating lasting positive change across Malaysia.'
+  const vision = aboutData?.vision || 'A Malaysia where every individual has equal opportunities to thrive, contribute to society, and live with dignity regardless of their background or circumstances.'
+  const values = (aboutData?.values as string[] | null) || ['Compassion', 'Integrity', 'Excellence', 'Collaboration', 'Innovation']
 
   return (
     <div>
@@ -228,7 +254,7 @@ export default function AboutContent() {
       <section className="relative py-20 bg-white -mt-20 rounded-t-[3rem] z-20">
         <div className="container-wide">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {impactStats.map((stat, index) => (
+            {displayImpactStats.map((stat, index) => (
               <motion.div
                 key={stat.label}
                 initial={{ opacity: 0, y: 40 }}
@@ -269,7 +295,7 @@ export default function AboutContent() {
                 {/* Main image */}
                 <div className="relative aspect-[4/3] rounded-3xl overflow-hidden shadow-dramatic">
                   <Image
-                    src="https://images.unsplash.com/photo-1559027615-cd4628902d4a?q=80&w=2574"
+                    src={aboutData?.image || "https://images.unsplash.com/photo-1559027615-cd4628902d4a?q=80&w=2574"}
                     alt="Community gathering"
                     fill
                     className="object-cover"
@@ -335,9 +361,7 @@ export default function AboutContent() {
                       <h3 className="font-heading text-xl font-semibold text-teal-700">Our Mission</h3>
                     </div>
                     <p className="text-gray-600 leading-relaxed">
-                      To empower underprivileged communities through sustainable programs in
-                      education, healthcare, and economic development, creating lasting positive
-                      change across Malaysia.
+                      {mission}
                     </p>
                   </div>
                 </motion.div>
@@ -362,9 +386,7 @@ export default function AboutContent() {
                       <h3 className="font-heading text-xl font-semibold text-amber-700">Our Vision</h3>
                     </div>
                     <p className="text-gray-600 leading-relaxed">
-                      A Malaysia where every individual has equal opportunities to thrive,
-                      contribute to society, and live with dignity regardless of their
-                      background or circumstances.
+                      {vision}
                     </p>
                   </div>
                 </motion.div>
@@ -386,16 +408,16 @@ export default function AboutContent() {
                     <h3 className="font-heading text-xl font-semibold text-sky-700">Our Values</h3>
                   </div>
                   <div className="flex flex-wrap gap-3">
-                    {['Compassion', 'Integrity', 'Excellence', 'Collaboration', 'Innovation'].map((value, i) => (
+                    {(Array.isArray(values) ? values : ['Compassion', 'Integrity', 'Excellence', 'Collaboration', 'Innovation']).map((value, i) => (
                       <motion.span
-                        key={value}
+                        key={String(value)}
                         initial={{ opacity: 0, scale: 0.8 }}
                         whileInView={{ opacity: 1, scale: 1 }}
                         viewport={{ once: true }}
                         transition={{ delay: 0.5 + i * 0.1 }}
                         className="px-5 py-2.5 bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:border-teal-300 hover:shadow-md transition-all duration-300"
                       >
-                        {value}
+                        {String(value)}
                       </motion.span>
                     ))}
                   </div>
@@ -512,75 +534,92 @@ export default function AboutContent() {
           </motion.div>
 
           {/* Department Legend - Premium Pills */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="flex flex-wrap justify-center gap-3 mb-16"
-          >
-            {departments.map((dept, i) => (
-              <motion.div
-                key={dept.name}
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-gray-200 shadow-sm"
-              >
-                <div className={`w-3 h-3 rounded-full bg-gradient-to-r ${dept.color}`} />
-                <span className="text-sm text-gray-600 font-medium">{dept.name}</span>
-              </motion.div>
-            ))}
-          </motion.div>
+          {departments.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="flex flex-wrap justify-center gap-3 mb-16"
+            >
+              {departments.map((dept, i) => (
+                <motion.div
+                  key={dept.name}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.05 }}
+                  className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-gray-200 shadow-sm"
+                >
+                  <div className={`w-3 h-3 rounded-full bg-gradient-to-r ${dept.color}`} />
+                  <span className="text-sm text-gray-600 font-medium">{dept.name}</span>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
 
           {/* Leadership Grid - Premium Cards */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {leadership.map((member, index) => {
-              const deptColor = departments.find((d) => d.name === member.department)?.color || 'from-gray-500 to-gray-600'
+          {teamMembers.length > 0 ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {teamMembers.map((member, index) => {
+                const deptIndex = departments.findIndex(d => d.name === member.department)
+                const deptColor = deptIndex >= 0 ? departments[deptIndex].color : 'from-gray-500 to-gray-600'
 
-              return (
-                <motion.div
-                  key={member.name}
-                  initial={{ opacity: 0, y: 40 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.05 }}
-                  whileHover={{ y: -8 }}
-                  className="card-elegant overflow-hidden group"
-                >
-                  {/* Top color bar */}
-                  <div className={`h-1.5 bg-gradient-to-r ${deptColor}`} />
+                return (
+                  <motion.div
+                    key={member.id}
+                    initial={{ opacity: 0, y: 40 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.05 }}
+                    whileHover={{ y: -8 }}
+                    className="card-elegant overflow-hidden group"
+                  >
+                    {/* Top color bar */}
+                    <div className={`h-1.5 bg-gradient-to-r ${deptColor}`} />
 
-                  <div className="p-8 text-center">
-                    {/* Avatar */}
-                    <div className="relative w-28 h-28 mx-auto mb-6">
-                      <div className={`absolute inset-0 rounded-full bg-gradient-to-br ${deptColor} opacity-20 group-hover:opacity-30 transition-opacity`} />
-                      <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-white shadow-elevated">
-                        {member.image ? (
-                          <Image
-                            src={member.image}
-                            alt={member.name}
-                            fill
-                            className="object-cover"
-                          />
-                        ) : (
-                          <div className={`w-full h-full bg-gradient-to-br ${deptColor} flex items-center justify-center text-white text-2xl font-display font-bold`}>
-                            {member.name.split(' ').map((n) => n[0]).slice(0, 2).join('')}
-                          </div>
-                        )}
+                    <div className="p-8 text-center">
+                      {/* Avatar */}
+                      <div className="relative w-28 h-28 mx-auto mb-6">
+                        <div className={`absolute inset-0 rounded-full bg-gradient-to-br ${deptColor} opacity-20 group-hover:opacity-30 transition-opacity`} />
+                        <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-white shadow-elevated">
+                          {member.image ? (
+                            <Image
+                              src={member.image}
+                              alt={member.name}
+                              fill
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className={`w-full h-full bg-gradient-to-br ${deptColor} flex items-center justify-center text-white text-2xl font-display font-bold`}>
+                              {member.name.split(' ').map((n) => n[0]).slice(0, 2).join('')}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
 
-                    <h3 className="font-heading text-lg font-semibold text-foundation-charcoal mb-1 group-hover:text-teal-600 transition-colors">
-                      {member.name}
-                    </h3>
-                    <p className="text-teal-600 text-sm font-medium mb-2">{member.position}</p>
-                    <p className="text-gray-400 text-xs font-medium uppercase tracking-wide">{member.department}</p>
-                  </div>
-                </motion.div>
-              )
-            })}
-          </div>
+                      <h3 className="font-heading text-lg font-semibold text-foundation-charcoal mb-1 group-hover:text-teal-600 transition-colors">
+                        {member.name}
+                      </h3>
+                      <p className="text-teal-600 text-sm font-medium mb-2">{member.position}</p>
+                      {member.department && (
+                        <p className="text-gray-400 text-xs font-medium uppercase tracking-wide">{member.department}</p>
+                      )}
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <div className="text-6xl mb-4">👥</div>
+              <h3 className="font-heading text-xl font-semibold text-foundation-charcoal mb-2">
+                Team Coming Soon
+              </h3>
+              <p className="text-gray-500 mb-6">
+                Our team information is being updated. Check back soon!
+              </p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -615,7 +654,7 @@ export default function AboutContent() {
               </h2>
               <p className="text-gray-400 text-lg leading-relaxed mb-10">
                 We believe in complete transparency. Our annual reports provide detailed
-                insights into our programs, financial allocation, and the impact we've
+                insights into our programs, financial allocation, and the impact we&apos;ve
                 created together with our donors and partners.
               </p>
 
@@ -639,7 +678,7 @@ export default function AboutContent() {
                       </div>
                       <div>
                         <div className="text-white font-semibold text-lg">Annual Report {year}</div>
-                        <div className="text-gray-500 text-sm">PDF Document • 2.5 MB</div>
+                        <div className="text-gray-500 text-sm">PDF Document</div>
                       </div>
                     </div>
                     <svg className="w-6 h-6 text-gray-500 group-hover:text-amber-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">

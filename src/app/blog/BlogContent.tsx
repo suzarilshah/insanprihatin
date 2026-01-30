@@ -6,88 +6,34 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { formatDate } from '@/lib/utils'
 
-const categories = [
-  { id: 'all', name: 'All Posts', icon: '📰', count: 6 },
-  { id: 'news', name: 'News', icon: '📢', count: 2 },
-  { id: 'stories', name: 'Impact Stories', icon: '💫', count: 2 },
-  { id: 'events', name: 'Events', icon: '🎉', count: 1 },
-  { id: 'announcements', name: 'Announcements', icon: '📣', count: 1 },
-]
+type BlogPost = {
+  id: string
+  slug: string
+  title: string
+  excerpt: string | null
+  content: string
+  featuredImage: string | null
+  authorId: string | null
+  category: string | null
+  tags: unknown
+  isPublished: boolean | null
+  publishedAt: Date | null
+  metaTitle: string | null
+  metaDescription: string | null
+  createdAt: Date
+  updatedAt: Date
+}
 
-const samplePosts = [
-  {
-    id: '1',
-    slug: 'annual-report-2025',
-    title: 'Yayasan Insan Prihatin Releases 2025 Annual Report',
-    excerpt: 'Our comprehensive report showcases the remarkable impact achieved across all programs, with over RM 15 million deployed to communities in need.',
-    category: 'announcements',
-    author: 'Admin',
-    authorImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-    publishedAt: '2026-01-15',
-    image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=2670',
-    readTime: '5 min',
-    featured: true,
-  },
-  {
-    id: '2',
-    slug: 'scholarship-recipients-success',
-    title: 'From Struggle to Success: How Scholarships Changed Their Lives',
-    excerpt: 'Meet three scholarship recipients who have overcome adversity to achieve academic excellence and are now giving back to their communities.',
-    category: 'stories',
-    author: 'Communications Team',
-    authorImage: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&crop=face',
-    publishedAt: '2026-01-10',
-    image: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2670',
-    readTime: '8 min',
-  },
-  {
-    id: '3',
-    slug: 'medical-camp-sabah',
-    title: 'Medical Camp Reaches 1,000 Villagers in Rural Sabah',
-    excerpt: 'Our mobile health unit successfully provided free medical consultations and treatments to underserved communities in remote areas.',
-    category: 'news',
-    author: 'Healthcare Program',
-    authorImage: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face',
-    publishedAt: '2026-01-05',
-    image: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=2670',
-    readTime: '4 min',
-  },
-  {
-    id: '4',
-    slug: 'charity-gala-2026',
-    title: 'Annual Charity Gala 2026: Save the Date',
-    excerpt: 'Join us for an evening of celebration and giving at our upcoming charity gala. Tickets now available for this prestigious event.',
-    category: 'events',
-    author: 'Events Team',
-    authorImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
-    publishedAt: '2025-12-28',
-    image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=2670',
-    readTime: '3 min',
-  },
-  {
-    id: '5',
-    slug: 'tree-planting-milestone',
-    title: '50,000 Trees Planted: A Green Milestone',
-    excerpt: 'We celebrate a significant environmental achievement as our Green Malaysia Initiative reaches the 50,000 trees planted milestone.',
-    category: 'news',
-    author: 'Environment Program',
-    authorImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face',
-    publishedAt: '2025-12-20',
-    image: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=2670',
-    readTime: '4 min',
-  },
-  {
-    id: '6',
-    slug: 'volunteer-appreciation',
-    title: 'Celebrating Our Volunteers: The Heart of Our Mission',
-    excerpt: 'A tribute to the dedicated volunteers who selflessly contribute their time and skills to our various programs across Malaysia.',
-    category: 'stories',
-    author: 'Volunteer Coordination',
-    authorImage: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&crop=face',
-    publishedAt: '2025-12-15',
-    image: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?q=80&w=2574',
-    readTime: '6 min',
-  },
+interface BlogContentProps {
+  posts: BlogPost[]
+}
+
+const defaultCategories = [
+  { id: 'all', name: 'All Posts', icon: '📰' },
+  { id: 'news', name: 'News', icon: '📢' },
+  { id: 'stories', name: 'Impact Stories', icon: '💫' },
+  { id: 'events', name: 'Events', icon: '🎉' },
+  { id: 'announcements', name: 'Announcements', icon: '📣' },
 ]
 
 const categoryColors: Record<string, string> = {
@@ -97,15 +43,47 @@ const categoryColors: Record<string, string> = {
   announcements: 'bg-amber-100 text-amber-700',
 }
 
-export default function BlogContent() {
+const defaultImage = 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=2670'
+const defaultAuthorImage = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face'
+
+export default function BlogContent({ posts }: BlogContentProps) {
   const [activeCategory, setActiveCategory] = useState('all')
 
-  const filteredPosts = activeCategory === 'all'
-    ? samplePosts
-    : samplePosts.filter((p) => p.category === activeCategory)
+  // Get unique categories from posts and merge with defaults
+  const postCategories = [...new Set(posts.map(p => p.category).filter(Boolean))]
+  const categories = defaultCategories.map(cat => ({
+    ...cat,
+    count: cat.id === 'all'
+      ? posts.length
+      : posts.filter(p => p.category === cat.id).length
+  })).filter(cat => cat.id === 'all' || cat.count > 0 || postCategories.includes(cat.id))
 
-  const featuredPost = samplePosts.find((p) => p.featured) || samplePosts[0]
-  const regularPosts = filteredPosts.filter((p) => p.id !== featuredPost.id)
+  // Add any custom categories from posts that aren't in defaults
+  postCategories.forEach(cat => {
+    if (cat && !defaultCategories.find(d => d.id === cat)) {
+      categories.push({
+        id: cat,
+        name: cat.charAt(0).toUpperCase() + cat.slice(1),
+        icon: '📁',
+        count: posts.filter(p => p.category === cat).length
+      })
+    }
+  })
+
+  const filteredPosts = activeCategory === 'all'
+    ? posts
+    : posts.filter((p) => p.category === activeCategory)
+
+  // Use most recent post as featured, or first post
+  const featuredPost = posts[0]
+  const regularPosts = filteredPosts.filter((p) => p.id !== featuredPost?.id)
+
+  // Calculate read time estimate (rough estimate: 200 words per minute)
+  const getReadTime = (content: string) => {
+    const words = content?.split(/\s+/).length || 0
+    const minutes = Math.ceil(words / 200)
+    return `${minutes} min`
+  }
 
   return (
     <div>
@@ -182,86 +160,90 @@ export default function BlogContent() {
       </section>
 
       {/* Featured Post Section */}
-      <section className="relative -mt-16 z-20 pb-16">
-        <div className="container-wide">
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Link
-              href={`/blog/${featuredPost.slug}`}
-              className="block card-elegant overflow-hidden group"
+      {featuredPost && (
+        <section className="relative -mt-16 z-20 pb-16">
+          <div className="container-wide">
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
             >
-              <div className="grid lg:grid-cols-2 min-h-[400px]">
-                <div className="relative aspect-[16/10] lg:aspect-auto overflow-hidden">
-                  <Image
-                    src={featuredPost.image}
-                    alt={featuredPost.title}
-                    fill
-                    className="object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-foundation-charcoal/40 via-transparent to-transparent lg:bg-gradient-to-r" />
-                  <div className="absolute top-6 left-6">
-                    <span className="badge-premium bg-amber-400 text-foundation-charcoal">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                      </svg>
-                      <span className="text-sm font-semibold">Featured</span>
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-8 lg:p-12 flex flex-col justify-center bg-white">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${categoryColors[featuredPost.category] || 'bg-gray-100 text-gray-700'}`}>
-                      {featuredPost.category}
-                    </span>
-                    <span className="text-gray-400">•</span>
-                    <span className="text-gray-500 text-sm">{featuredPost.readTime} read</span>
-                  </div>
-
-                  <h2 className="font-heading text-2xl lg:text-3xl font-bold text-foundation-charcoal mb-4 group-hover:text-teal-600 transition-colors">
-                    {featuredPost.title}
-                  </h2>
-
-                  <p className="text-gray-600 text-lg mb-6 line-clamp-3">
-                    {featuredPost.excerpt}
-                  </p>
-
-                  <div className="flex items-center justify-between pt-6 border-t border-gray-100">
-                    <div className="flex items-center gap-3">
-                      <div className="relative w-10 h-10 rounded-full overflow-hidden">
-                        <Image
-                          src={featuredPost.authorImage}
-                          alt={featuredPost.author}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                      <div>
-                        <div className="font-medium text-foundation-charcoal text-sm">
-                          {featuredPost.author}
-                        </div>
-                        <div className="text-gray-500 text-xs">
-                          {formatDate(featuredPost.publishedAt)}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-teal-600 font-semibold text-sm group-hover:gap-3 transition-all">
-                      Read Article
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                      </svg>
+              <Link
+                href={`/blog/${featuredPost.slug}`}
+                className="block card-elegant overflow-hidden group"
+              >
+                <div className="grid lg:grid-cols-2 min-h-[400px]">
+                  <div className="relative aspect-[16/10] lg:aspect-auto overflow-hidden">
+                    <Image
+                      src={featuredPost.featuredImage || defaultImage}
+                      alt={featuredPost.title}
+                      fill
+                      className="object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-foundation-charcoal/40 via-transparent to-transparent lg:bg-gradient-to-r" />
+                    <div className="absolute top-6 left-6">
+                      <span className="badge-premium bg-amber-400 text-foundation-charcoal">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        <span className="text-sm font-semibold">Featured</span>
+                      </span>
                     </div>
                   </div>
+
+                  <div className="p-8 lg:p-12 flex flex-col justify-center bg-white">
+                    <div className="flex items-center gap-3 mb-4">
+                      {featuredPost.category && (
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${categoryColors[featuredPost.category] || 'bg-gray-100 text-gray-700'}`}>
+                          {featuredPost.category}
+                        </span>
+                      )}
+                      <span className="text-gray-400">•</span>
+                      <span className="text-gray-500 text-sm">{getReadTime(featuredPost.content)} read</span>
+                    </div>
+
+                    <h2 className="font-heading text-2xl lg:text-3xl font-bold text-foundation-charcoal mb-4 group-hover:text-teal-600 transition-colors">
+                      {featuredPost.title}
+                    </h2>
+
+                    <p className="text-gray-600 text-lg mb-6 line-clamp-3">
+                      {featuredPost.excerpt || featuredPost.content.substring(0, 200) + '...'}
+                    </p>
+
+                    <div className="flex items-center justify-between pt-6 border-t border-gray-100">
+                      <div className="flex items-center gap-3">
+                        <div className="relative w-10 h-10 rounded-full overflow-hidden">
+                          <Image
+                            src={defaultAuthorImage}
+                            alt="Author"
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <div>
+                          <div className="font-medium text-foundation-charcoal text-sm">
+                            Admin
+                          </div>
+                          <div className="text-gray-500 text-xs">
+                            {featuredPost.publishedAt ? formatDate(featuredPost.publishedAt) : formatDate(featuredPost.createdAt)}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-teal-600 font-semibold text-sm group-hover:gap-3 transition-all">
+                        Read Article
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </Link>
-          </motion.div>
-        </div>
-      </section>
+              </Link>
+            </motion.div>
+          </div>
+        </section>
+      )}
 
       {/* Blog Posts Section */}
       <section className="section-padding bg-foundation-pearl relative overflow-hidden">
@@ -271,36 +253,38 @@ export default function BlogContent() {
 
         <div className="relative container-wide">
           {/* Category Filter - Premium Pills */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-wrap justify-center gap-3 mb-16"
-          >
-            {categories.map((category, i) => (
-              <motion.button
-                key={category.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.05 }}
-                onClick={() => setActiveCategory(category.id)}
-                className={`flex items-center gap-2 px-5 py-3 rounded-full font-medium transition-all duration-300 ${
-                  activeCategory === category.id
-                    ? 'bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-elevated'
-                    : 'bg-white text-gray-600 hover:bg-teal-50 hover:text-teal-600 shadow-sm border border-gray-100'
-                }`}
-              >
-                <span className="text-base">{category.icon}</span>
-                <span>{category.name}</span>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${
-                  activeCategory === category.id
-                    ? 'bg-white/20 text-white'
-                    : 'bg-gray-100 text-gray-500'
-                }`}>
-                  {category.count}
-                </span>
-              </motion.button>
-            ))}
-          </motion.div>
+          {categories.length > 1 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-wrap justify-center gap-3 mb-16"
+            >
+              {categories.map((category, i) => (
+                <motion.button
+                  key={category.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.05 }}
+                  onClick={() => setActiveCategory(category.id)}
+                  className={`flex items-center gap-2 px-5 py-3 rounded-full font-medium transition-all duration-300 ${
+                    activeCategory === category.id
+                      ? 'bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-elevated'
+                      : 'bg-white text-gray-600 hover:bg-teal-50 hover:text-teal-600 shadow-sm border border-gray-100'
+                  }`}
+                >
+                  <span className="text-base">{category.icon}</span>
+                  <span>{category.name}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${
+                    activeCategory === category.id
+                      ? 'bg-white/20 text-white'
+                      : 'bg-gray-100 text-gray-500'
+                  }`}>
+                    {category.count}
+                  </span>
+                </motion.button>
+              ))}
+            </motion.div>
+          )}
 
           {/* Posts Grid */}
           <AnimatePresence mode="wait">
@@ -311,103 +295,105 @@ export default function BlogContent() {
               exit={{ opacity: 0 }}
               className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
             >
-              {regularPosts.map((post, index) => (
-                <motion.div
-                  key={post.id}
-                  initial={{ opacity: 0, y: 40 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ y: -8 }}
-                  layout
-                >
-                  <Link
-                    href={`/blog/${post.slug}`}
-                    className="block card-elegant overflow-hidden group h-full"
+              {regularPosts.length > 0 ? (
+                regularPosts.map((post, index) => (
+                  <motion.div
+                    key={post.id}
+                    initial={{ opacity: 0, y: 40 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    whileHover={{ y: -8 }}
+                    layout
                   >
-                    {/* Image */}
-                    <div className="relative aspect-[16/10] overflow-hidden">
-                      <Image
-                        src={post.image}
-                        alt={post.title}
-                        fill
-                        className="object-cover transition-transform duration-700 group-hover:scale-110"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-foundation-charcoal/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <Link
+                      href={`/blog/${post.slug}`}
+                      className="block card-elegant overflow-hidden group h-full"
+                    >
+                      {/* Image */}
+                      <div className="relative aspect-[16/10] overflow-hidden">
+                        <Image
+                          src={post.featuredImage || defaultImage}
+                          alt={post.title}
+                          fill
+                          className="object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-foundation-charcoal/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                      {/* Category badge */}
-                      <div className="absolute top-4 left-4">
-                        <span className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize ${categoryColors[post.category] || 'bg-gray-100 text-gray-700'}`}>
-                          {post.category}
-                        </span>
-                      </div>
-
-                      {/* Read time */}
-                      <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <span className="px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-sm text-xs font-medium text-gray-700">
-                          {post.readTime} read
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Content */}
-                    <div className="p-6">
-                      <h3 className="font-heading text-lg font-semibold text-foundation-charcoal mb-3 group-hover:text-teal-600 transition-colors line-clamp-2">
-                        {post.title}
-                      </h3>
-
-                      <p className="text-gray-500 text-sm mb-5 line-clamp-2">
-                        {post.excerpt}
-                      </p>
-
-                      {/* Author & Date */}
-                      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                        <div className="flex items-center gap-3">
-                          <div className="relative w-8 h-8 rounded-full overflow-hidden">
-                            <Image
-                              src={post.authorImage}
-                              alt={post.author}
-                              fill
-                              className="object-cover"
-                            />
+                        {/* Category badge */}
+                        {post.category && (
+                          <div className="absolute top-4 left-4">
+                            <span className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize ${categoryColors[post.category] || 'bg-gray-100 text-gray-700'}`}>
+                              {post.category}
+                            </span>
                           </div>
-                          <div className="text-xs">
-                            <div className="font-medium text-foundation-charcoal">
-                              {post.author}
-                            </div>
-                            <div className="text-gray-400">
-                              {formatDate(post.publishedAt)}
-                            </div>
-                          </div>
-                        </div>
+                        )}
 
-                        <div className="flex items-center gap-1 text-teal-600 font-medium text-sm group-hover:gap-2 transition-all">
-                          Read
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
+                        {/* Read time */}
+                        <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span className="px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-sm text-xs font-medium text-gray-700">
+                            {getReadTime(post.content)} read
+                          </span>
                         </div>
                       </div>
-                    </div>
+
+                      {/* Content */}
+                      <div className="p-6">
+                        <h3 className="font-heading text-lg font-semibold text-foundation-charcoal mb-3 group-hover:text-teal-600 transition-colors line-clamp-2">
+                          {post.title}
+                        </h3>
+
+                        <p className="text-gray-500 text-sm mb-5 line-clamp-2">
+                          {post.excerpt || post.content.substring(0, 150) + '...'}
+                        </p>
+
+                        {/* Author & Date */}
+                        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                          <div className="flex items-center gap-3">
+                            <div className="relative w-8 h-8 rounded-full overflow-hidden">
+                              <Image
+                                src={defaultAuthorImage}
+                                alt="Author"
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                            <div className="text-xs">
+                              <div className="font-medium text-foundation-charcoal">
+                                Admin
+                              </div>
+                              <div className="text-gray-400">
+                                {post.publishedAt ? formatDate(post.publishedAt) : formatDate(post.createdAt)}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1 text-teal-600 font-medium text-sm group-hover:gap-2 transition-all">
+                            Read
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))
+              ) : posts.length === 0 ? (
+                <div className="col-span-full text-center py-16">
+                  <div className="text-6xl mb-4">📝</div>
+                  <h3 className="font-heading text-xl font-semibold text-foundation-charcoal mb-2">
+                    No Blog Posts Yet
+                  </h3>
+                  <p className="text-gray-500 mb-6">
+                    We&apos;re working on great content. Check back soon!
+                  </p>
+                  <Link href="/contact" className="btn-primary">
+                    Stay in Touch
                   </Link>
-                </motion.div>
-              ))}
+                </div>
+              ) : null}
             </motion.div>
           </AnimatePresence>
-
-          {/* Load More */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="text-center mt-16"
-          >
-            <button className="btn-primary">
-              Load More Articles
-              <svg className="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-          </motion.div>
         </div>
       </section>
 

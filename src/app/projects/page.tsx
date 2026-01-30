@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import { Header, Footer } from '@/components/layout'
 import ProjectsContent from './ProjectsContent'
+import { getProjects } from '@/lib/actions/projects'
 
 export const metadata: Metadata = {
   title: 'Projects & Initiatives',
@@ -11,12 +12,18 @@ export const metadata: Metadata = {
   },
 }
 
-export default function ProjectsPage() {
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+export default async function ProjectsPage() {
+  // Fetch published projects from database
+  const projects = await getProjects({ published: true })
+
   return (
     <>
       <Header />
       <main>
-        <ProjectsContent />
+        <ProjectsContent projects={projects} />
       </main>
       <Footer />
     </>

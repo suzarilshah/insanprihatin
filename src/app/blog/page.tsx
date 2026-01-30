@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import { Header, Footer } from '@/components/layout'
 import BlogContent from './BlogContent'
+import { getBlogPosts } from '@/lib/actions/blog'
 
 export const metadata: Metadata = {
   title: 'Blog & News',
@@ -11,12 +12,18 @@ export const metadata: Metadata = {
   },
 }
 
-export default function BlogPage() {
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+export default async function BlogPage() {
+  // Fetch published blog posts from database
+  const posts = await getBlogPosts({ published: true })
+
   return (
     <>
       <Header />
       <main>
-        <BlogContent />
+        <BlogContent posts={posts} />
       </main>
       <Footer />
     </>
