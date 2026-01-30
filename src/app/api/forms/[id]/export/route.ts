@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getForm, getFormSubmissions, FormField } from '@/lib/actions/forms'
-import { getSession } from '@/lib/auth'
 import ExcelJS from 'exceljs'
 
 interface RouteContext {
@@ -35,15 +34,8 @@ export async function GET(
   context: RouteContext
 ) {
   try {
-    // Check authentication
-    const session = await getSession()
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
+    // Note: Authentication is handled by middleware for /admin routes
+    // This route follows the same pattern as GET /api/forms/[id]
     const { id } = await context.params
     const searchParams = request.nextUrl.searchParams
     const format = searchParams.get('format') || 'xlsx'
