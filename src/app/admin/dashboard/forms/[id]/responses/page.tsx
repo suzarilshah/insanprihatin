@@ -5,6 +5,123 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { markSubmissionAsRead, deleteFormSubmission, markMultipleSubmissionsAsRead, deleteMultipleSubmissions } from '@/lib/actions/forms'
 
+// Export dropdown component
+function ExportDropdown({ formId, disabled }: { formId: string; disabled?: boolean }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
+
+  const handleExport = async (format: 'xlsx' | 'csv') => {
+    setIsExporting(true)
+    setIsOpen(false)
+
+    try {
+      const response = await fetch(`/api/forms/${formId}/export?format=${format}`)
+
+      if (!response.ok) {
+        throw new Error('Export failed')
+      }
+
+      // Get filename from content-disposition header
+      const contentDisposition = response.headers.get('content-disposition')
+      const filenameMatch = contentDisposition?.match(/filename="(.+)"/)
+      const filename = filenameMatch ? filenameMatch[1] : `form_responses.${format}`
+
+      // Create blob and download
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error) {
+      console.error('Export failed:', error)
+      alert('Failed to export responses. Please try again.')
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        disabled={disabled || isExporting}
+        className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl hover:from-emerald-600 hover:to-teal-600 transition-all inline-flex items-center gap-2 shadow-sm disabled:opacity-50"
+      >
+        {isExporting ? (
+          <>
+            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+            Exporting...
+          </>
+        ) : (
+          <>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Export
+            <svg className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </>
+        )}
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -10 }}
+              transition={{ duration: 0.15 }}
+              className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-20"
+            >
+              <div className="p-2">
+                <button
+                  onClick={() => handleExport('xlsx')}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-emerald-50 transition-colors text-left group"
+                >
+                  <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
+                    <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-medium text-foundation-charcoal">Excel (.xlsx)</p>
+                    <p className="text-xs text-gray-500">Formatted with styling</p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => handleExport('csv')}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-blue-50 transition-colors text-left group"
+                >
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                    <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-medium text-foundation-charcoal">CSV (.csv)</p>
+                    <p className="text-xs text-gray-500">Simple text format</p>
+                  </div>
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
 interface FormField {
   id: string
   type: string
@@ -246,6 +363,7 @@ export default function FormResponsesPage({ params }: { params: Promise<{ id: st
         </div>
         <div className="flex items-center gap-3">
           <CopyButton text={`{{form:${form.slug}}}`} />
+          <ExportDropdown formId={form.id} disabled={form.submissions.length === 0} />
           <Link
             href={`/admin/dashboard/forms/${form.id}`}
             className="px-4 py-2 border border-gray-300 rounded-xl text-gray-600 hover:bg-gray-50 transition-colors inline-flex items-center gap-2"

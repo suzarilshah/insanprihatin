@@ -4,6 +4,107 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 
+// Quick export button for form list
+function QuickExportButton({ formId, formName, disabled }: { formId: string; formName: string; disabled?: boolean }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
+
+  const handleExport = async (e: React.MouseEvent, format: 'xlsx' | 'csv') => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsExporting(true)
+    setIsOpen(false)
+
+    try {
+      const response = await fetch(`/api/forms/${formId}/export?format=${format}`)
+      if (!response.ok) throw new Error('Export failed')
+
+      const contentDisposition = response.headers.get('content-disposition')
+      const filenameMatch = contentDisposition?.match(/filename="(.+)"/)
+      const filename = filenameMatch ? filenameMatch[1] : `${formName}_responses.${format}`
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error) {
+      console.error('Export failed:', error)
+      alert('Failed to export responses.')
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  return (
+    <div className="relative">
+      <button
+        onClick={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          if (!disabled) setIsOpen(!isOpen)
+        }}
+        disabled={disabled || isExporting}
+        className={`p-2 rounded-lg transition-colors ${
+          disabled
+            ? 'text-gray-300 cursor-not-allowed'
+            : 'text-gray-400 hover:text-emerald-600 hover:bg-emerald-50'
+        }`}
+        title={disabled ? 'No responses to export' : 'Export responses'}
+      >
+        {isExporting ? (
+          <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+        ) : (
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+        )}
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: -5 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -5 }}
+              transition={{ duration: 0.1 }}
+              className="absolute right-0 top-full mt-1 w-40 bg-white rounded-lg shadow-xl border border-gray-100 overflow-hidden z-20"
+            >
+              <button
+                onClick={(e) => handleExport(e, 'xlsx')}
+                className="w-full flex items-center gap-2 px-3 py-2 hover:bg-emerald-50 transition-colors text-left text-sm"
+              >
+                <svg className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Excel (.xlsx)
+              </button>
+              <button
+                onClick={(e) => handleExport(e, 'csv')}
+                className="w-full flex items-center gap-2 px-3 py-2 hover:bg-blue-50 transition-colors text-left text-sm"
+              >
+                <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                </svg>
+                CSV (.csv)
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
 interface FormUsage {
   blogPosts: Array<{ id: string; title: string; slug: string; isPublished: boolean }>
   projects: Array<{ id: string; title: string; slug: string; isPublished: boolean }>
@@ -284,6 +385,11 @@ export default function FormsPage() {
 
                     {/* Actions */}
                     <div className="flex items-center gap-2">
+                      <QuickExportButton
+                        formId={form.id}
+                        formName={form.name}
+                        disabled={(form.totalSubmissions || 0) === 0}
+                      />
                       <Link
                         href={`/admin/dashboard/forms/${form.id}/responses`}
                         className="p-2 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
