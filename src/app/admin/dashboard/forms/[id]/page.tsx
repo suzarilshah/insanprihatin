@@ -7,6 +7,39 @@ import { motion } from 'framer-motion'
 import FormBuilder, { FormConfig, FormField } from '@/components/admin/FormBuilder'
 import { createForm, updateForm, deleteForm } from '@/lib/actions/forms'
 
+function CopyButton({ text, className = '' }: { text: string; className?: string }) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <button
+      onClick={handleCopy}
+      className={`inline-flex items-center gap-2 px-3 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-sm font-medium transition-colors ${className}`}
+    >
+      {copied ? (
+        <>
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          Copied!
+        </>
+      ) : (
+        <>
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+          Copy Embed Code
+        </>
+      )}
+    </button>
+  )
+}
+
 function generateSlug(name: string) {
   return name
     .toLowerCase()
@@ -301,14 +334,47 @@ export default function FormEditor({ params }: { params: Promise<{ id: string }>
 
           {/* Embed Code */}
           {!isNew && formData.slug && (
-            <div className="bg-amber-50 rounded-2xl p-6 border border-amber-200">
-              <h3 className="font-medium text-amber-800 mb-2">Embed This Form</h3>
-              <p className="text-sm text-amber-700 mb-3">
-                Add this code to your project or blog post content:
+            <div className="bg-gradient-to-br from-teal-50 to-cyan-50 rounded-2xl p-6 border border-teal-200">
+              <div className="flex items-center gap-2 mb-3">
+                <svg className="w-5 h-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+                <h3 className="font-medium text-teal-800">Embed This Form</h3>
+              </div>
+              <p className="text-sm text-teal-700 mb-4">
+                Copy and paste this code into your project or blog post content:
               </p>
-              <code className="block px-4 py-3 bg-amber-100 rounded-xl text-amber-900 font-mono text-sm break-all">
-                {'{{form:' + formData.slug + '}}'}
-              </code>
+              <div className="bg-white/80 rounded-xl p-3 mb-4 border border-teal-200">
+                <code className="block text-teal-900 font-mono text-sm select-all">
+                  {'{{form:' + formData.slug + '}}'}
+                </code>
+              </div>
+              <CopyButton text={`{{form:${formData.slug}}}`} />
+            </div>
+          )}
+
+          {/* View Responses */}
+          {!isNew && (
+            <div className="bg-white rounded-2xl p-6 border border-gray-100">
+              <div className="flex items-center gap-2 mb-3">
+                <svg className="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
+                <h3 className="font-medium text-foundation-charcoal">Responses</h3>
+              </div>
+              <p className="text-sm text-gray-500 mb-4">
+                View and manage form submissions.
+              </p>
+              <Link
+                href={`/admin/dashboard/forms/${resolvedParams.id}/responses`}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 rounded-xl hover:bg-purple-100 transition-colors text-sm font-medium"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                View Responses
+              </Link>
             </div>
           )}
         </div>

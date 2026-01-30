@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { getBlogPost, createBlogPost, updateBlogPost } from '@/lib/actions/blog'
 import ImageUpload from '@/components/admin/ImageUpload'
+import FormSelector from '@/components/admin/FormSelector'
 
 function generateSlug(title: string) {
   return title
@@ -259,16 +260,26 @@ export default function BlogPostEditor({ params }: { params: Promise<{ id: strin
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="block text-sm font-medium text-gray-700">Content *</label>
-                  <button
-                    type="button"
-                    onClick={() => setShowMarkdownHelp(!showMarkdownHelp)}
-                    className="text-xs text-teal-600 hover:text-teal-700 flex items-center gap-1"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Markdown Help
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <FormSelector
+                      onInsert={(embedCode) => {
+                        setFormData({
+                          ...formData,
+                          content: formData.content + '\n\n' + embedCode + '\n',
+                        })
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowMarkdownHelp(!showMarkdownHelp)}
+                      className="text-xs text-teal-600 hover:text-teal-700 flex items-center gap-1"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Markdown Help
+                    </button>
+                  </div>
                 </div>
 
                 {showMarkdownHelp && (

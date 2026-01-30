@@ -1,8 +1,8 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { db, contentForms, formSubmissions } from '@/db'
-import { eq, desc, and } from 'drizzle-orm'
+import { db, contentForms, formSubmissions, blogPosts, projects } from '@/db'
+import { eq, desc, and, count, sql, like } from 'drizzle-orm'
 import { requireAuth } from '@/lib/auth-server'
 
 export interface FormField {
@@ -242,4 +242,173 @@ export async function extractFormSlugs(content: string): Promise<string[]> {
   }
 
   return [...new Set(slugs)] // Return unique slugs
+}
+
+// Get submission count for a form
+export async function getFormSubmissionCount(formId: string): Promise<number> {
+  const result = await db
+    .select({ count: count() })
+    .from(formSubmissions)
+    .where(eq(formSubmissions.formId, formId))
+
+  return result[0]?.count || 0
+}
+
+// Get unread submission count for a form
+export async function getFormUnreadCount(formId: string): Promise<number> {
+  const result = await db
+    .select({ count: count() })
+    .from(formSubmissions)
+    .where(and(
+      eq(formSubmissions.formId, formId),
+      eq(formSubmissions.isRead, false)
+    ))
+
+  return result[0]?.count || 0
+}
+
+// Get all forms with submission counts
+export async function getFormsWithStats() {
+  const forms = await db.query.contentForms.findMany({
+    orderBy: [desc(contentForms.createdAt)],
+  })
+
+  // Get submission counts for each form
+  const formsWithStats = await Promise.all(
+    forms.map(async (form) => {
+      const totalSubmissions = await getFormSubmissionCount(form.id)
+      const unreadSubmissions = await getFormUnreadCount(form.id)
+
+      return {
+        ...form,
+        totalSubmissions,
+        unreadSubmissions,
+      }
+    })
+  )
+
+  return formsWithStats
+}
+
+// Find content that uses a specific form
+export async function getFormUsage(formSlug: string) {
+  const pattern = `%{{form:${formSlug}}}%`
+
+  // Find blog posts using this form
+  const blogPostsUsingForm = await db
+    .select({
+      id: blogPosts.id,
+      title: blogPosts.title,
+      slug: blogPosts.slug,
+      isPublished: blogPosts.isPublished,
+    })
+    .from(blogPosts)
+    .where(like(blogPosts.content, pattern))
+
+  // Find projects using this form
+  const projectsUsingForm = await db
+    .select({
+      id: projects.id,
+      title: projects.title,
+      slug: projects.slug,
+      isPublished: projects.isPublished,
+    })
+    .from(projects)
+    .where(like(projects.content, pattern))
+
+  return {
+    blogPosts: blogPostsUsingForm,
+    projects: projectsUsingForm,
+    totalUsage: blogPostsUsingForm.length + projectsUsingForm.length,
+  }
+}
+
+// Get all forms with stats and usage
+export async function getFormsWithStatsAndUsage() {
+  const forms = await db.query.contentForms.findMany({
+    orderBy: [desc(contentForms.createdAt)],
+  })
+
+  const formsWithData = await Promise.all(
+    forms.map(async (form) => {
+      const [totalSubmissions, unreadSubmissions, usage] = await Promise.all([
+        getFormSubmissionCount(form.id),
+        getFormUnreadCount(form.id),
+        getFormUsage(form.slug),
+      ])
+
+      return {
+        ...form,
+        totalSubmissions,
+        unreadSubmissions,
+        usage,
+      }
+    })
+  )
+
+  return formsWithData
+}
+
+// Get form with full details including stats and submissions
+export async function getFormWithDetails(id: string) {
+  const form = await db.query.contentForms.findFirst({
+    where: eq(contentForms.id, id),
+  })
+
+  if (!form) return null
+
+  const [submissions, usage] = await Promise.all([
+    getFormSubmissions({ formId: id }),
+    getFormUsage(form.slug),
+  ])
+
+  const totalSubmissions = submissions.length
+  const unreadSubmissions = submissions.filter(s => !s.isRead).length
+
+  return {
+    ...form,
+    submissions,
+    usage,
+    totalSubmissions,
+    unreadSubmissions,
+  }
+}
+
+// Get single submission with full details
+export async function getFormSubmission(id: string) {
+  const submission = await db.query.formSubmissions.findFirst({
+    where: eq(formSubmissions.id, id),
+  })
+  return submission
+}
+
+// Mark multiple submissions as read
+export async function markMultipleSubmissionsAsRead(ids: string[]) {
+  await requireAuth()
+
+  await Promise.all(
+    ids.map(id =>
+      db
+        .update(formSubmissions)
+        .set({ isRead: true })
+        .where(eq(formSubmissions.id, id))
+    )
+  )
+
+  revalidatePath('/admin/dashboard/forms')
+  return { success: true }
+}
+
+// Delete multiple submissions
+export async function deleteMultipleSubmissions(ids: string[]) {
+  await requireAuth()
+
+  await Promise.all(
+    ids.map(id =>
+      db.delete(formSubmissions).where(eq(formSubmissions.id, id))
+    )
+  )
+
+  revalidatePath('/admin/dashboard/forms')
+  return { success: true }
 }

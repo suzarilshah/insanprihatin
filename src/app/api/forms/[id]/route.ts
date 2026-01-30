@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getForm, updateForm, deleteForm, FormField } from '@/lib/actions/forms'
+import { getForm, updateForm, deleteForm, FormField, getFormWithDetails } from '@/lib/actions/forms'
 import { getSession } from '@/lib/auth'
 
 interface RouteContext {
@@ -12,6 +12,20 @@ export async function GET(
 ) {
   try {
     const { id } = await context.params
+    const searchParams = request.nextUrl.searchParams
+    const withSubmissions = searchParams.get('withSubmissions') === 'true'
+
+    if (withSubmissions) {
+      const formWithDetails = await getFormWithDetails(id)
+      if (!formWithDetails) {
+        return NextResponse.json(
+          { error: 'Form not found' },
+          { status: 404 }
+        )
+      }
+      return NextResponse.json(formWithDetails)
+    }
+
     const form = await getForm(id)
 
     if (!form) {

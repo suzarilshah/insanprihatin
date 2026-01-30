@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getForms, createForm, FormField } from '@/lib/actions/forms'
+import { getForms, createForm, FormField, getFormsWithStatsAndUsage } from '@/lib/actions/forms'
 import { getSession } from '@/lib/auth'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const searchParams = request.nextUrl.searchParams
+    const withStats = searchParams.get('withStats') === 'true'
+
+    if (withStats) {
+      const forms = await getFormsWithStatsAndUsage()
+      return NextResponse.json(forms)
+    }
+
     const forms = await getForms()
     return NextResponse.json(forms)
   } catch (error) {
