@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
 import { formatDate } from '@/lib/utils'
+import { MarkdownRenderer } from '@/components/content'
 
 type BlogPost = {
   id: string
@@ -23,9 +24,31 @@ type BlogPost = {
   updatedAt: Date
 }
 
+interface FormField {
+  id: string
+  type: 'text' | 'email' | 'phone' | 'textarea' | 'select' | 'checkbox' | 'radio' | 'date' | 'number'
+  label: string
+  placeholder?: string
+  required?: boolean
+  options?: string[]
+}
+
+interface ContentForm {
+  id: string
+  name: string
+  slug: string
+  title?: string
+  description?: string
+  submitButtonText?: string
+  successMessage?: string
+  fields: FormField[]
+  isActive: boolean
+}
+
 interface BlogPostContentProps {
   post: BlogPost
   relatedPosts: BlogPost[]
+  forms?: ContentForm[]
 }
 
 const categoryColors: Record<string, string> = {
@@ -45,7 +68,7 @@ const getReadTime = (content: string) => {
   return `${minutes} min read`
 }
 
-export default function BlogPostContent({ post, relatedPosts }: BlogPostContentProps) {
+export default function BlogPostContent({ post, relatedPosts, forms = [] }: BlogPostContentProps) {
   const tags = Array.isArray(post.tags) ? post.tags as string[] : []
 
   return (
@@ -183,18 +206,14 @@ export default function BlogPostContent({ post, relatedPosts }: BlogPostContentP
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="prose prose-lg prose-teal max-w-none mb-12"
+              className="mb-12"
             >
-              <div
-                className="text-gray-600 leading-relaxed text-lg"
-                style={{ whiteSpace: 'pre-wrap' }}
-                dangerouslySetInnerHTML={{
-                  __html: post.content
-                    .replace(/\n\n/g, '</p><p class="mb-6">')
-                    .replace(/\n/g, '<br />')
-                    .replace(/^/, '<p class="mb-6">')
-                    .replace(/$/, '</p>')
-                }}
+              <MarkdownRenderer
+                content={post.content}
+                forms={forms}
+                sourceContentType="blog_posts"
+                sourceContentId={post.id}
+                sourceContentTitle={post.title}
               />
             </motion.article>
 

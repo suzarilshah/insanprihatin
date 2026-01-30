@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { Header, Footer } from '@/components/layout'
 import { getBlogPost, getBlogPosts } from '@/lib/actions/blog'
+import { extractFormSlugs, getFormsBySlugs } from '@/lib/actions/forms'
 import BlogPostContent from './BlogPostContent'
 
 interface PageProps {
@@ -55,11 +56,39 @@ export default async function BlogPostPage({ params }: PageProps) {
     .filter((p) => p.id !== post.id && (post.category ? p.category === post.category : true))
     .slice(0, 3)
 
+  // Extract and fetch embedded forms from content
+  const formSlugs = await extractFormSlugs(post.content)
+  const forms = formSlugs.length > 0 ? await getFormsBySlugs(formSlugs) : []
+
+  // Transform forms to match the expected format
+  const transformedForms = forms.map(form => ({
+    id: form.id,
+    name: form.name,
+    slug: form.slug,
+    title: form.title || undefined,
+    description: form.description || undefined,
+    submitButtonText: form.submitButtonText || undefined,
+    successMessage: form.successMessage || undefined,
+    fields: form.fields as unknown as Array<{
+      id: string
+      type: 'text' | 'email' | 'phone' | 'textarea' | 'select' | 'checkbox' | 'radio' | 'date' | 'number'
+      label: string
+      placeholder?: string
+      required?: boolean
+      options?: string[]
+    }>,
+    isActive: form.isActive || false,
+  }))
+
   return (
     <>
       <Header />
       <main>
-        <BlogPostContent post={post} relatedPosts={relatedPosts} />
+        <BlogPostContent
+          post={post}
+          relatedPosts={relatedPosts}
+          forms={transformedForms}
+        />
       </main>
       <Footer />
     </>

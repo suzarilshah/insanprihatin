@@ -21,6 +21,7 @@ export default function BlogPostEditor({ params }: { params: Promise<{ id: strin
   const [isPending, startTransition] = useTransition()
   const [isLoading, setIsLoading] = useState(!isNew)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+  const [showMarkdownHelp, setShowMarkdownHelp] = useState(false)
 
   const [formData, setFormData] = useState({
     title: '',
@@ -256,18 +257,88 @@ export default function BlogPostEditor({ params }: { params: Promise<{ id: strin
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Content *
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">Content *</label>
+                  <button
+                    type="button"
+                    onClick={() => setShowMarkdownHelp(!showMarkdownHelp)}
+                    className="text-xs text-teal-600 hover:text-teal-700 flex items-center gap-1"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Markdown Help
+                  </button>
+                </div>
+
+                {showMarkdownHelp && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mb-3 p-4 bg-teal-50 border border-teal-200 rounded-xl text-sm"
+                  >
+                    <h4 className="font-medium text-teal-800 mb-2">Markdown Formatting</h4>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-teal-700">
+                      <div><code className="bg-teal-100 px-1 rounded"># Heading 1</code></div>
+                      <div><code className="bg-teal-100 px-1 rounded">## Heading 2</code></div>
+                      <div><code className="bg-teal-100 px-1 rounded">**bold**</code></div>
+                      <div><code className="bg-teal-100 px-1 rounded">*italic*</code></div>
+                      <div><code className="bg-teal-100 px-1 rounded">- bullet list</code></div>
+                      <div><code className="bg-teal-100 px-1 rounded">1. numbered list</code></div>
+                      <div><code className="bg-teal-100 px-1 rounded">[link](url)</code></div>
+                      <div><code className="bg-teal-100 px-1 rounded">&gt; blockquote</code></div>
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-teal-200">
+                      <h4 className="font-medium text-teal-800 mb-1">Embed Form</h4>
+                      <p className="text-teal-700 text-xs mb-1">Add a form anywhere in your content:</p>
+                      <code className="bg-teal-100 px-2 py-1 rounded block text-xs">{'{{form:your-form-slug}}'}</code>
+                    </div>
+                  </motion.div>
+                )}
+
                 <textarea
                   value={formData.content}
                   onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                   rows={15}
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 resize-none font-mono text-sm"
-                  placeholder="Write your content here... (Markdown supported)"
+                  placeholder="Write your content here...
+
+# Use Markdown for formatting
+Write your content using **bold**, *italic*, lists, and more.
+
+## Embed Forms
+To add a feedback or survey form, use: {{form:form-slug}}
+Create forms in the Forms section of the admin panel."
                 />
-                <p className="text-xs text-gray-500 mt-1">Supports Markdown formatting</p>
               </div>
+            </div>
+          </div>
+
+          {/* Embedded Form Section */}
+          <div className="bg-white rounded-2xl p-6 border border-gray-100">
+            <div className="flex items-center gap-2 mb-4">
+              <svg className="w-5 h-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <h3 className="font-medium text-foundation-charcoal">Embedded Forms</h3>
+            </div>
+            <p className="text-sm text-gray-500 mb-4">
+              Add feedback forms, surveys, or polls to your blog post.
+            </p>
+            <Link
+              href="/admin/dashboard/forms/new"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-teal-50 text-teal-700 rounded-xl hover:bg-teal-100 transition-colors text-sm font-medium"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Create New Form
+            </Link>
+            <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-xs text-amber-700">
+                <strong>Tip:</strong> After creating a form, embed it in your content using <code className="bg-amber-100 px-1 rounded">{'{{form:slug}}'}</code>
+              </p>
             </div>
           </div>
         </div>

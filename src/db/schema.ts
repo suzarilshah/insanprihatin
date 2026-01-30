@@ -240,3 +240,52 @@ export const activityLog = pgTable('activity_log', {
   // Timestamp
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
+
+// Content Forms - for embedding RSVP, inquiry forms in projects/blog posts
+export const contentForms = pgTable('content_forms', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  // Form identification
+  name: text('name').notNull(), // Human-readable name for admin
+  slug: text('slug').notNull().unique(), // Used in placeholder syntax: {{form:slug}}
+  // Form configuration
+  title: text('title'), // Optional title displayed above form
+  description: text('description'), // Optional description/instructions
+  submitButtonText: text('submit_button_text').default('Submit'),
+  successMessage: text('success_message').default('Thank you for your submission!'),
+  // Fields configuration stored as JSON array
+  // Each field: { id, type, label, placeholder, required, options, validation }
+  // Types: text, email, phone, textarea, select, checkbox, radio, date, number
+  fields: jsonb('fields').notNull().default('[]'),
+  // Settings
+  sendEmailNotification: boolean('send_email_notification').default(true),
+  notificationEmail: text('notification_email'), // Override default notification email
+  isActive: boolean('is_active').default(true),
+  // Associated content (optional - form can be standalone or linked)
+  linkedContentType: text('linked_content_type'), // 'projects' | 'blog_posts' | null
+  linkedContentId: uuid('linked_content_id'),
+  // Timestamps
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
+// Form Submissions - stores all form submissions
+export const formSubmissions = pgTable('form_submissions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  // Link to form
+  formId: uuid('form_id').notNull(),
+  formSlug: text('form_slug').notNull(), // Denormalized for easy querying
+  // Submission data
+  data: jsonb('data').notNull(), // { fieldId: value, ... }
+  // Source tracking
+  sourceUrl: text('source_url'), // URL where form was submitted from
+  sourceContentType: text('source_content_type'), // 'projects' | 'blog_posts' | null
+  sourceContentId: uuid('source_content_id'),
+  sourceContentTitle: text('source_content_title'),
+  // Submitter info (if provided)
+  submitterEmail: text('submitter_email'),
+  submitterName: text('submitter_name'),
+  // Status
+  isRead: boolean('is_read').default(false),
+  // Timestamps
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})

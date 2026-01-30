@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
 import { formatDate } from '@/lib/utils'
+import { MarkdownRenderer } from '@/components/content'
 
 type Project = {
   id: string
@@ -28,9 +29,31 @@ type Project = {
   updatedAt: Date
 }
 
+interface FormField {
+  id: string
+  type: 'text' | 'email' | 'phone' | 'textarea' | 'select' | 'checkbox' | 'radio' | 'date' | 'number'
+  label: string
+  placeholder?: string
+  required?: boolean
+  options?: string[]
+}
+
+interface ContentForm {
+  id: string
+  name: string
+  slug: string
+  title?: string
+  description?: string
+  submitButtonText?: string
+  successMessage?: string
+  fields: FormField[]
+  isActive: boolean
+}
+
 interface ProjectDetailContentProps {
   project: Project
   relatedProjects: Project[]
+  forms?: ContentForm[]
 }
 
 const statusConfig: Record<string, { bg: string; text: string; dot: string }> = {
@@ -41,7 +64,7 @@ const statusConfig: Record<string, { bg: string; text: string; dot: string }> = 
 
 const defaultImage = 'https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?q=80&w=2670'
 
-export default function ProjectDetailContent({ project, relatedProjects }: ProjectDetailContentProps) {
+export default function ProjectDetailContent({ project, relatedProjects, forms = [] }: ProjectDetailContentProps) {
   const status = statusConfig[project.status || 'ongoing'] || statusConfig.ongoing
   const gallery = Array.isArray(project.gallery) ? project.gallery as string[] : []
 
@@ -216,11 +239,14 @@ export default function ProjectDetailContent({ project, relatedProjects }: Proje
                 initial={{ opacity: 0, y: 40 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="prose prose-lg prose-teal max-w-none mb-12"
+                className="mb-12"
               >
-                <div
-                  className="text-gray-600 leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: project.content.replace(/\n/g, '<br />') }}
+                <MarkdownRenderer
+                  content={project.content}
+                  forms={forms}
+                  sourceContentType="projects"
+                  sourceContentId={project.id}
+                  sourceContentTitle={project.title}
                 />
               </motion.div>
             )}

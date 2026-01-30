@@ -276,3 +276,184 @@ function escapeHtml(text: string): string {
   }
   return text.replace(/[&<>"']/g, (char) => htmlEntities[char])
 }
+
+interface FormField {
+  id: string
+  type: string
+  label: string
+  options?: string[]
+}
+
+interface FormNotificationData {
+  formName: string
+  formTitle: string
+  fields: FormField[]
+  data: Record<string, unknown>
+  sourceUrl?: string
+  sourceContentTitle?: string
+  notificationEmail?: string
+}
+
+/**
+ * Send form submission notification email to admin
+ */
+export async function sendFormNotificationEmail(
+  notification: FormNotificationData
+): Promise<EmailResult> {
+  // Check if email notifications are enabled
+  const emailEnabled = await getSettingValue('emailNotificationsEnabled')
+  if (emailEnabled === false) {
+    console.log('Email notifications are disabled')
+    return { success: false, reason: 'disabled' }
+  }
+
+  // Get notification email recipient (use form-specific email or global setting)
+  let recipientEmail = notification.notificationEmail
+  if (!recipientEmail) {
+    const globalEmail = await getSettingValue('notificationEmail')
+    if (globalEmail && typeof globalEmail === 'string') {
+      recipientEmail = globalEmail
+    }
+  }
+
+  if (!recipientEmail) {
+    console.log('No notification email configured')
+    return { success: false, reason: 'no_recipient' }
+  }
+
+  // Check if Resend API key is configured
+  if (!process.env.RESEND_API_KEY) {
+    console.error('RESEND_API_KEY is not configured')
+    return { success: false, reason: 'no_api_key' }
+  }
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: DEFAULT_FROM,
+      to: recipientEmail,
+      subject: `New Form Submission: ${notification.formTitle}`,
+      html: generateFormEmailHtml(notification),
+    })
+
+    if (error) {
+      console.error('Resend API error:', error)
+      return { success: false, error: error.message }
+    }
+
+    console.log('Form notification email sent successfully:', data?.id)
+    return { success: true, messageId: data?.id }
+  } catch (error) {
+    console.error('Failed to send form notification email:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
+/**
+ * Generate HTML email content for form notifications
+ */
+function generateFormEmailHtml(notification: FormNotificationData): string {
+  const submissionTime = new Date().toLocaleString('en-MY', {
+    timeZone: 'Asia/Kuala_Lumpur',
+    dateStyle: 'full',
+    timeStyle: 'short',
+  })
+
+  // Build fields table
+  const fieldsHtml = notification.fields
+    .map((field) => {
+      let value = notification.data[field.id]
+
+      // Handle checkbox fields (multiple values)
+      if (field.type === 'checkbox' && field.options) {
+        const selectedOptions = field.options.filter((_, i) =>
+          notification.data[`${field.id}_${i}`]
+        )
+        value = selectedOptions.length > 0 ? selectedOptions.join(', ') : 'None selected'
+      }
+
+      // Handle empty values
+      if (value === undefined || value === null || value === '') {
+        value = '-'
+      }
+
+      return `
+        <tr>
+          <td style="padding: 12px; color: #6b7280; font-size: 14px; border-bottom: 1px solid #e5e7eb; width: 35%; vertical-align: top;">
+            ${escapeHtml(field.label)}
+          </td>
+          <td style="padding: 12px; color: #1f2937; font-size: 14px; border-bottom: 1px solid #e5e7eb; font-weight: 500;">
+            ${escapeHtml(String(value))}
+          </td>
+        </tr>
+      `
+    })
+    .join('')
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Form Submission</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <!-- Header -->
+    <div style="background: linear-gradient(135deg, #0d9488 0%, #0e7490 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+      <h1 style="color: white; margin: 0; font-size: 24px; font-weight: 600;">
+        New Form Submission
+      </h1>
+      <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0; font-size: 14px;">
+        ${submissionTime}
+      </p>
+    </div>
+
+    <!-- Content -->
+    <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none;">
+      <!-- Form Name Badge -->
+      <div style="margin-bottom: 20px;">
+        <span style="display: inline-block; background: #f0fdfa; color: #0d9488; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: 500;">
+          ${escapeHtml(notification.formTitle)}
+        </span>
+        ${notification.sourceContentTitle ? `
+        <span style="display: inline-block; background: #fef3c7; color: #92400e; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: 500; margin-left: 8px;">
+          from: ${escapeHtml(notification.sourceContentTitle)}
+        </span>
+        ` : ''}
+      </div>
+
+      <!-- Submission Data -->
+      <div style="background: #f9fafb; border-radius: 8px; overflow: hidden; margin-bottom: 20px;">
+        <table style="width: 100%; border-collapse: collapse;">
+          ${fieldsHtml}
+        </table>
+      </div>
+
+      ${notification.sourceUrl ? `
+      <!-- Source URL -->
+      <div style="margin-top: 20px; padding: 15px; background: #f9fafb; border-radius: 8px;">
+        <p style="color: #6b7280; font-size: 12px; margin: 0;">
+          Submitted from: <a href="${escapeHtml(notification.sourceUrl)}" style="color: #0d9488; text-decoration: none;">${escapeHtml(notification.sourceUrl)}</a>
+        </p>
+      </div>
+      ` : ''}
+    </div>
+
+    <!-- Footer -->
+    <div style="padding: 20px; text-align: center; border-radius: 0 0 12px 12px; background: #f9fafb; border: 1px solid #e5e7eb; border-top: none;">
+      <p style="color: #6b7280; font-size: 12px; margin: 0;">
+        This email was sent from a form on<br>
+        <a href="https://insanprihatin.org" style="color: #0d9488; text-decoration: none;">
+          insanprihatin.org
+        </a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim()
+}

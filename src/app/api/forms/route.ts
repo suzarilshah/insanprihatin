@@ -1,0 +1,75 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { getForms, createForm, FormField } from '@/lib/actions/forms'
+import { getSession } from '@/lib/auth'
+
+export async function GET() {
+  try {
+    const forms = await getForms()
+    return NextResponse.json(forms)
+  } catch (error) {
+    console.error('Failed to get forms:', error)
+    return NextResponse.json(
+      { error: 'Failed to get forms' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const session = await getSession()
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    const body = await request.json()
+    const {
+      name,
+      slug,
+      title,
+      description,
+      submitButtonText,
+      successMessage,
+      fields,
+      sendEmailNotification,
+      notificationEmail,
+    } = body
+
+    if (!name || !slug) {
+      return NextResponse.json(
+        { error: 'Name and slug are required' },
+        { status: 400 }
+      )
+    }
+
+    const result = await createForm({
+      name,
+      slug,
+      title,
+      description,
+      submitButtonText,
+      successMessage,
+      fields: (fields || []) as FormField[],
+      sendEmailNotification,
+      notificationEmail,
+    })
+
+    if (result.success) {
+      return NextResponse.json(result.form)
+    } else {
+      return NextResponse.json(
+        { error: 'Failed to create form' },
+        { status: 500 }
+      )
+    }
+  } catch (error) {
+    console.error('Failed to create form:', error)
+    return NextResponse.json(
+      { error: 'Failed to create form' },
+      { status: 500 }
+    )
+  }
+}
