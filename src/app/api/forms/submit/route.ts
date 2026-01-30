@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createFormSubmission, getFormBySlug, FormField } from '@/lib/actions/forms'
 import { sendFormNotificationEmail } from '@/lib/email'
+import { notifyFormSubmission } from '@/lib/actions/notifications'
 
 export async function POST(request: NextRequest) {
   try {
@@ -68,11 +69,25 @@ export async function POST(request: NextRequest) {
       submitterName,
     })
 
-    if (!result.success) {
+    if (!result.success || !result.submission) {
       return NextResponse.json(
         { error: 'Failed to save submission' },
         { status: 500 }
       )
+    }
+
+    // Create admin notification for new form submission
+    try {
+      await notifyFormSubmission({
+        formId,
+        formName: form.name,
+        submitterName,
+        submitterEmail,
+        submissionId: result.submission.id,
+      })
+    } catch (notifyError) {
+      console.error('Failed to create form submission notification:', notifyError)
+      // Don't fail the submission if notification fails
     }
 
     // Send email notification if enabled

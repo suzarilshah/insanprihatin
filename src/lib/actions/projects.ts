@@ -5,6 +5,7 @@ import { db, projects } from '@/db'
 import { eq, desc, and } from 'drizzle-orm'
 import { requireAuth } from '@/lib/auth-server'
 import { createVersion, logActivity } from '@/lib/versioning'
+import { notifyProjectPublished } from '@/lib/actions/notifications'
 
 export async function getProjects(options?: { published?: boolean; category?: string; status?: string; limit?: number }) {
   const conditions = []
@@ -80,6 +81,15 @@ export async function createProject(data: {
     user: { id: user.id, email: user.email, name: user.name },
   })
 
+  // Create notification if published
+  if (data.isPublished) {
+    await notifyProjectPublished({
+      projectId: project[0].id,
+      title: data.title,
+      authorName: user.name,
+    })
+  }
+
   revalidatePath('/projects')
   return { success: true, project: project[0] }
 }
@@ -148,6 +158,15 @@ export async function updateProject(id: string, data: {
     contentTitle: existing.title,
     user: { id: user.id, email: user.email, name: user.name },
   })
+
+  // Create notification if published
+  if (changeType === 'publish') {
+    await notifyProjectPublished({
+      projectId: id,
+      title: data.title || existing.title,
+      authorName: user.name,
+    })
+  }
 
   revalidatePath('/projects')
   if (data.slug) {

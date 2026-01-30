@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db, contactSubmissions } from '@/db'
 import { sendContactNotificationEmail } from '@/lib/email'
+import { notifyContactMessage } from '@/lib/actions/notifications'
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,6 +42,19 @@ export async function POST(request: NextRequest) {
       subject: sanitizedData.subject,
       message: sanitizedData.message,
     }).returning()
+
+    // Create admin notification for new contact message
+    try {
+      await notifyContactMessage({
+        messageId: submission.id,
+        senderName: sanitizedData.name,
+        senderEmail: sanitizedData.email,
+        subject: sanitizedData.subject,
+      })
+    } catch (notifyError) {
+      console.error('Failed to create contact notification:', notifyError)
+      // Don't fail the request if notification fails
+    }
 
     // Send email notification (don't fail the request if email fails)
     try {

@@ -5,6 +5,7 @@ import { db, blogPosts } from '@/db'
 import { eq, desc, and } from 'drizzle-orm'
 import { requireAuth } from '@/lib/auth-server'
 import { createVersion, logActivity } from '@/lib/versioning'
+import { notifyBlogPublished } from '@/lib/actions/notifications'
 
 export async function getBlogPosts(options?: { published?: boolean; limit?: number }) {
   const conditions = []
@@ -65,6 +66,15 @@ export async function createBlogPost(data: {
     contentTitle: data.title,
     user: { id: user.id, email: user.email, name: user.name },
   })
+
+  // Create notification if published
+  if (data.isPublished) {
+    await notifyBlogPublished({
+      postId: post[0].id,
+      title: data.title,
+      authorName: user.name,
+    })
+  }
 
   revalidatePath('/blog')
   return { success: true, post: post[0] }
@@ -134,6 +144,15 @@ export async function updateBlogPost(id: string, data: {
     contentTitle: existing.title,
     user: { id: user.id, email: user.email, name: user.name },
   })
+
+  // Create notification if published
+  if (changeType === 'publish') {
+    await notifyBlogPublished({
+      postId: id,
+      title: data.title || existing.title,
+      authorName: user.name,
+    })
+  }
 
   revalidatePath('/blog')
   if (data.slug) {

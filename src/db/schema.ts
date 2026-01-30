@@ -293,3 +293,33 @@ export const formSubmissions = pgTable('form_submissions', {
   // Timestamps
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
+
+// Admin Notifications - real-time notification system for admin dashboard
+export const adminNotifications = pgTable('admin_notifications', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  // Notification type determines icon and styling
+  // Types: 'blog_published', 'project_published', 'form_submission', 'contact_message',
+  //        'team_update', 'donation_received', 'system', 'org_chart_update', 'm365_sync'
+  type: text('type').notNull(),
+  // Priority: 'low', 'normal', 'high', 'urgent'
+  priority: text('priority').default('normal'),
+  // Display content
+  title: text('title').notNull(),
+  message: text('message').notNull(),
+  // Optional icon override (defaults based on type)
+  icon: text('icon'),
+  // Related entity for navigation
+  relatedType: text('related_type'), // 'blog_posts', 'projects', 'forms', 'team_members', 'donations', 'messages'
+  relatedId: uuid('related_id'),
+  relatedUrl: text('related_url'), // Pre-computed URL for quick navigation
+  // Metadata for additional info (e.g., submitter name, amount, etc.)
+  metadata: jsonb('metadata'),
+  // Status
+  isRead: boolean('is_read').default(false),
+  isDismissed: boolean('is_dismissed').default(false),
+  // Expiration for auto-cleanup (null = never expires)
+  expiresAt: timestamp('expires_at'),
+  // Timestamps
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  readAt: timestamp('read_at'),
+})

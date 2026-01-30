@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db, donations } from '@/db'
+import { notifyDonationReceived } from '@/lib/actions/notifications'
 
 export async function POST(request: NextRequest) {
   try {

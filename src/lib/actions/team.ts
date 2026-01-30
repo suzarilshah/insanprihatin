@@ -5,6 +5,7 @@ import { db, teamMembers } from '@/db'
 import { eq, asc, and } from 'drizzle-orm'
 import { requireAuth } from '@/lib/auth-server'
 import { createVersion, logActivity } from '@/lib/versioning'
+import { notifyTeamUpdate, notifyOrgChartUpdate } from '@/lib/actions/notifications'
 
 export async function getTeamMembers(options?: { department?: string; active?: boolean }) {
   const conditions = []
@@ -68,6 +69,14 @@ export async function createTeamMember(data: {
     user: { id: user.id, email: user.email, name: user.name },
   })
 
+  // Create notification for team member added
+  await notifyTeamUpdate({
+    memberId: member[0].id,
+    memberName: data.name,
+    action: 'added',
+    details: data.position,
+  })
+
   revalidatePath('/about')
   return { success: true, member: member[0] }
 }
@@ -124,6 +133,31 @@ export async function updateTeamMember(id: string, data: {
     user: { id: user.id, email: user.email, name: user.name },
   })
 
+  // Create notification for team member update
+  const positionChanged = data.position && data.position !== existing.position
+  const parentChanged = data.parentId !== undefined && data.parentId !== existing.parentId
+
+  if (positionChanged) {
+    await notifyTeamUpdate({
+      memberId: id,
+      memberName: data.name || existing.name,
+      action: 'position_changed',
+      details: `${existing.position} → ${data.position}`,
+    })
+  } else if (parentChanged) {
+    await notifyOrgChartUpdate({
+      changeType: 'hierarchy',
+      affectedCount: 1,
+      details: `${existing.name}'s reporting structure updated`,
+    })
+  } else {
+    await notifyTeamUpdate({
+      memberId: id,
+      memberName: data.name || existing.name,
+      action: 'updated',
+    })
+  }
+
   revalidatePath('/about')
   return { success: true }
 }
@@ -157,6 +191,13 @@ export async function deleteTeamMember(id: string) {
     contentTitle: existing.name,
     user: { id: user.id, email: user.email, name: user.name },
     metadata: { deletedData: existing },
+  })
+
+  // Create notification for team member removed
+  await notifyTeamUpdate({
+    memberId: id,
+    memberName: existing.name,
+    action: 'removed',
   })
 
   await db.delete(teamMembers).where(eq(teamMembers.id, id))
