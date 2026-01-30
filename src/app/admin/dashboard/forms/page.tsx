@@ -19,7 +19,18 @@ function QuickExportButton({ formId, formName, disabled }: { formId: string; for
       const response = await fetch(`/api/forms/${formId}/export?format=${format}`, {
         credentials: 'include',
       })
-      if (!response.ok) throw new Error('Export failed')
+
+      // Check content type to see if it's an error response
+      const contentType = response.headers.get('content-type') || ''
+
+      if (!response.ok || contentType.includes('application/json')) {
+        // If it's JSON, it might be an error response
+        if (contentType.includes('application/json')) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Export failed')
+        }
+        throw new Error(`Export failed with status: ${response.status}`)
+      }
 
       const contentDisposition = response.headers.get('content-disposition')
       const filenameMatch = contentDisposition?.match(/filename="(.+)"/)
@@ -36,7 +47,8 @@ function QuickExportButton({ formId, formName, disabled }: { formId: string; for
       document.body.removeChild(a)
     } catch (error) {
       console.error('Export failed:', error)
-      alert('Failed to export responses.')
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      alert(`Failed to export responses: ${message}`)
     } finally {
       setIsExporting(false)
     }

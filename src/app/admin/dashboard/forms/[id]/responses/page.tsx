@@ -19,8 +19,16 @@ function ExportDropdown({ formId, disabled }: { formId: string; disabled?: boole
         credentials: 'include',
       })
 
-      if (!response.ok) {
-        throw new Error('Export failed')
+      // Check content type to see if it's an error response
+      const contentType = response.headers.get('content-type') || ''
+
+      if (!response.ok || contentType.includes('application/json')) {
+        // If it's JSON, it might be an error response
+        if (contentType.includes('application/json')) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Export failed')
+        }
+        throw new Error(`Export failed with status: ${response.status}`)
       }
 
       const contentDisposition = response.headers.get('content-disposition')
@@ -38,7 +46,8 @@ function ExportDropdown({ formId, disabled }: { formId: string; disabled?: boole
       document.body.removeChild(a)
     } catch (error) {
       console.error('Export failed:', error)
-      alert('Failed to export responses. Please try again.')
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      alert(`Failed to export responses: ${message}`)
     } finally {
       setIsExporting(false)
     }
