@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db, contactSubmissions } from '@/db'
 import { eq } from 'drizzle-orm'
+import { getSession } from '@/lib/auth-server'
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Verify authentication
+    const session = await getSession()
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { id } = await params
     const body = await request.json()
 
@@ -27,6 +34,12 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Verify authentication
+    const session = await getSession()
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { id } = await params
 
     await db.delete(contactSubmissions).where(eq(contactSubmissions.id, id))
