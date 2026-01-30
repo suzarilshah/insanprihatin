@@ -11,6 +11,21 @@ interface StatProps {
   icon?: React.ReactNode
 }
 
+interface ImpactStatFromDB {
+  id: string
+  label: string
+  value: string
+  suffix?: string | null
+  icon?: string | null
+  sortOrder?: number | null
+  isActive?: boolean | null
+  updatedAt?: Date
+}
+
+interface ImpactProps {
+  stats?: ImpactStatFromDB[]
+}
+
 function AnimatedStat({ value, suffix = '', prefix = '', label, icon }: StatProps) {
   const [hasAnimated, setHasAnimated] = useState(false)
   const count = useMotionValue(0)
@@ -56,7 +71,8 @@ function AnimatedStat({ value, suffix = '', prefix = '', label, icon }: StatProp
   )
 }
 
-const stats = [
+// Default stats to use when no data from DB
+const defaultStats = [
   {
     value: 50000,
     suffix: '+',
@@ -99,7 +115,86 @@ const stats = [
   },
 ]
 
-export default function Impact() {
+// Icon mapping for database-stored icon names
+const iconMap: Record<string, React.ReactNode> = {
+  users: (
+    <svg className="w-9 h-9" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+    </svg>
+  ),
+  currency: (
+    <svg className="w-9 h-9" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ),
+  check: (
+    <svg className="w-9 h-9" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ),
+  globe: (
+    <svg className="w-9 h-9" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+    </svg>
+  ),
+  heart: (
+    <svg className="w-9 h-9" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+    </svg>
+  ),
+}
+
+// Default icon when no match found
+const defaultIcon = (
+  <svg className="w-9 h-9" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+  </svg>
+)
+
+// Helper function to parse value string to number
+function parseStatValue(value: string): { numericValue: number; prefix: string } {
+  // Remove common prefixes and parse
+  const cleanValue = value.replace(/[,\s]/g, '')
+  const rmMatch = cleanValue.match(/^RM\s*([\d.]+)([KMB]?)$/i)
+
+  if (rmMatch) {
+    let num = parseFloat(rmMatch[1])
+    const multiplier = rmMatch[2]?.toUpperCase()
+    if (multiplier === 'K') num *= 1000
+    if (multiplier === 'M') num *= 1000000
+    if (multiplier === 'B') num *= 1000000000
+    return { numericValue: num, prefix: 'RM ' }
+  }
+
+  // Try parsing with multiplier suffixes
+  const numMatch = cleanValue.match(/^([\d.]+)([KMB]?)$/i)
+  if (numMatch) {
+    let num = parseFloat(numMatch[1])
+    const multiplier = numMatch[2]?.toUpperCase()
+    if (multiplier === 'K') num *= 1000
+    if (multiplier === 'M') num *= 1000000
+    if (multiplier === 'B') num *= 1000000000
+    return { numericValue: num, prefix: '' }
+  }
+
+  // Fallback to direct parse
+  return { numericValue: parseFloat(cleanValue) || 0, prefix: '' }
+}
+
+export default function Impact({ stats: dbStats }: ImpactProps) {
+  // Use database stats if available, otherwise use defaults
+  const stats = dbStats && dbStats.length > 0
+    ? dbStats.map((stat) => {
+        const { numericValue, prefix } = parseStatValue(stat.value)
+        return {
+          value: numericValue,
+          prefix,
+          suffix: stat.suffix || '',
+          label: stat.label,
+          icon: stat.icon ? (iconMap[stat.icon] || defaultIcon) : defaultIcon,
+        }
+      })
+    : defaultStats
   return (
     <section className="relative py-32 overflow-hidden">
       {/* Background */}

@@ -11,7 +11,11 @@ interface HeroProps {
   description?: string
   ctaText?: string
   ctaLink?: string
+  backgroundImage?: string | null
 }
+
+// Default fallback image
+const DEFAULT_BACKGROUND = 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?q=80&w=2574'
 
 export default function Hero({
   title = 'Empowering Communities Through Compassion',
@@ -19,7 +23,10 @@ export default function Hero({
   description = 'Building a better tomorrow through education, healthcare, and sustainable development. Join us in creating lasting impact for communities across Malaysia.',
   ctaText = 'Explore Our Impact',
   ctaLink = '/projects',
+  backgroundImage,
 }: HeroProps) {
+  // Use the provided background image or fall back to default
+  const bgImage = backgroundImage || DEFAULT_BACKGROUND
   const containerRef = useRef<HTMLElement>(null)
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -37,12 +44,13 @@ export default function Hero({
         {/* Background Image - Malaysian community/charitable work */}
         <motion.div style={{ y: backgroundY }} className="absolute inset-0 scale-110">
           <Image
-            src="https://images.unsplash.com/photo-1559027615-cd4628902d4a?q=80&w=2574"
+            src={bgImage}
             alt="Malaysian community coming together"
             fill
             className="object-cover"
             priority
             quality={90}
+            unoptimized={bgImage.startsWith('http')}
           />
         </motion.div>
 
