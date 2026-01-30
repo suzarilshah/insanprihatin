@@ -15,18 +15,18 @@ function ExportDropdown({ formId, disabled }: { formId: string; disabled?: boole
     setIsOpen(false)
 
     try {
-      const response = await fetch(`/api/forms/${formId}/export?format=${format}`)
+      const response = await fetch(`/api/forms/${formId}/export?format=${format}`, {
+        credentials: 'include',
+      })
 
       if (!response.ok) {
         throw new Error('Export failed')
       }
 
-      // Get filename from content-disposition header
       const contentDisposition = response.headers.get('content-disposition')
       const filenameMatch = contentDisposition?.match(/filename="(.+)"/)
       const filename = filenameMatch ? filenameMatch[1] : `form_responses.${format}`
 
-      // Create blob and download
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -170,6 +170,16 @@ function formatDate(dateString: string) {
   }).format(date)
 }
 
+function formatShortDate(dateString: string) {
+  const date = new Date(dateString)
+  return new Intl.DateTimeFormat('en-MY', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
+}
+
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
 
@@ -199,19 +209,71 @@ function CopyButton({ text }: { text: string }) {
   )
 }
 
+// Helper to get submitter display name from form data
+function getSubmitterDisplay(submission: FormSubmission, fields: FormField[]): { name: string; email: string } {
+  const data = submission.data as Record<string, unknown>
+
+  // First try metadata
+  let name = submission.submitterName || ''
+  let email = submission.submitterEmail || ''
+
+  // Then try to find name/email from form data
+  for (const field of fields) {
+    const value = data[field.id]
+    if (!value) continue
+
+    // Look for email field
+    if (field.type === 'email' && !email) {
+      email = String(value)
+    }
+
+    // Look for name field (check label)
+    const lowerLabel = field.label.toLowerCase()
+    if ((lowerLabel.includes('name') || lowerLabel.includes('nama')) && !name) {
+      name = String(value)
+    }
+  }
+
+  // If still no name, try first text field that looks like a name
+  if (!name) {
+    for (const field of fields) {
+      if (field.type === 'text' && data[field.id]) {
+        const value = String(data[field.id])
+        // Check if it looks like a name (not too long, no special chars)
+        if (value.length < 100 && /^[a-zA-Z\s.'-]+$/.test(value)) {
+          name = value
+          break
+        }
+      }
+    }
+  }
+
+  return { name, email }
+}
+
+// Format cell value for display
+function formatCellValue(value: unknown): string {
+  if (value === null || value === undefined || value === '') return '-'
+  if (Array.isArray(value)) return value.join(', ')
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No'
+  return String(value)
+}
+
 export default function FormResponsesPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
   const [form, setForm] = useState<FormData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [expandedSubmission, setExpandedSubmission] = useState<string | null>(null)
   const [selectedSubmissions, setSelectedSubmissions] = useState<string[]>([])
   const [isPending, startTransition] = useTransition()
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [expandedRow, setExpandedRow] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadForm() {
       try {
-        const response = await fetch(`/api/forms/${resolvedParams.id}?withSubmissions=true`)
+        const response = await fetch(`/api/forms/${resolvedParams.id}?withSubmissions=true`, {
+          credentials: 'include',
+        })
         if (response.ok) {
           const data = await response.json()
           setForm(data)
@@ -234,7 +296,7 @@ export default function FormResponsesPage({ params }: { params: Promise<{ id: st
           submissions: form.submissions.map(s =>
             s.id === submissionId ? { ...s, isRead: true } : s
           ),
-          unreadSubmissions: form.unreadSubmissions - 1,
+          unreadSubmissions: Math.max(0, form.unreadSubmissions - 1),
         })
       }
     })
@@ -251,9 +313,10 @@ export default function FormResponsesPage({ params }: { params: Promise<{ id: st
           ...form,
           submissions: form.submissions.filter(s => s.id !== submissionId),
           totalSubmissions: form.totalSubmissions - 1,
-          unreadSubmissions: submission?.isRead ? form.unreadSubmissions : form.unreadSubmissions - 1,
+          unreadSubmissions: submission?.isRead ? form.unreadSubmissions : Math.max(0, form.unreadSubmissions - 1),
         })
         setMessage({ type: 'success', text: 'Response deleted successfully' })
+        setTimeout(() => setMessage(null), 3000)
       }
     })
   }
@@ -272,10 +335,11 @@ export default function FormResponsesPage({ params }: { params: Promise<{ id: st
           submissions: form.submissions.map(s =>
             selectedSubmissions.includes(s.id) ? { ...s, isRead: true } : s
           ),
-          unreadSubmissions: form.unreadSubmissions - unreadSelected,
+          unreadSubmissions: Math.max(0, form.unreadSubmissions - unreadSelected),
         })
         setSelectedSubmissions([])
         setMessage({ type: 'success', text: `${selectedSubmissions.length} responses marked as read` })
+        setTimeout(() => setMessage(null), 3000)
       }
     })
   }
@@ -294,10 +358,11 @@ export default function FormResponsesPage({ params }: { params: Promise<{ id: st
           ...form,
           submissions: form.submissions.filter(s => !selectedSubmissions.includes(s.id)),
           totalSubmissions: form.totalSubmissions - selectedSubmissions.length,
-          unreadSubmissions: form.unreadSubmissions - unreadDeleted,
+          unreadSubmissions: Math.max(0, form.unreadSubmissions - unreadDeleted),
         })
         setSelectedSubmissions([])
         setMessage({ type: 'success', text: `${selectedSubmissions.length} responses deleted` })
+        setTimeout(() => setMessage(null), 3000)
       }
     })
   }
@@ -340,6 +405,9 @@ export default function FormResponsesPage({ params }: { params: Promise<{ id: st
     )
   }
 
+  // Get display columns (form fields)
+  const displayFields = form.fields.slice(0, 5) // Show first 5 fields in table
+
   return (
     <div>
       {/* Header */}
@@ -377,57 +445,62 @@ export default function FormResponsesPage({ params }: { params: Promise<{ id: st
       </div>
 
       {/* Message */}
-      {message && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0 }}
-          className={`p-4 rounded-xl mb-6 ${
-            message.type === 'success'
-              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-              : 'bg-red-50 text-red-700 border border-red-200'
-          }`}
-        >
-          {message.text}
-        </motion.div>
-      )}
+      <AnimatePresence>
+        {message && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className={`p-4 rounded-xl mb-6 ${
+              message.type === 'success'
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : 'bg-red-50 text-red-700 border border-red-200'
+            }`}
+          >
+            {message.text}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Bulk Actions */}
-      {selectedSubmissions.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-teal-50 border border-teal-200 rounded-xl p-4 mb-6 flex items-center justify-between"
-        >
-          <p className="text-teal-700 font-medium">
-            {selectedSubmissions.length} response{selectedSubmissions.length > 1 ? 's' : ''} selected
-          </p>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleBulkMarkAsRead}
-              disabled={isPending}
-              className="px-3 py-1.5 bg-teal-600 text-white rounded-lg text-sm hover:bg-teal-700 transition-colors disabled:opacity-50"
-            >
-              Mark as Read
-            </button>
-            <button
-              onClick={handleBulkDelete}
-              disabled={isPending}
-              className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-colors disabled:opacity-50"
-            >
-              Delete
-            </button>
-            <button
-              onClick={() => setSelectedSubmissions([])}
-              className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300 transition-colors"
-            >
-              Cancel
-            </button>
-          </div>
-        </motion.div>
-      )}
+      <AnimatePresence>
+        {selectedSubmissions.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="bg-teal-50 border border-teal-200 rounded-xl p-4 mb-6 flex items-center justify-between"
+          >
+            <p className="text-teal-700 font-medium">
+              {selectedSubmissions.length} response{selectedSubmissions.length > 1 ? 's' : ''} selected
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleBulkMarkAsRead}
+                disabled={isPending}
+                className="px-3 py-1.5 bg-teal-600 text-white rounded-lg text-sm hover:bg-teal-700 transition-colors disabled:opacity-50"
+              >
+                Mark as Read
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                disabled={isPending}
+                className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-colors disabled:opacity-50"
+              >
+                Delete
+              </button>
+              <button
+                onClick={() => setSelectedSubmissions([])}
+                className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Responses List */}
+      {/* Responses Table */}
       {form.submissions.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
           <div className="w-16 h-16 bg-teal-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -444,151 +517,225 @@ export default function FormResponsesPage({ params }: { params: Promise<{ id: st
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-          {/* Table Header */}
-          <div className="bg-gray-50 px-6 py-4 border-b border-gray-100">
-            <div className="flex items-center gap-4">
-              <input
-                type="checkbox"
-                checked={selectedSubmissions.length === form.submissions.length}
-                onChange={toggleSelectAll}
-                className="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
-              />
-              <span className="text-sm font-medium text-gray-700">Select all</span>
-            </div>
-          </div>
-
-          {/* Submissions */}
-          <div className="divide-y divide-gray-100">
-            {form.submissions.map((submission, index) => (
-              <motion.div
-                key={submission.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: index * 0.02 }}
-                className={`${!submission.isRead ? 'bg-teal-50/30' : ''}`}
-              >
-                {/* Submission Row */}
-                <div
-                  className="px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                  onClick={() => {
-                    setExpandedSubmission(expandedSubmission === submission.id ? null : submission.id)
-                    if (!submission.isRead) {
-                      handleMarkAsRead(submission.id)
-                    }
-                  }}
-                >
-                  <div className="flex items-center gap-4">
+          {/* Table Container with Horizontal Scroll */}
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[800px]">
+              {/* Table Header */}
+              <thead className="bg-gray-50 border-b border-gray-100">
+                <tr>
+                  <th className="px-4 py-4 text-left w-12">
                     <input
                       type="checkbox"
-                      checked={selectedSubmissions.includes(submission.id)}
-                      onChange={(e) => {
-                        e.stopPropagation()
-                        toggleSelectSubmission(submission.id)
-                      }}
-                      onClick={(e) => e.stopPropagation()}
+                      checked={selectedSubmissions.length === form.submissions.length}
+                      onChange={toggleSelectAll}
                       className="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
                     />
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3">
-                        {!submission.isRead && (
-                          <span className="w-2 h-2 bg-teal-500 rounded-full flex-shrink-0" />
-                        )}
-                        <p className="font-medium text-foundation-charcoal truncate">
-                          {submission.submitterName || submission.submitterEmail || 'Anonymous'}
-                        </p>
-                        {submission.sourceContentTitle && (
-                          <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded truncate">
-                            from: {submission.sourceContentTitle}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-500 mt-0.5">
-                        {formatDate(submission.createdAt)}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleDelete(submission.id)
-                        }}
-                        disabled={isPending}
-                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                      <svg
-                        className={`w-5 h-5 text-gray-400 transition-transform ${expandedSubmission === submission.id ? 'rotate-180' : ''}`}
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Expanded Details */}
-                <AnimatePresence>
-                  {expandedSubmission === submission.id && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="overflow-hidden"
+                  </th>
+                  <th className="px-4 py-4 text-left w-8">
+                    <span className="sr-only">Status</span>
+                  </th>
+                  <th className="px-4 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Submitted
+                  </th>
+                  <th className="px-4 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Submitter
+                  </th>
+                  {displayFields.map(field => (
+                    <th
+                      key={field.id}
+                      className="px-4 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider max-w-[200px]"
                     >
-                      <div className="px-6 pb-6 ml-8">
-                        <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-                          {Object.entries(submission.data).map(([fieldId, value]) => (
-                            <div key={fieldId}>
-                              <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-                                {getFieldLabel(fieldId)}
-                              </p>
-                              <p className="text-foundation-charcoal">
-                                {Array.isArray(value) ? value.join(', ') : String(value || '-')}
-                              </p>
-                            </div>
-                          ))}
+                      {field.label}
+                    </th>
+                  ))}
+                  <th className="px-4 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider w-24">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
 
-                          {/* Metadata */}
-                          <div className="pt-3 mt-3 border-t border-gray-200">
-                            <div className="grid grid-cols-2 gap-4 text-sm">
-                              {submission.submitterEmail && (
-                                <div>
-                                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Email</p>
-                                  <p className="text-gray-700">{submission.submitterEmail}</p>
-                                </div>
-                              )}
-                              {submission.sourceUrl && (
-                                <div>
-                                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Source URL</p>
-                                  <a
-                                    href={submission.sourceUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-teal-600 hover:underline truncate block"
-                                  >
-                                    {submission.sourceUrl}
-                                  </a>
-                                </div>
-                              )}
-                            </div>
+              {/* Table Body */}
+              <tbody className="divide-y divide-gray-100">
+                {form.submissions.map((submission, index) => {
+                  const submitter = getSubmitterDisplay(submission, form.fields)
+                  const isExpanded = expandedRow === submission.id
+
+                  return (
+                    <motion.tr
+                      key={submission.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: index * 0.02 }}
+                      className={`group ${!submission.isRead ? 'bg-teal-50/40' : 'hover:bg-gray-50'} transition-colors cursor-pointer`}
+                      onClick={() => {
+                        setExpandedRow(isExpanded ? null : submission.id)
+                        if (!submission.isRead) {
+                          handleMarkAsRead(submission.id)
+                        }
+                      }}
+                    >
+                      <td className="px-4 py-4" onClick={e => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={selectedSubmissions.includes(submission.id)}
+                          onChange={() => toggleSelectSubmission(submission.id)}
+                          className="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                        />
+                      </td>
+                      <td className="px-4 py-4">
+                        {!submission.isRead && (
+                          <span className="w-2.5 h-2.5 bg-teal-500 rounded-full block" title="Unread" />
+                        )}
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className="text-sm text-gray-600 whitespace-nowrap">
+                          {formatShortDate(submission.createdAt)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="min-w-[150px]">
+                          <p className={`text-sm ${!submission.isRead ? 'font-semibold' : 'font-medium'} text-foundation-charcoal truncate`}>
+                            {submitter.name || submitter.email || 'No name provided'}
+                          </p>
+                          {submitter.email && submitter.name && (
+                            <p className="text-xs text-gray-500 truncate">{submitter.email}</p>
+                          )}
+                        </div>
+                      </td>
+                      {displayFields.map(field => (
+                        <td key={field.id} className="px-4 py-4 max-w-[200px]">
+                          <span className="text-sm text-gray-700 truncate block">
+                            {formatCellValue(submission.data[field.id])}
+                          </span>
+                        </td>
+                      ))}
+                      <td className="px-4 py-4 text-right" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => handleDelete(submission.id)}
+                            disabled={isPending}
+                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                            title="Delete"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                          <button
+                            className="p-1.5 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
+                            title="View details"
+                          >
+                            <svg
+                              className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Expanded Details Panel */}
+          <AnimatePresence>
+            {expandedRow && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="border-t border-gray-200 bg-gray-50 overflow-hidden"
+              >
+                {(() => {
+                  const submission = form.submissions.find(s => s.id === expandedRow)
+                  if (!submission) return null
+                  const submitter = getSubmitterDisplay(submission, form.fields)
+
+                  return (
+                    <div className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <h4 className="font-medium text-foundation-charcoal">
+                            Response Details
+                          </h4>
+                          <p className="text-sm text-gray-500">
+                            Submitted on {formatDate(submission.createdAt)}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setExpandedRow(null)}
+                          className="p-1 text-gray-400 hover:text-gray-600 hover:bg-white rounded-lg transition-colors"
+                        >
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+
+                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {/* All form fields */}
+                        {form.fields.map(field => (
+                          <div key={field.id} className="bg-white rounded-lg p-3 border border-gray-100">
+                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
+                              {field.label}
+                            </p>
+                            <p className="text-foundation-charcoal text-sm break-words">
+                              {formatCellValue(submission.data[field.id])}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Metadata */}
+                      {(submitter.email || submission.sourceUrl || submission.sourceContentTitle) && (
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
+                            Submission Metadata
+                          </p>
+                          <div className="grid md:grid-cols-3 gap-4 text-sm">
+                            {submitter.email && (
+                              <div>
+                                <span className="text-gray-500">Email:</span>{' '}
+                                <a href={`mailto:${submitter.email}`} className="text-teal-600 hover:underline">
+                                  {submitter.email}
+                                </a>
+                              </div>
+                            )}
+                            {submission.sourceContentTitle && (
+                              <div>
+                                <span className="text-gray-500">Source:</span>{' '}
+                                <span className="text-foundation-charcoal">{submission.sourceContentTitle}</span>
+                              </div>
+                            )}
+                            {submission.sourceUrl && (
+                              <div>
+                                <span className="text-gray-500">URL:</span>{' '}
+                                <a
+                                  href={submission.sourceUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-teal-600 hover:underline truncate block"
+                                >
+                                  {submission.sourceUrl}
+                                </a>
+                              </div>
+                            )}
                           </div>
                         </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                      )}
+                    </div>
+                  )
+                })()}
               </motion.div>
-            ))}
-          </div>
+            )}
+          </AnimatePresence>
         </div>
       )}
     </div>

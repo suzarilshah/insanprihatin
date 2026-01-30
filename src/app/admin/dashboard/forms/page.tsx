@@ -16,7 +16,9 @@ function QuickExportButton({ formId, formName, disabled }: { formId: string; for
     setIsOpen(false)
 
     try {
-      const response = await fetch(`/api/forms/${formId}/export?format=${format}`)
+      const response = await fetch(`/api/forms/${formId}/export?format=${format}`, {
+        credentials: 'include',
+      })
       if (!response.ok) throw new Error('Export failed')
 
       const contentDisposition = response.headers.get('content-disposition')
