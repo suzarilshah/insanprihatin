@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db, contactSubmissions } from '@/db'
+import { sendContactNotificationEmail } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,22 +24,47 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Sanitize inputs
+    const sanitizedData = {
+      name: name.trim().slice(0, 100),
+      email: email.trim().toLowerCase().slice(0, 255),
+      phone: phone ? phone.trim().slice(0, 20) : null,
+      subject: subject?.trim().slice(0, 50) || 'General Inquiry',
+      message: message.trim().slice(0, 5000),
+    }
+
     // Save to database
-    const submission = await db.insert(contactSubmissions).values({
-      name,
-      email,
-      phone: phone || null,
-      subject: subject || 'General Inquiry',
-      message,
+    const [submission] = await db.insert(contactSubmissions).values({
+      name: sanitizedData.name,
+      email: sanitizedData.email,
+      phone: sanitizedData.phone,
+      subject: sanitizedData.subject,
+      message: sanitizedData.message,
     }).returning()
 
-    // TODO: Send email notification to admin
-    // await sendContactNotificationEmail(submission[0])
+    // Send email notification (don't fail the request if email fails)
+    try {
+      const emailResult = await sendContactNotificationEmail({
+        id: submission.id,
+        name: sanitizedData.name,
+        email: sanitizedData.email,
+        phone: sanitizedData.phone,
+        subject: sanitizedData.subject,
+        message: sanitizedData.message,
+      })
+
+      if (!emailResult.success) {
+        console.log('Email notification not sent:', emailResult.reason || emailResult.error)
+      }
+    } catch (emailError) {
+      // Log but don't fail the request
+      console.error('Email notification error:', emailError)
+    }
 
     return NextResponse.json({
       success: true,
       message: 'Thank you for contacting us. We will get back to you soon.',
-      id: submission[0].id,
+      id: submission.id,
     })
   } catch (error) {
     console.error('Contact submission error:', error)

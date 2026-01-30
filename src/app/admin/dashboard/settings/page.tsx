@@ -26,7 +26,12 @@ export default function SettingsPage() {
     secondaryColor: '#f59e0b',
     googleAnalytics: '',
     facebookPixel: '',
+    // Email notification settings
+    notificationEmail: '',
+    emailNotificationsEnabled: true,
   })
+  const [isSendingTestEmail, setIsSendingTestEmail] = useState(false)
+  const [testEmailResult, setTestEmailResult] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
   useEffect(() => {
     async function loadSettings() {
@@ -38,6 +43,8 @@ export default function SettingsPage() {
           contactPhone,
           address,
           social,
+          notificationEmail,
+          emailNotificationsEnabled,
         ] = await Promise.all([
           getSiteSetting('siteName'),
           getSiteSetting('siteTagline'),
@@ -45,6 +52,8 @@ export default function SettingsPage() {
           getSiteSetting('contactPhone'),
           getSiteSetting('address'),
           getSiteSetting('social'),
+          getSiteSetting('notificationEmail'),
+          getSiteSetting('emailNotificationsEnabled'),
         ])
 
         setSettings(prev => ({
@@ -55,6 +64,8 @@ export default function SettingsPage() {
           contactPhone: (contactPhone as string) || prev.contactPhone,
           address: (address as string) || prev.address,
           ...((social as Record<string, string>) || {}),
+          notificationEmail: (notificationEmail as string) || prev.notificationEmail,
+          emailNotificationsEnabled: emailNotificationsEnabled !== false,
         }))
       } catch (error) {
         console.error('Failed to load settings:', error)
@@ -82,6 +93,8 @@ export default function SettingsPage() {
             socialLinkedIn: settings.socialLinkedIn,
             socialYoutube: settings.socialYoutube,
           }),
+          updateSiteSetting('notificationEmail', settings.notificationEmail),
+          updateSiteSetting('emailNotificationsEnabled', settings.emailNotificationsEnabled),
         ])
         setMessage({ type: 'success', text: 'Settings saved successfully!' })
       } catch (error) {
@@ -89,6 +102,40 @@ export default function SettingsPage() {
         setMessage({ type: 'error', text: 'Failed to save settings. Please try again.' })
       }
     })
+  }
+
+  const handleSendTestEmail = async () => {
+    if (!settings.notificationEmail) {
+      setTestEmailResult({ type: 'error', text: 'Please enter a notification email first' })
+      return
+    }
+
+    setIsSendingTestEmail(true)
+    setTestEmailResult(null)
+
+    try {
+      const response = await fetch('/api/test-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: settings.notificationEmail }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send test email')
+      }
+
+      setTestEmailResult({ type: 'success', text: 'Test email sent! Check your inbox.' })
+    } catch (error) {
+      console.error('Test email error:', error)
+      setTestEmailResult({
+        type: 'error',
+        text: error instanceof Error ? error.message : 'Failed to send test email',
+      })
+    } finally {
+      setIsSendingTestEmail(false)
+    }
   }
 
   if (isLoading) {
@@ -102,6 +149,7 @@ export default function SettingsPage() {
   const tabs = [
     { id: 'general', label: 'General', icon: '⚙️' },
     { id: 'contact', label: 'Contact', icon: '📍' },
+    { id: 'email', label: 'Email Notifications', icon: '📧' },
     { id: 'social', label: 'Social Media', icon: '📱' },
     { id: 'analytics', label: 'Analytics', icon: '📊' },
   ]
@@ -235,6 +283,107 @@ export default function SettingsPage() {
             </div>
           )}
 
+          {activeTab === 'email' && (
+            <div className="bg-white rounded-2xl border border-gray-100 p-6">
+              <h2 className="font-heading text-lg font-semibold text-foundation-charcoal mb-6">
+                Email Notification Settings
+              </h2>
+              <p className="text-gray-600 text-sm mb-6">
+                Configure where to receive email notifications when someone submits the contact form.
+              </p>
+              <div className="space-y-6">
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Enable Email Notifications</label>
+                    <p className="text-xs text-gray-500 mt-1">Receive emails when contact forms are submitted</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSettings({ ...settings, emailNotificationsEnabled: !settings.emailNotificationsEnabled })}
+                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 ${
+                      settings.emailNotificationsEnabled ? 'bg-teal-600' : 'bg-gray-200'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        settings.emailNotificationsEnabled ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Notification Email</label>
+                  <input
+                    type="email"
+                    value={settings.notificationEmail}
+                    onChange={(e) => setSettings({ ...settings, notificationEmail: e.target.value })}
+                    placeholder="admin@insanprihatin.org"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Contact form submissions will be sent to this email address
+                  </p>
+                </div>
+                <div className="pt-4 border-t border-gray-100">
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">Test Email Configuration</h3>
+                  <p className="text-xs text-gray-500 mb-4">
+                    Send a test email to verify your configuration is working correctly.
+                  </p>
+                  {testEmailResult && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`p-3 rounded-lg mb-4 text-sm ${
+                        testEmailResult.type === 'success'
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : 'bg-red-50 text-red-700 border border-red-200'
+                      }`}
+                    >
+                      {testEmailResult.text}
+                    </motion.div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleSendTestEmail}
+                    disabled={isSendingTestEmail || !settings.notificationEmail}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {isSendingTestEmail ? (
+                      <>
+                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        Send Test Email
+                      </>
+                    )}
+                  </button>
+                </div>
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                  <div className="flex gap-3">
+                    <svg className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                      <p className="text-sm font-medium text-amber-800">Resend API Key Required</p>
+                      <p className="text-xs text-amber-700 mt-1">
+                        To send emails, add your Resend API key to the environment variable <code className="bg-amber-100 px-1 rounded">RESEND_API_KEY</code>.
+                        Get your API key from <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="underline">resend.com</a>.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {activeTab === 'social' && (
             <div className="bg-white rounded-2xl border border-gray-100 p-6">
               <h2 className="font-heading text-lg font-semibold text-foundation-charcoal mb-6">
@@ -242,17 +391,17 @@ export default function SettingsPage() {
               </h2>
               <div className="space-y-6">
                 {[
-                  { key: 'socialFacebook', label: 'Facebook', placeholder: 'https://facebook.com/...' },
-                  { key: 'socialInstagram', label: 'Instagram', placeholder: 'https://instagram.com/...' },
-                  { key: 'socialTwitter', label: 'Twitter / X', placeholder: 'https://twitter.com/...' },
-                  { key: 'socialLinkedIn', label: 'LinkedIn', placeholder: 'https://linkedin.com/...' },
-                  { key: 'socialYoutube', label: 'YouTube', placeholder: 'https://youtube.com/...' },
+                  { key: 'socialFacebook' as const, label: 'Facebook', placeholder: 'https://facebook.com/...' },
+                  { key: 'socialInstagram' as const, label: 'Instagram', placeholder: 'https://instagram.com/...' },
+                  { key: 'socialTwitter' as const, label: 'Twitter / X', placeholder: 'https://twitter.com/...' },
+                  { key: 'socialLinkedIn' as const, label: 'LinkedIn', placeholder: 'https://linkedin.com/...' },
+                  { key: 'socialYoutube' as const, label: 'YouTube', placeholder: 'https://youtube.com/...' },
                 ].map((item) => (
                   <div key={item.key}>
                     <label className="block text-sm font-medium text-gray-700 mb-2">{item.label}</label>
                     <input
                       type="text"
-                      value={settings[item.key as keyof typeof settings]}
+                      value={settings[item.key]}
                       onChange={(e) => setSettings({ ...settings, [item.key]: e.target.value })}
                       placeholder={item.placeholder}
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
