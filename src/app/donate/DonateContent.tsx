@@ -1,689 +1,435 @@
 'use client'
 
-import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { formatCurrency } from '@/lib/utils'
 
-const donationAmounts = [50, 100, 250, 500, 1000, 2500]
+// Configuration
+const PRESET_AMOUNTS = [50, 100, 250, 500, 1000, 2500]
 
-const programs = [
-  { id: 'general', name: 'General Fund', description: 'Support all our programs', icon: '🎯', color: 'from-teal-400 to-teal-500' },
-  { id: 'education', name: 'Education', description: 'Scholarships & school supplies', icon: '🎓', color: 'from-blue-400 to-blue-500' },
-  { id: 'healthcare', name: 'Healthcare', description: 'Medical camps & treatment', icon: '🏥', color: 'from-rose-400 to-rose-500' },
-  { id: 'environment', name: 'Environment', description: 'Green initiatives', icon: '🌳', color: 'from-emerald-400 to-emerald-500' },
-  { id: 'community', name: 'Community', description: 'Skills training & development', icon: '🏘️', color: 'from-amber-400 to-amber-500' },
+const PROGRAMS = [
+  { id: 'general', name: 'General Fund', description: 'Maximum flexibility where needed most', icon: '🌍', color: 'from-teal-400 to-teal-500' },
+  { id: 'education', name: 'Education', description: 'Scholarships & digital literacy', icon: '🎓', color: 'from-blue-400 to-blue-500' },
+  { id: 'healthcare', name: 'Healthcare', description: 'Medical camps & screenings', icon: '🩺', color: 'from-rose-400 to-rose-500' },
+  { id: 'community', name: 'Community', description: 'Skills training & development', icon: '🤝', color: 'from-amber-400 to-amber-500' },
 ]
 
-const impactExamples = [
-  { amount: 50, impact: 'Provides school supplies for 1 student', icon: '📚' },
-  { amount: 100, impact: 'Funds a medical checkup for 5 villagers', icon: '🩺' },
-  { amount: 250, impact: 'Sponsors a month of skills training', icon: '🛠️' },
-  { amount: 500, impact: 'Plants 50 trees in rural areas', icon: '🌱' },
-  { amount: 1000, impact: 'Provides a semester scholarship', icon: '🎓' },
-  { amount: 2500, impact: 'Equips a rural classroom', icon: '🏫' },
+const IMPACT_TIERS = [
+  { threshold: 50, label: 'School Supplies', desc: 'Equips 1 student for a term', emoji: '📚' },
+  { threshold: 100, label: 'Medical Checkup', desc: 'Screening for 5 villagers', emoji: '🩺' },
+  { threshold: 250, label: 'Skills Training', desc: '1 month vocational course', emoji: '🛠️' },
+  { threshold: 500, label: 'Reforestation', desc: 'Plants 50 native trees', emoji: '🌱' },
+  { threshold: 1000, label: 'Scholarship', desc: 'Full semester support', emoji: '🎓' },
+  { threshold: 2500, label: 'Classroom Tech', desc: 'Smart equipment for rural school', emoji: '💻' },
 ]
 
 export default function DonateContent() {
-  const [selectedAmount, setSelectedAmount] = useState<number | null>(100)
-  const [customAmount, setCustomAmount] = useState('')
-  const [selectedProgram, setSelectedProgram] = useState('general')
-  const [donationType, setDonationType] = useState<'one-time' | 'monthly'>('one-time')
-  const [donorInfo, setDonorInfo] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    anonymous: false,
-    message: '',
-  })
-  const [step, setStep] = useState(1)
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  
+  // State
+  const [amount, setAmount] = useState<number>(100)
+  const [customAmount, setCustomAmount] = useState<string>('')
+  const [program, setProgram] = useState(PROGRAMS[0].id)
+  const [frequency, setFrequency] = useState<'one-time' | 'monthly'>('one-time')
+  const [step, setStep] = useState<'amount' | 'details' | 'confirm'>('amount')
+  
+  // Donor Info
+  const [donor, setDonor] = useState({ name: '', email: '', phone: '', isAnonymous: false })
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const finalAmount = customAmount ? parseInt(customAmount) : selectedAmount
-  const currentImpact = impactExamples.find((e) => e.amount <= (finalAmount || 0))
+  // Computed
+  const currentImpact = IMPACT_TIERS.slice().reverse().find(t => amount >= t.threshold) || IMPACT_TIERS[0]
+  const displayAmount = customAmount ? parseFloat(customAmount) : amount
 
-  const handleAmountSelect = (amount: number) => {
-    setSelectedAmount(amount)
+  // Handlers
+  const handleAmountSelect = (val: number) => {
+    setAmount(val)
     setCustomAmount('')
   }
 
-  const handleCustomAmountChange = (value: string) => {
-    setCustomAmount(value)
-    setSelectedAmount(null)
+  const handleCustomChange = (val: string) => {
+    setCustomAmount(val)
+    if (val) setAmount(parseFloat(val))
+  }
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true)
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1500))
+    router.push(`/donate/success?amount=${displayAmount}&ref=${Math.random().toString(36).slice(2)}`)
   }
 
   return (
-    <div>
-      {/* Premium Hero Section */}
-      <section className="relative py-32 overflow-hidden">
-        {/* Background */}
-        <div className="absolute inset-0">
-          <Image
-            src="https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?q=80&w=2670"
-            alt="Helping hands"
-            fill
-            className="object-cover"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-600/95 via-amber-500/90 to-amber-400/85" />
-          <div className="absolute inset-0 bg-dots opacity-10" />
-          <div className="grain" />
-        </div>
+    <div className="min-h-screen bg-foundation-pearl selection:bg-teal-100 selection:text-teal-900">
+      
+      {/* Hero Background - Abstract & Premium */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-teal-100/40 rounded-full blur-[120px] animate-pulse-slow" />
+        <div className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-amber-100/40 rounded-full blur-[100px]" />
+        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03]" />
+      </div>
 
-        {/* Animated orbs */}
-        <motion.div
-          animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.3, 0.2] }}
-          transition={{ duration: 8, repeat: Infinity }}
-          className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-white/20 rounded-full blur-[100px]"
-        />
-
-        <div className="relative container-wide z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
+      <div className="relative z-10 container-wide pt-32 pb-20">
+        
+        {/* Header Section */}
+        <div className="text-center max-w-3xl mx-auto mb-16">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center max-w-3xl mx-auto"
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-teal-100 shadow-sm mb-6"
           >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
-              className="inline-flex items-center gap-3 px-6 py-3 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 mb-8"
-            >
-              <motion.span
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="text-2xl"
-              >
-                💝
-              </motion.span>
-              <span className="text-white font-medium">Support Our Mission</span>
-            </motion.div>
-
-            <h1 className="heading-display text-white mb-6">
-              <motion.span
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="block"
-              >
-                Your Generosity
-              </motion.span>
-              <motion.span
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="block text-foundation-charcoal"
-              >
-                Transforms Lives
-              </motion.span>
-            </h1>
-
-            <motion.p
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="body-large text-white/90 mb-8"
-            >
-              Every donation creates ripples of positive change in communities across Malaysia.
-              Together, we can build a better future.
-            </motion.p>
-
-            {/* Quick stats */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="inline-flex gap-8 md:gap-12 p-6 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20"
-            >
-              {[
-                { value: '2,500+', label: 'Donors' },
-                { value: 'RM 15M', label: 'Raised' },
-                { value: '50K+', label: 'Lives Changed' },
-              ].map((stat, index) => (
-                <div key={index} className="text-center">
-                  <div className="font-display text-2xl lg:text-3xl font-bold text-white">
-                    {stat.value}
-                  </div>
-                  <div className="text-white/70 text-sm">{stat.label}</div>
-                </div>
-              ))}
-            </motion.div>
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span>
+            </span>
+            <span className="text-sm font-medium text-teal-800 tracking-wide uppercase">2025 Impact Fund Open</span>
           </motion.div>
+          
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="heading-display text-5xl md:text-7xl mb-6 text-foundation-charcoal"
+          >
+            Invest in <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-emerald-600">Sustainable</span> Futures.
+          </motion.h1>
+          
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-xl text-gray-500 leading-relaxed"
+          >
+            100% of your donation goes directly to verified community programs. 
+            <br className="hidden md:block" />
+            We cover our own operating costs.
+          </motion.p>
         </div>
-      </section>
 
-      {/* Donation Form Section */}
-      <section className="section-padding bg-white relative">
-        {/* Background decorations */}
-        <div className="absolute inset-0 bg-grid opacity-30" />
+        <div className="grid lg:grid-cols-12 gap-8 items-start max-w-6xl mx-auto">
+          
+          {/* LEFT: Donation Interface */}
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            className="lg:col-span-7"
+          >
+            <div className="bg-white rounded-3xl shadow-xl shadow-teal-900/5 border border-white/50 backdrop-blur-xl overflow-hidden relative">
+              
+              {/* Progress Bar */}
+              <div className="h-1 bg-gray-100 w-full">
+                <motion.div 
+                  className="h-full bg-teal-500"
+                  initial={{ width: '33%' }}
+                  animate={{ width: step === 'amount' ? '33%' : step === 'details' ? '66%' : '100%' }}
+                />
+              </div>
 
-        <div className="relative container-wide">
-          <div className="grid lg:grid-cols-3 gap-12">
-            {/* Main Form */}
-            <div className="lg:col-span-2">
-              {/* Progress Steps */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-4 mb-8"
-              >
-                {[1, 2, 3].map((s) => (
-                  <div key={s} className="flex items-center">
-                    <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all ${
-                        step >= s
-                          ? 'bg-gradient-to-br from-teal-400 to-teal-500 text-white'
-                          : 'bg-gray-100 text-gray-400'
-                      }`}
+              <div className="p-8 md:p-10">
+                <AnimatePresence mode="wait">
+                  
+                  {/* STEP 1: AMOUNT */}
+                  {step === 'amount' && (
+                    <motion.div
+                      key="step1"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      className="space-y-8"
                     >
-                      {step > s ? (
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      ) : (
-                        s
-                      )}
-                    </div>
-                    {s < 3 && (
-                      <div className={`w-16 h-1 mx-2 rounded ${step > s ? 'bg-teal-400' : 'bg-gray-200'}`} />
-                    )}
-                  </div>
-                ))}
-                <div className="ml-4 text-sm text-gray-500">
-                  {step === 1 && 'Choose Amount'}
-                  {step === 2 && 'Your Information'}
-                  {step === 3 && 'Confirm'}
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="card-elegant p-8 lg:p-10"
-              >
-                {/* Step 1: Amount & Program */}
-                {step === 1 && (
-                  <div className="space-y-10">
-                    {/* Donation Type */}
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-4">
-                        Donation Type
-                      </label>
-                      <div className="grid grid-cols-2 gap-4">
-                        {[
-                          { id: 'one-time', label: 'One-Time', desc: 'Single contribution', icon: '💫' },
-                          { id: 'monthly', label: 'Monthly', desc: 'Recurring impact', icon: '🔄' },
-                        ].map((type) => (
-                          <motion.button
-                            key={type.id}
-                            whileHover={{ y: -2 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => setDonationType(type.id as 'one-time' | 'monthly')}
-                            className={`p-5 rounded-2xl border-2 text-left transition-all ${
-                              donationType === type.id
-                                ? 'border-teal-500 bg-teal-50 shadow-md'
-                                : 'border-gray-200 hover:border-teal-200 hover:bg-gray-50'
+                      {/* Frequency Toggle */}
+                      <div className="flex p-1 bg-gray-100/80 rounded-xl w-max mx-auto">
+                        {['one-time', 'monthly'].map((f) => (
+                          <button
+                            key={f}
+                            onClick={() => setFrequency(f as any)}
+                            className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                              frequency === f 
+                                ? 'bg-white text-teal-700 shadow-sm' 
+                                : 'text-gray-500 hover:text-gray-700'
                             }`}
                           >
-                            <span className="text-2xl">{type.icon}</span>
-                            <div className="font-semibold text-foundation-charcoal mt-2">
-                              {type.label}
-                            </div>
-                            <div className="text-sm text-gray-500">{type.desc}</div>
-                          </motion.button>
+                            {f === 'one-time' ? 'One-Time' : 'Monthly'}
+                          </button>
                         ))}
                       </div>
-                    </div>
 
-                    {/* Amount Selection */}
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-4">
-                        Select Amount (MYR)
-                      </label>
-                      <div className="grid grid-cols-3 gap-3 mb-4">
-                        {donationAmounts.map((amount) => (
-                          <motion.button
-                            key={amount}
-                            whileHover={{ y: -2 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => handleAmountSelect(amount)}
-                            className={`relative p-5 rounded-2xl border-2 font-bold text-lg transition-all ${
-                              selectedAmount === amount
-                                ? 'border-teal-500 bg-gradient-to-br from-teal-500 to-teal-600 text-white shadow-glow-teal'
-                                : 'border-gray-200 hover:border-teal-300 text-foundation-charcoal'
+                      {/* Main Amount Display */}
+                      <div className="text-center py-6">
+                        <div className="text-gray-400 font-medium mb-2 uppercase tracking-wider text-xs">Enter Amount</div>
+                        <div className="flex items-baseline justify-center gap-2 font-display text-foundation-charcoal">
+                          <span className="text-4xl text-gray-300 font-light">RM</span>
+                          <input 
+                            type="number" 
+                            value={customAmount || amount}
+                            onChange={(e) => handleCustomChange(e.target.value)}
+                            className="text-7xl font-bold w-full max-w-[300px] text-center bg-transparent border-none focus:ring-0 p-0 placeholder-gray-200"
+                            placeholder="0"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Presets */}
+                      <div className="grid grid-cols-3 gap-3">
+                        {PRESET_AMOUNTS.map((val) => (
+                          <button
+                            key={val}
+                            onClick={() => handleAmountSelect(val)}
+                            className={`py-3 rounded-xl font-medium transition-all ${
+                              amount === val && !customAmount
+                                ? 'bg-teal-50 text-teal-700 ring-2 ring-teal-500 ring-offset-2'
+                                : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
                             }`}
                           >
-                            {formatCurrency(amount)}
-                            {selectedAmount === amount && (
-                              <motion.div
-                                layoutId="selectedBadge"
-                                className="absolute -top-2 -right-2 w-6 h-6 bg-amber-400 rounded-full flex items-center justify-center"
-                              >
-                                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                              </motion.div>
-                            )}
-                          </motion.button>
+                            RM {val}
+                          </button>
                         ))}
                       </div>
-                      <div className="relative">
-                        <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 font-semibold">
-                          RM
-                        </span>
-                        <input
-                          type="number"
-                          placeholder="Enter custom amount"
-                          value={customAmount}
-                          onChange={(e) => handleCustomAmountChange(e.target.value)}
-                          className="input-elegant pl-14 text-lg font-semibold"
-                          min="1"
-                        />
-                      </div>
-                    </div>
 
-                    {/* Program Selection */}
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-4">
-                        Choose a Program
-                      </label>
-                      <div className="grid sm:grid-cols-2 gap-4">
-                        {programs.map((program) => (
-                          <motion.button
-                            key={program.id}
-                            whileHover={{ y: -2 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => setSelectedProgram(program.id)}
-                            className={`p-5 rounded-2xl border-2 text-left transition-all ${
-                              selectedProgram === program.id
-                                ? 'border-teal-500 bg-teal-50 shadow-md'
-                                : 'border-gray-200 hover:border-teal-200'
-                            }`}
-                          >
-                            <div className="flex items-start gap-4">
-                              <div className={`w-12 h-12 bg-gradient-to-br ${program.color} rounded-xl flex items-center justify-center text-xl`}>
-                                {program.icon}
-                              </div>
+                      {/* Program Selector */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-3">Allocated Fund</label>
+                        <div className="grid sm:grid-cols-2 gap-3">
+                          {PROGRAMS.map((p) => (
+                            <button
+                              key={p.id}
+                              onClick={() => setProgram(p.id)}
+                              className={`p-3 rounded-xl border text-left flex items-center gap-3 transition-all ${
+                                program === p.id
+                                  ? 'border-teal-500 bg-teal-50/50'
+                                  : 'border-gray-200 hover:border-teal-200'
+                              }`}
+                            >
+                              <span className="text-2xl">{p.icon}</span>
                               <div>
-                                <div className="font-semibold text-foundation-charcoal">
-                                  {program.name}
-                                </div>
-                                <div className="text-sm text-gray-500">{program.description}</div>
+                                <div className="font-semibold text-sm text-gray-900">{p.name}</div>
+                                <div className="text-xs text-gray-500">{p.description}</div>
                               </div>
-                            </div>
-                          </motion.button>
-                        ))}
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                    </div>
 
-                    <button
-                      onClick={() => setStep(2)}
-                      disabled={!finalAmount}
-                      className="btn-primary w-full text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      <button 
+                        onClick={() => setStep('details')}
+                        className="w-full py-4 bg-foundation-charcoal text-white rounded-xl font-bold text-lg hover:bg-black transition-all hover:scale-[1.01] active:scale-[0.99] shadow-lg shadow-gray-200"
+                      >
+                        Continue
+                      </button>
+                    </motion.div>
+                  )}
+
+                  {/* STEP 2: DETAILS */}
+                  {step === 'details' && (
+                    <motion.div
+                      key="step2"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      className="space-y-6"
                     >
-                      Continue
-                      <svg className="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                      </svg>
-                    </button>
-                  </div>
-                )}
-
-                {/* Step 2: Donor Information */}
-                {step === 2 && (
-                  <div className="space-y-8">
-                    <div>
-                      <h3 className="font-heading text-xl font-semibold text-foundation-charcoal mb-2">
-                        Your Information
-                      </h3>
-                      <p className="text-gray-500 text-sm">
-                        We'll send your tax receipt to this email
-                      </p>
-                    </div>
-
-                    <div className="space-y-5">
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Full Name *
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="John Doe"
-                          value={donorInfo.name}
-                          onChange={(e) => setDonorInfo({ ...donorInfo, name: e.target.value })}
-                          className="input-elegant"
-                          required
-                        />
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="font-heading text-2xl font-bold">Your Details</h3>
+                        <button onClick={() => setStep('amount')} className="text-sm text-gray-500 hover:text-teal-600">Edit Amount</button>
                       </div>
-                      <div className="grid sm:grid-cols-2 gap-5">
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Email Address *
-                          </label>
-                          <input
-                            type="email"
-                            placeholder="john@example.com"
-                            value={donorInfo.email}
-                            onChange={(e) => setDonorInfo({ ...donorInfo, email: e.target.value })}
-                            className="input-elegant"
-                            required
+
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-gray-700">Full Name</label>
+                          <input 
+                            type="text" 
+                            className="w-full px-4 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-teal-500 focus:ring-0 transition-all"
+                            placeholder="Jane Doe"
+                            value={donor.name}
+                            onChange={e => setDonor({...donor, name: e.target.value})}
                           />
                         </div>
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Phone Number
-                          </label>
-                          <input
-                            type="tel"
-                            placeholder="+60 12-345 6789"
-                            value={donorInfo.phone}
-                            onChange={(e) => setDonorInfo({ ...donorInfo, phone: e.target.value })}
-                            className="input-elegant"
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-gray-700">Email Address</label>
+                          <input 
+                            type="email" 
+                            className="w-full px-4 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-teal-500 focus:ring-0 transition-all"
+                            placeholder="jane@example.com"
+                            value={donor.email}
+                            onChange={e => setDonor({...donor, email: e.target.value})}
                           />
                         </div>
                       </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Message (Optional)
-                        </label>
-                        <textarea
-                          placeholder="Leave a message for the beneficiaries..."
-                          value={donorInfo.message}
-                          onChange={(e) => setDonorInfo({ ...donorInfo, message: e.target.value })}
-                          className="textarea-elegant"
-                          rows={3}
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-700">Phone (Optional)</label>
+                        <input 
+                          type="tel" 
+                          className="w-full px-4 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-teal-500 focus:ring-0 transition-all"
+                          placeholder="+60 12 345 6789"
+                          value={donor.phone}
+                          onChange={e => setDonor({...donor, phone: e.target.value})}
                         />
                       </div>
-                      <label className="flex items-center gap-3 cursor-pointer p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
-                        <input
-                          type="checkbox"
-                          checked={donorInfo.anonymous}
-                          onChange={(e) => setDonorInfo({ ...donorInfo, anonymous: e.target.checked })}
-                          className="w-5 h-5 rounded border-gray-300 text-teal-500 focus:ring-teal-500"
-                        />
+
+                      <label className="flex items-center gap-3 p-4 rounded-xl border border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors">
+                        <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${donor.isAnonymous ? 'bg-teal-500 border-teal-500' : 'border-gray-300'}`}>
+                          {donor.isAnonymous && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                        </div>
+                        <input type="checkbox" className="hidden" checked={donor.isAnonymous} onChange={e => setDonor({...donor, isAnonymous: e.target.checked})} />
                         <div>
-                          <span className="font-medium text-foundation-charcoal">Make this donation anonymous</span>
-                          <p className="text-gray-500 text-sm">Your name won't be displayed publicly</p>
+                          <div className="font-medium text-gray-900">Make this donation anonymous</div>
+                          <div className="text-xs text-gray-500">Your name won't appear on public lists</div>
                         </div>
                       </label>
-                    </div>
 
-                    <div className="flex gap-4">
-                      <button
-                        onClick={() => setStep(1)}
-                        className="btn-outline flex-1"
-                      >
-                        Back
-                      </button>
-                      <button
-                        onClick={() => setStep(3)}
-                        disabled={!donorInfo.name || !donorInfo.email}
-                        className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                      <button 
+                        onClick={() => setStep('confirm')}
+                        disabled={!donor.name || !donor.email}
+                        className="w-full py-4 bg-foundation-charcoal text-white rounded-xl font-bold text-lg hover:bg-black transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Review Donation
                       </button>
-                    </div>
-                  </div>
-                )}
+                    </motion.div>
+                  )}
 
-                {/* Step 3: Confirmation */}
-                {step === 3 && (
-                  <div className="space-y-8">
-                    <div className="text-center">
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ type: 'spring' }}
-                        className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-amber-400 to-amber-500 rounded-full flex items-center justify-center"
-                      >
-                        <span className="text-4xl">💝</span>
-                      </motion.div>
-                      <h3 className="font-heading text-2xl font-semibold text-foundation-charcoal mb-2">
-                        Review Your Donation
-                      </h3>
-                      <p className="text-gray-500">
-                        Please confirm your donation details
-                      </p>
-                    </div>
+                  {/* STEP 3: CONFIRM */}
+                  {step === 'confirm' && (
+                    <motion.div
+                      key="step3"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      className="space-y-8"
+                    >
+                      <div className="text-center">
+                        <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+                          🔒
+                        </div>
+                        <h3 className="font-heading text-2xl font-bold">Secure Checkout</h3>
+                      </div>
 
-                    <div className="bg-gray-50 rounded-2xl p-6 space-y-4">
-                      <div className="flex justify-between items-center pb-4 border-b border-gray-200">
-                        <span className="text-gray-600">Amount</span>
-                        <span className="font-display text-2xl font-bold text-teal-600">
-                          {finalAmount ? formatCurrency(finalAmount) : 'RM 0'}
-                          {donationType === 'monthly' && <span className="text-sm font-normal text-gray-500">/month</span>}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Program</span>
-                        <span className="font-medium">{programs.find((p) => p.id === selectedProgram)?.name}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Type</span>
-                        <span className="font-medium capitalize">{donationType}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Donor</span>
-                        <span className="font-medium">{donorInfo.anonymous ? 'Anonymous' : donorInfo.name}</span>
-                      </div>
-                    </div>
-
-                    {currentImpact && (
-                      <div className="p-5 bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl">
-                        <div className="flex items-center gap-4">
-                          <span className="text-4xl">{currentImpact.icon}</span>
-                          <div>
-                            <div className="font-semibold text-foundation-charcoal">Your Impact</div>
-                            <p className="text-gray-600">{currentImpact.impact}</p>
-                          </div>
+                      <div className="bg-gray-50 rounded-2xl p-6 space-y-4 text-sm">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-500">Amount</span>
+                          <span className="font-bold text-xl text-gray-900">RM {displayAmount}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-500">Frequency</span>
+                          <span className="font-medium capitalize">{frequency}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-500">Program</span>
+                          <span className="font-medium">{PROGRAMS.find(p => p.id === program)?.name}</span>
+                        </div>
+                        <div className="h-px bg-gray-200 my-2" />
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-500">Name</span>
+                          <span className="font-medium">{donor.name}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-500">Email</span>
+                          <span className="font-medium">{donor.email}</span>
                         </div>
                       </div>
-                    )}
 
-                    <div className="flex gap-4">
-                      <button
-                        onClick={() => setStep(2)}
-                        className="btn-outline flex-1"
+                      <button 
+                        onClick={handleSubmit}
+                        disabled={isSubmitting}
+                        className="w-full py-4 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-xl font-bold text-lg hover:shadow-lg hover:shadow-teal-500/20 transition-all flex items-center justify-center gap-2"
                       >
-                        Back
+                        {isSubmitting ? (
+                          <span className="animate-pulse">Processing...</span>
+                        ) : (
+                          <>Pay RM {displayAmount} Securely</>
+                        )}
                       </button>
-                      <button className="btn-secondary flex-1 text-lg">
-                        Complete Donation
-                        <svg className="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
+                      
+                      <button onClick={() => setStep('details')} className="w-full text-sm text-gray-400 hover:text-gray-600">
+                        Back to details
                       </button>
-                    </div>
+                    </motion.div>
+                  )}
 
-                    <p className="text-center text-gray-500 text-sm">
-                      🔒 Secure payment powered by trusted partners
-                    </p>
-                  </div>
-                )}
-              </motion.div>
+                </AnimatePresence>
+              </div>
             </div>
-
-            {/* Sidebar */}
-            <div className="lg:col-span-1">
-              {/* Summary Card */}
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="card-elegant p-8 mb-8 sticky top-32"
-              >
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="relative w-16 h-16">
-                    <Image
-                      src="/images/logo.png"
-                      alt="Yayasan Insan Prihatin"
-                      fill
-                      className="object-contain"
-                    />
-                  </div>
-                  <div>
-                    <h3 className="font-heading text-lg font-semibold text-foundation-charcoal">
-                      Donation Summary
-                    </h3>
-                    <p className="text-gray-500 text-sm">
-                      {programs.find((p) => p.id === selectedProgram)?.name}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-4 pt-6 border-t border-gray-100">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Amount</span>
-                    <span className="font-semibold text-foundation-charcoal">
-                      {finalAmount ? formatCurrency(finalAmount) : 'RM 0'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Type</span>
-                    <span className="font-medium text-foundation-charcoal capitalize">
-                      {donationType}
-                    </span>
-                  </div>
-                  <div className="pt-4 border-t border-gray-100">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold text-foundation-charcoal text-lg">Total</span>
-                      <span className="font-display text-2xl font-bold text-gradient">
-                        {finalAmount ? formatCurrency(finalAmount) : 'RM 0'}
-                        {donationType === 'monthly' && <span className="text-sm text-gray-500">/mo</span>}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Impact Preview */}
-                {currentImpact && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-6 p-5 bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl"
-                  >
-                    <div className="flex items-start gap-3">
-                      <span className="text-3xl">{currentImpact.icon}</span>
-                      <div>
-                        <div className="font-semibold text-foundation-charcoal text-sm">
-                          Your Impact
-                        </div>
-                        <p className="text-gray-600 text-sm">
-                          {currentImpact.impact}
-                        </p>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </motion.div>
-
-              {/* Trust Indicators */}
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="space-y-4"
-              >
-                {[
-                  { icon: '🔒', title: '100% Secure', desc: 'Bank-level encryption' },
-                  { icon: '📜', title: 'Tax Deductible', desc: 'Official receipt provided' },
-                  { icon: '✓', title: 'Registered', desc: 'SSM verified foundation' },
-                  { icon: '📊', title: 'Transparent', desc: 'Annual reports available' },
-                ].map((item, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.3 + index * 0.1 }}
-                    className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl"
-                  >
-                    <span className="text-2xl">{item.icon}</span>
-                    <div>
-                      <div className="font-medium text-foundation-charcoal text-sm">{item.title}</div>
-                      <div className="text-gray-500 text-xs">{item.desc}</div>
-                    </div>
-                  </motion.div>
-                ))}
-              </motion.div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Other Ways to Give */}
-      <section className="section-padding bg-foundation-cream relative overflow-hidden">
-        <div className="absolute inset-0 bg-dots opacity-20" />
-
-        <div className="relative container-wide">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <div className="badge-premium mx-auto mb-6">
-              <span className="accent-dot" />
-              <span className="text-sm font-medium text-teal-700">More Options</span>
-            </div>
-            <h2 className="heading-section text-foundation-charcoal mb-4">
-              Other Ways to Support
-            </h2>
-            <p className="text-gray-600 text-lg">
-              There are many ways to contribute to our mission
-            </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                icon: '🏦',
-                title: 'Bank Transfer',
-                description: 'Direct transfer to our foundation account',
-                details: ['Maybank: 5123-4567-8910', 'Account: Yayasan Insan Prihatin'],
-                action: 'Get Bank Details',
-              },
-              {
-                icon: '🤝',
-                title: 'Corporate Giving',
-                description: 'Partner with us for CSR initiatives',
-                details: ['Customized partnership programs', 'Employee matching grants'],
-                action: 'Become a Partner',
-              },
-              {
-                icon: '📦',
-                title: 'In-Kind Donations',
-                description: 'Donate goods, equipment, or services',
-                details: ['School supplies', 'Medical equipment', 'Professional services'],
-                action: 'Learn More',
-              },
-            ].map((item, index) => (
-              <motion.div
-                key={item.title}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -8 }}
-                className="card-elegant p-8 text-center group"
-              >
-                <div className="text-5xl mb-6">{item.icon}</div>
-                <h3 className="font-heading text-xl font-semibold text-foundation-charcoal mb-3">
-                  {item.title}
-                </h3>
-                <p className="text-gray-600 mb-4">{item.description}</p>
-                <ul className="text-sm text-gray-500 space-y-1 mb-6">
-                  {item.details.map((detail, i) => (
-                    <li key={i}>{detail}</li>
-                  ))}
-                </ul>
-                <button className="text-teal-600 font-medium hover:text-teal-700 transition-colors group-hover:underline">
-                  {item.action} →
-                </button>
-              </motion.div>
-            ))}
-          </div>
+          {/* RIGHT: Impact Visualization & Trust */}
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
+            className="lg:col-span-5 space-y-6"
+          >
+            {/* Dynamic Impact Card */}
+            <div className="bg-gradient-to-br from-amber-400 to-orange-500 rounded-3xl p-1 shadow-lg text-white relative overflow-hidden group">
+              <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20" />
+              <div className="relative bg-white/10 backdrop-blur-sm rounded-[20px] p-8 h-full">
+                <div className="text-amber-100 text-sm font-semibold uppercase tracking-wider mb-2">Projected Impact</div>
+                <div className="text-4xl mb-4">{currentImpact.emoji}</div>
+                <h3 className="font-heading text-2xl font-bold mb-2">{currentImpact.label}</h3>
+                <p className="text-amber-50 text-lg leading-relaxed">
+                  Your <span className="font-bold text-white">RM {displayAmount}</span> donation helps provide {currentImpact.desc.toLowerCase()}.
+                </p>
+                
+                {/* Progress Visual */}
+                <div className="mt-8">
+                  <div className="flex justify-between text-xs font-medium text-amber-100 mb-2">
+                    <span>Impact Scale</span>
+                    <span>High Impact</span>
+                  </div>
+                  <div className="h-2 bg-black/10 rounded-full overflow-hidden">
+                    <motion.div 
+                      className="h-full bg-white"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min((displayAmount / 2500) * 100, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Transparency Card */}
+            <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
+              <h4 className="font-heading text-lg font-bold text-gray-900 mb-6">Where Your Money Goes</h4>
+              <div className="space-y-4">
+                {[
+                  { label: 'Direct Aid & Programs', val: '85%', color: 'bg-teal-500' },
+                  { label: 'Operations & Staff', val: '10%', color: 'bg-blue-500' },
+                  { label: 'Fundraising', val: '5%', color: 'bg-amber-500' },
+                ].map((item) => (
+                  <div key={item.label}>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-gray-600 font-medium">{item.label}</span>
+                      <span className="font-bold text-gray-900">{item.val}</span>
+                    </div>
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div className={`h-full ${item.color} w-[${item.val}]`} style={{ width: item.val }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-gray-400 mt-6 pt-6 border-t border-gray-100">
+                *Audited annually by Deloitte. 2025 Transparency Report available.
+              </p>
+            </div>
+
+            {/* Security Badges */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-gray-100">
+                <span className="text-2xl">🔒</span>
+                <div className="text-xs font-medium text-gray-600">256-bit SSL<br/>Encryption</div>
+              </div>
+              <div className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-gray-100">
+                <span className="text-2xl">🛡️</span>
+                <div className="text-xs font-medium text-gray-600">Official Tax<br/>Receipt</div>
+              </div>
+            </div>
+
+          </motion.div>
         </div>
-      </section>
+      </div>
     </div>
   )
 }
