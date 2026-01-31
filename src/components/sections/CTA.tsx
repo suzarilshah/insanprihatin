@@ -1,265 +1,205 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 
-const DONATION_AMOUNTS = [50, 100, 250]
+const DONATION_AMOUNTS = [50, 100, 250, 500]
+
+interface FeaturedProject {
+  id: string
+  title: string
+  donationGoal: number
+  donationRaised: number
+}
 
 export default function CTA() {
   const router = useRouter()
   const [selectedAmount, setSelectedAmount] = useState<number>(100)
   const [customAmount, setCustomAmount] = useState<string>('')
-  const [selectedProgram, setSelectedProgram] = useState<string>('general')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [featuredProject, setFeaturedProject] = useState<FeaturedProject | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
-  const finalAmount = customAmount ? parseInt(customAmount) : selectedAmount
-
-  const handleAmountSelect = (amount: number) => {
-    setSelectedAmount(amount)
-    setCustomAmount('')
-    setError(null)
-  }
-
-  const handleCustomAmountChange = (value: string) => {
-    setCustomAmount(value)
-    setSelectedAmount(0)
-    setError(null)
-  }
-
-  const handleQuickDonate = async () => {
-    if (!finalAmount || finalAmount < 1) {
-      setError('Please select or enter a valid donation amount')
-      return
-    }
-
-    setIsSubmitting(true)
-    setError(null)
-
-    try {
-      const response = await fetch('/api/donations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: finalAmount,
-          currency: 'MYR',
-          program: selectedProgram,
-          isAnonymous: true, // Quick donations are anonymous by default
-          donorName: 'Quick Donor',
-          donorEmail: 'quickdonation@yayasaninsanprihatin.org',
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to process donation')
-      }
-
-      // If there's a redirect URL (payment gateway), go there
-      if (data.redirectUrl) {
-        if (data.paymentMethod === 'toyyibpay') {
-          window.location.href = data.redirectUrl
-        } else {
-          // For manual payment, go to success page with bank details
-          router.push(`/donate/success?ref=${data.paymentReference}&method=manual`)
+  useEffect(() => {
+    async function fetchFeaturedProject() {
+      try {
+        const response = await fetch('/api/projects?donationEnabled=true&published=true&limit=1')
+        if (response.ok) {
+          const projects = await response.json()
+          if (projects.length > 0 && projects[0].donationGoal) {
+            setFeaturedProject({
+              id: projects[0].id,
+              title: projects[0].title,
+              donationGoal: projects[0].donationGoal || 0,
+              donationRaised: projects[0].donationRaised || 0,
+            })
+          }
         }
-      } else {
-        // Fallback to success page
-        router.push(`/donate/success?ref=${data.paymentReference}`)
+      } catch (error) {
+        console.error('Failed to fetch featured project:', error)
+      } finally {
+        setIsLoading(false)
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
-      setIsSubmitting(false)
     }
+    fetchFeaturedProject()
+  }, [])
+
+  const handleDonate = () => {
+    const amount = customAmount ? customAmount : selectedAmount
+    const projectParam = featuredProject ? `&project=${featuredProject.id}` : ''
+    router.push(`/donate?amount=${amount}${projectParam}`)
   }
+
+  const progressPercentage = featuredProject
+    ? Math.min(100, Math.round((featuredProject.donationRaised / featuredProject.donationGoal) * 100))
+    : 0
 
   return (
-    <section className="relative py-32 overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-r from-foundation-charcoal via-gray-900 to-foundation-charcoal" />
-        {/* Decorative shapes */}
-        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-teal-600/20 to-transparent" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-amber-400/10 rounded-full blur-[150px]" />
-      </div>
+    <section className="relative py-32 overflow-hidden bg-foundation-charcoal">
+      {/* Background FX */}
+      <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.05]" />
+      <div className="absolute inset-0 bg-gradient-to-br from-foundation-charcoal via-gray-900 to-black" />
 
-      <div className="relative container-wide">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          {/* Content */}
-          <motion.div
-            initial={{ opacity: 0, x: -40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-          >
-            <div className="inline-flex items-center gap-2 mb-6">
-              <span className="w-8 h-0.5 bg-amber-400 rounded-full" />
-              <span className="text-amber-400 font-medium uppercase tracking-wider text-sm">Join Us</span>
-            </div>
+      {/* Glows */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-teal-500/10 rounded-full blur-[150px]" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-amber-500/10 rounded-full blur-[150px]" />
 
-            <h2 className="heading-section text-white mb-6">
-              Be Part of Something{' '}
-              <span className="text-gradient-amber">Greater</span>
-            </h2>
+      <div className="container-wide relative z-10">
+        <div className="max-w-5xl mx-auto bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[3rem] p-8 md:p-16 overflow-hidden relative shadow-2xl">
 
-            <p className="text-gray-400 text-lg leading-relaxed mb-8">
-              Your contribution, no matter the size, creates ripples of positive change.
-              Join our growing community of supporters who are helping us build a more compassionate Malaysia.
-            </p>
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            {/* Text Side */}
+            <div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+              >
+                <h2 className="heading-section text-white mb-6">
+                  Ready to Make an <br />
+                  <span className="text-amber-400">Immediate Impact?</span>
+                </h2>
+                <p className="text-lg text-gray-400 mb-8 leading-relaxed">
+                  Join thousands of changemakers. Your contribution provides immediate relief and sustainable solutions for families in need.
+                </p>
 
-            <div className="flex flex-wrap gap-4">
-              <Link href="/donate" className="btn-secondary">
-                Donate Now
-              </Link>
-              <Link href="/contact?type=volunteer" className="btn-outline border-white/30 text-white hover:bg-white hover:text-foundation-charcoal">
-                Become a Volunteer
-              </Link>
-            </div>
-
-            {/* Trust indicators */}
-            <div className="mt-12 pt-8 border-t border-white/10">
-              <p className="text-gray-500 text-sm mb-4">Trusted by leading organizations</p>
-              <div className="flex items-center gap-8 opacity-50">
-                {/* Partner logo placeholders */}
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="w-20 h-8 bg-white/20 rounded" />
-                ))}
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Donation Card */}
-          <motion.div
-            initial={{ opacity: 0, x: 40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-          >
-            <div className="bg-white rounded-3xl p-8 shadow-elevated">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="relative w-14 h-14">
-                  <Image
-                    src="/images/logo.png"
-                    alt="Yayasan Insan Prihatin"
-                    fill
-                    className="object-contain"
-                  />
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Link href="/donate" className="btn-primary bg-amber-400 text-foundation-charcoal hover:bg-amber-300 border-none shadow-lg shadow-amber-400/20">
+                    Donate Now
+                  </Link>
+                  <Link href="/contact" className="btn-outline border-white/20 text-white hover:bg-white hover:text-foundation-charcoal">
+                    Volunteer With Us
+                  </Link>
                 </div>
-                <div>
-                  <h3 className="font-heading text-xl font-semibold text-foundation-charcoal">
-                    Quick Donation
-                  </h3>
-                  <p className="text-gray-500 text-sm">100% goes to our programs</p>
-                </div>
-              </div>
+              </motion.div>
+            </div>
 
-              {/* Error Message */}
-              {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                  {error}
+            {/* Mini Donation Form */}
+            <div className="bg-white rounded-3xl p-8 shadow-xl relative">
+              <div className="absolute -top-4 -right-4 w-20 h-20 bg-teal-100 rounded-full blur-2xl -z-10" />
+
+              {/* Featured Project (if available) */}
+              {!isLoading && featuredProject && (
+                <div className="mb-6 pb-6 border-b border-gray-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="w-2 h-2 bg-teal-500 rounded-full animate-pulse" />
+                    <span className="text-xs text-teal-600 font-medium uppercase tracking-wide">
+                      Featured Campaign
+                    </span>
+                  </div>
+                  <h4 className="font-heading text-foundation-charcoal font-semibold text-lg mb-3 line-clamp-1">
+                    {featuredProject.title}
+                  </h4>
+
+                  {/* Progress Bar */}
+                  <div className="mb-2">
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <motion.div
+                        className="h-full bg-gradient-to-r from-teal-500 to-teal-400 rounded-full"
+                        initial={{ width: 0 }}
+                        whileInView={{ width: `${progressPercentage}%` }}
+                        transition={{ duration: 1, delay: 0.2 }}
+                        viewport={{ once: true }}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">
+                      <span className="font-semibold text-teal-600">
+                        RM {(featuredProject.donationRaised / 100).toLocaleString()}
+                      </span>
+                      {' '}raised
+                    </span>
+                    <span className="text-gray-500">
+                      {progressPercentage}% of RM {(featuredProject.donationGoal / 100).toLocaleString()}
+                    </span>
+                  </div>
                 </div>
               )}
 
-              {/* Amount Options */}
-              <div className="grid grid-cols-3 gap-3 mb-6">
+              <div className="mb-6">
+                <h3 className="text-foundation-charcoal font-heading text-xl font-bold mb-1">Quick Donation</h3>
+                <p className="text-gray-500 text-sm">Secure & Tax Deductible</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 mb-4">
                 {DONATION_AMOUNTS.map((amount) => (
                   <button
                     key={amount}
-                    onClick={() => handleAmountSelect(amount)}
-                    disabled={isSubmitting}
-                    className={`py-3 rounded-xl font-medium transition-all ${
+                    onClick={() => { setSelectedAmount(amount); setCustomAmount('') }}
+                    className={`py-3 px-4 rounded-xl font-bold text-sm transition-all border ${
                       selectedAmount === amount && !customAmount
-                        ? 'bg-teal-500 text-white shadow-md'
-                        : 'bg-gray-100 text-foundation-charcoal hover:bg-teal-50'
-                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                        ? 'bg-teal-600 text-white border-teal-600 shadow-lg shadow-teal-600/30'
+                        : 'bg-gray-50 text-gray-600 border-gray-100 hover:bg-white hover:border-teal-200'
+                    }`}
                   >
                     RM {amount}
                   </button>
                 ))}
               </div>
 
-              {/* Custom Amount */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  Or enter custom amount
-                </label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">RM</span>
-                  <input
-                    type="number"
-                    placeholder="Enter amount"
-                    value={customAmount}
-                    onChange={(e) => handleCustomAmountChange(e.target.value)}
-                    disabled={isSubmitting}
-                    min="1"
-                    className="input-elegant pl-12 disabled:opacity-50 disabled:cursor-not-allowed"
-                  />
-                </div>
+              <div className="relative mb-6">
+                <input
+                  type="number"
+                  placeholder="Custom Amount"
+                  value={customAmount}
+                  onChange={(e) => setCustomAmount(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-100 rounded-xl py-4 pl-12 pr-4 font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
+                />
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">RM</span>
               </div>
-
-              {/* Program Selection */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  Select program (optional)
-                </label>
-                <select
-                  className="input-elegant"
-                  value={selectedProgram}
-                  onChange={(e) => setSelectedProgram(e.target.value)}
-                  disabled={isSubmitting}
-                >
-                  <option value="general">General Fund</option>
-                  <option value="education">Education</option>
-                  <option value="healthcare">Healthcare</option>
-                  <option value="environment">Environment</option>
-                  <option value="community">Community Development</option>
-                </select>
-              </div>
-
-              {/* Amount Summary */}
-              {finalAmount > 0 && (
-                <div className="mb-4 p-3 bg-teal-50 rounded-xl text-center">
-                  <span className="text-sm text-gray-600">You are donating </span>
-                  <span className="font-bold text-teal-600">RM {finalAmount}</span>
-                  <span className="text-sm text-gray-600"> to {selectedProgram === 'general' ? 'General Fund' : selectedProgram}</span>
-                </div>
-              )}
 
               <button
-                onClick={handleQuickDonate}
-                disabled={isSubmitting || !finalAmount || finalAmount < 1}
-                className="block w-full btn-primary text-center disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleDonate}
+                className="w-full btn-secondary py-4 text-center justify-center group"
               >
-                {isSubmitting ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    Processing...
-                  </span>
-                ) : (
-                  'Donate Now'
-                )}
+                Proceed to Payment
+                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </button>
 
-              <p className="text-center text-gray-400 text-xs mt-4">
-                🔒 Secure payment powered by trusted partners
-              </p>
+              {/* Trust Badges */}
+              <div className="mt-6 pt-6 border-t border-gray-100">
+                <div className="flex items-center justify-center gap-4 text-xs text-gray-400">
+                  <div className="flex items-center gap-1">
+                    <svg className="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                    <span>SSL Secured</span>
+                  </div>
+                  <div className="w-1 h-1 bg-gray-300 rounded-full" />
+                  <div className="flex items-center gap-1">
+                    <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>ToyyibPay Verified</span>
+                  </div>
+                </div>
+              </div>
 
-              {/* Link to full donate page */}
-              <p className="text-center text-gray-500 text-sm mt-4">
-                Want to include your details?{' '}
-                <Link href="/donate" className="text-teal-600 hover:underline font-medium">
-                  Donate with receipt →
-                </Link>
-              </p>
             </div>
-          </motion.div>
+          </div>
+
         </div>
       </div>
     </section>

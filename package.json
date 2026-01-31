@@ -24,6 +24,7 @@
     "@neondatabase/auth-ui": "^0.1.0-alpha.11",
     "@neondatabase/serverless": "^1.0.2",
     "@react-email/components": "^1.0.6",
+    "@react-pdf/renderer": "^4.3.2",
     "@tailwindcss/postcss": "^4.1.18",
     "appwrite": "^21.5.0",
     "better-auth": "^1.4.18",

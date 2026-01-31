@@ -457,3 +457,212 @@ function generateFormEmailHtml(notification: FormNotificationData): string {
 </html>
   `.trim()
 }
+
+// ============================================
+// DONATION RECEIPT EMAIL
+// ============================================
+
+interface DonationReceiptData {
+  receiptNumber: string
+  donorName: string
+  donorEmail: string
+  amount: number
+  currency: string
+  projectTitle?: string
+  paymentReference: string
+  completedAt: Date
+  pdfBuffer?: Buffer
+}
+
+/**
+ * Send donation receipt email with PDF attachment
+ */
+export async function sendDonationReceiptEmail(
+  data: DonationReceiptData
+): Promise<EmailResult> {
+  // Check if Resend API key is configured
+  if (!process.env.RESEND_API_KEY) {
+    console.error('RESEND_API_KEY is not configured')
+    return { success: false, reason: 'no_api_key' }
+  }
+
+  if (!data.donorEmail) {
+    console.log('No donor email provided')
+    return { success: false, reason: 'no_recipient' }
+  }
+
+  try {
+    const formattedAmount = new Intl.NumberFormat('en-MY', {
+      style: 'currency',
+      currency: data.currency || 'MYR',
+    }).format(data.amount)
+
+    const emailOptions: {
+      from: string
+      to: string
+      subject: string
+      html: string
+      attachments?: Array<{
+        filename: string
+        content: Buffer
+        contentType: string
+      }>
+    } = {
+      from: DEFAULT_FROM,
+      to: data.donorEmail,
+      subject: `Thank You for Your Donation - Receipt ${data.receiptNumber}`,
+      html: generateDonationReceiptEmailHtml(data, formattedAmount),
+    }
+
+    // Add PDF attachment if provided
+    if (data.pdfBuffer) {
+      emailOptions.attachments = [
+        {
+          filename: `YIP-Receipt-${data.receiptNumber}.pdf`,
+          content: data.pdfBuffer,
+          contentType: 'application/pdf',
+        },
+      ]
+    }
+
+    const { data: responseData, error } = await resend.emails.send(emailOptions)
+
+    if (error) {
+      console.error('Resend API error:', error)
+      return { success: false, error: error.message }
+    }
+
+    console.log('Donation receipt email sent successfully:', responseData?.id)
+    return { success: true, messageId: responseData?.id }
+  } catch (error) {
+    console.error('Failed to send donation receipt email:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
+/**
+ * Generate HTML email content for donation receipt
+ */
+function generateDonationReceiptEmailHtml(
+  data: DonationReceiptData,
+  formattedAmount: string
+): string {
+  const completedDate = new Date(data.completedAt).toLocaleDateString('en-MY', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Donation Receipt</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <!-- Header -->
+    <div style="background: linear-gradient(135deg, #0d9488 0%, #0e7490 100%); padding: 40px 30px; border-radius: 12px 12px 0 0; text-align: center;">
+      <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">
+        Thank You!
+      </h1>
+      <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0; font-size: 16px;">
+        Your generosity makes a difference
+      </p>
+    </div>
+
+    <!-- Content -->
+    <div style="background: #ffffff; padding: 40px 30px; border: 1px solid #e5e7eb; border-top: none;">
+      <!-- Greeting -->
+      <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">
+        Dear ${escapeHtml(data.donorName)},
+      </p>
+      <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 30px;">
+        Thank you for your generous donation to Yayasan Insan Prihatin. Your support helps us continue our mission of empowering communities and transforming lives.
+      </p>
+
+      <!-- Receipt Card -->
+      <div style="background: #f0fdfa; border-radius: 12px; padding: 25px; margin-bottom: 30px; border: 1px solid #99f6e4;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <span style="display: inline-block; background: #0d9488; color: white; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">
+            Official Receipt
+          </span>
+        </div>
+
+        <div style="text-align: center; margin-bottom: 25px;">
+          <div style="font-size: 14px; color: #6b7280; margin-bottom: 5px;">Amount Donated</div>
+          <div style="font-size: 36px; color: #0d9488; font-weight: 700;">${formattedAmount}</div>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 10px 0; color: #6b7280; font-size: 14px; border-bottom: 1px solid #d1fae5;">Receipt Number</td>
+            <td style="padding: 10px 0; color: #1f2937; font-size: 14px; font-weight: 600; text-align: right; border-bottom: 1px solid #d1fae5;">${escapeHtml(data.receiptNumber)}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; color: #6b7280; font-size: 14px; border-bottom: 1px solid #d1fae5;">Reference</td>
+            <td style="padding: 10px 0; color: #1f2937; font-size: 14px; font-weight: 600; text-align: right; border-bottom: 1px solid #d1fae5; font-family: monospace;">${escapeHtml(data.paymentReference)}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; color: #6b7280; font-size: 14px; border-bottom: 1px solid #d1fae5;">Date</td>
+            <td style="padding: 10px 0; color: #1f2937; font-size: 14px; font-weight: 600; text-align: right; border-bottom: 1px solid #d1fae5;">${completedDate}</td>
+          </tr>
+          ${data.projectTitle ? `
+          <tr>
+            <td style="padding: 10px 0; color: #6b7280; font-size: 14px;">Project</td>
+            <td style="padding: 10px 0; color: #1f2937; font-size: 14px; font-weight: 600; text-align: right;">${escapeHtml(data.projectTitle)}</td>
+          </tr>
+          ` : `
+          <tr>
+            <td style="padding: 10px 0; color: #6b7280; font-size: 14px;">Purpose</td>
+            <td style="padding: 10px 0; color: #1f2937; font-size: 14px; font-weight: 600; text-align: right;">General Fund</td>
+          </tr>
+          `}
+        </table>
+      </div>
+
+      <!-- Tax Notice -->
+      <div style="background: #fef3c7; border-radius: 8px; padding: 15px; margin-bottom: 30px; border-left: 4px solid #f59e0b;">
+        <p style="color: #92400e; font-size: 13px; line-height: 1.6; margin: 0;">
+          <strong>Tax Deduction Notice:</strong> Your donation may be eligible for tax deduction under Section 44(6) of the Income Tax Act 1967. Please retain this receipt for your tax records.
+        </p>
+      </div>
+
+      <!-- PDF Attachment Notice -->
+      <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin: 0 0 30px; text-align: center;">
+        A PDF copy of your receipt is attached to this email.
+      </p>
+
+      <!-- CTA -->
+      <div style="text-align: center;">
+        <a href="https://insanprihatin.org/donate"
+           style="display: inline-block; background: linear-gradient(135deg, #0d9488 0%, #0e7490 100%); color: white; padding: 14px 40px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">
+          Support Another Cause
+        </a>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="padding: 25px; text-align: center; border-radius: 0 0 12px 12px; background: #f9fafb; border: 1px solid #e5e7eb; border-top: none;">
+      <p style="color: #374151; font-size: 14px; font-weight: 600; margin: 0 0 10px;">
+        Yayasan Insan Prihatin
+      </p>
+      <p style="color: #6b7280; font-size: 12px; margin: 0 0 5px;">
+        Empowering Communities, Transforming Lives
+      </p>
+      <p style="color: #6b7280; font-size: 12px; margin: 0;">
+        <a href="https://insanprihatin.org" style="color: #0d9488; text-decoration: none;">insanprihatin.org</a>
+        &nbsp;|&nbsp;
+        <a href="mailto:info@insanprihatin.org" style="color: #0d9488; text-decoration: none;">info@insanprihatin.org</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim()
+}

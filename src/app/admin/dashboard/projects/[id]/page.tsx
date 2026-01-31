@@ -41,7 +41,13 @@ export default function ProjectEditor({ params }: { params: Promise<{ id: string
     metaTitle: '',
     metaDescription: '',
     isPublished: false,
+    // Donation configuration
+    donationEnabled: false,
+    donationGoal: '',
+    donationRaised: 0,
+    toyyibpayCategoryCode: '',
   })
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false)
 
   useEffect(() => {
     if (!isNew) {
@@ -68,6 +74,11 @@ export default function ProjectEditor({ params }: { params: Promise<{ id: string
                 metaTitle: project.metaTitle || '',
                 metaDescription: project.metaDescription || '',
                 isPublished: project.isPublished || false,
+                // Donation configuration
+                donationEnabled: project.donationEnabled || false,
+                donationGoal: project.donationGoal ? (project.donationGoal / 100).toString() : '',
+                donationRaised: project.donationRaised || 0,
+                toyyibpayCategoryCode: project.toyyibpayCategoryCode || '',
               })
             }
           }
@@ -123,6 +134,9 @@ export default function ProjectEditor({ params }: { params: Promise<{ id: string
           metaTitle: formData.metaTitle || undefined,
           metaDescription: formData.metaDescription || undefined,
           isPublished: publish !== undefined ? publish : formData.isPublished,
+          // Donation configuration
+          donationEnabled: formData.donationEnabled,
+          donationGoal: formData.donationGoal ? Math.round(parseFloat(formData.donationGoal) * 100) : undefined,
         }
 
         if (isNew) {
@@ -378,6 +392,109 @@ Create forms in the Forms section of the admin panel."
                 </span>
               </div>
             </div>
+          </div>
+
+          {/* Donation Settings */}
+          <div className="bg-white rounded-2xl p-6 border border-gray-100">
+            <div className="flex items-center gap-2 mb-4">
+              <svg className="w-5 h-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h3 className="font-medium text-foundation-charcoal">Donation Settings</h3>
+            </div>
+
+            {/* Enable Donations Toggle */}
+            <label className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors mb-4">
+              <div className={`relative w-10 h-5 rounded-full transition-colors ${formData.donationEnabled ? 'bg-teal-500' : 'bg-gray-300'}`}>
+                <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${formData.donationEnabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+              </div>
+              <input
+                type="checkbox"
+                className="hidden"
+                checked={formData.donationEnabled}
+                onChange={(e) => setFormData({ ...formData, donationEnabled: e.target.checked })}
+              />
+              <div>
+                <div className="font-medium text-sm text-gray-900">Enable Donations</div>
+                <div className="text-xs text-gray-500">Accept donations for this project</div>
+              </div>
+            </label>
+
+            {formData.donationEnabled && (
+              <div className="space-y-4">
+                {/* Donation Goal */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Donation Goal (RM)</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">RM</span>
+                    <input
+                      type="number"
+                      value={formData.donationGoal}
+                      onChange={(e) => setFormData({ ...formData, donationGoal: e.target.value })}
+                      className="w-full pl-10 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 text-sm"
+                      placeholder="e.g., 50000"
+                      min="100"
+                      step="100"
+                    />
+                  </div>
+                </div>
+
+                {/* Progress Display (for existing projects) */}
+                {!isNew && formData.donationRaised > 0 && (
+                  <div className="p-3 bg-teal-50 rounded-xl">
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="text-teal-700 font-medium">Raised</span>
+                      <span className="text-teal-900 font-bold">
+                        RM {(formData.donationRaised / 100).toLocaleString()}
+                        {formData.donationGoal && (
+                          <span className="font-normal text-teal-600">
+                            {' '}/ RM {parseFloat(formData.donationGoal).toLocaleString()}
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    {formData.donationGoal && (
+                      <div className="h-2 bg-teal-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-teal-500 transition-all"
+                          style={{
+                            width: `${Math.min((formData.donationRaised / 100) / parseFloat(formData.donationGoal) * 100, 100)}%`
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* ToyyibPay Category Status */}
+                {!isNew && (
+                  <div className="p-3 bg-gray-50 rounded-xl">
+                    <div className="flex items-center gap-2 text-sm">
+                      {formData.toyyibpayCategoryCode ? (
+                        <>
+                          <div className="w-2 h-2 bg-emerald-500 rounded-full" />
+                          <span className="text-gray-600">Payment category active</span>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-2 h-2 bg-amber-500 rounded-full" />
+                          <span className="text-gray-600">Category will be created on save</span>
+                        </>
+                      )}
+                    </div>
+                    {formData.toyyibpayCategoryCode && (
+                      <code className="block mt-1 text-xs text-gray-400 font-mono">
+                        {formData.toyyibpayCategoryCode}
+                      </code>
+                    )}
+                  </div>
+                )}
+
+                <p className="text-xs text-gray-500">
+                  When enabled, this project will appear on the donation page and accept contributions via ToyyibPay.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Featured Image */}

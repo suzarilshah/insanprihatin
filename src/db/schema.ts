@@ -95,6 +95,11 @@ export const projects = pgTable('projects', {
   isPublished: boolean('is_published').default(false),
   metaTitle: text('meta_title'),
   metaDescription: text('meta_description'),
+  // Donation configuration
+  donationEnabled: boolean('donation_enabled').default(false),
+  donationGoal: integer('donation_goal'), // Target amount in cents
+  donationRaised: integer('donation_raised').default(0), // Amount raised in cents
+  toyyibpayCategoryCode: text('toyyibpay_category_code'), // ToyyibPay category code
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
@@ -116,13 +121,40 @@ export const donations = pgTable('donations', {
   id: uuid('id').defaultRandom().primaryKey(),
   donorName: text('donor_name'),
   donorEmail: text('donor_email'),
+  donorPhone: text('donor_phone'),
   amount: integer('amount').notNull(),
   currency: text('currency').default('MYR'),
   projectId: uuid('project_id'),
   message: text('message'),
   isAnonymous: boolean('is_anonymous').default(false),
-  paymentStatus: text('payment_status').default('pending'),
+  paymentStatus: text('payment_status').default('pending'), // pending, completed, failed, refunded
   paymentReference: text('payment_reference'),
+  // ToyyibPay integration
+  toyyibpayBillCode: text('toyyibpay_bill_code'),
+  toyyibpayTransactionId: text('toyyibpay_transaction_id'),
+  paymentMethod: text('payment_method').default('fpx'), // fpx, card
+  paymentAttempts: integer('payment_attempts').default(0),
+  // Receipt tracking
+  receiptSentAt: timestamp('receipt_sent_at'),
+  receiptNumber: text('receipt_number'),
+  // Session tracking for security
+  sessionId: text('session_id'),
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
+  // Failure tracking
+  failureReason: text('failure_reason'),
+  completedAt: timestamp('completed_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+// Donation Logs - for extensive audit trail and troubleshooting
+export const donationLogs = pgTable('donation_logs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  donationId: uuid('donation_id').notNull(),
+  eventType: text('event_type').notNull(), // created, bill_created, payment_started, callback_received, status_updated, receipt_sent, receipt_downloaded, retry_initiated, error
+  eventData: jsonb('event_data'), // Additional event details (ToyyibPay response, error details, etc.)
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 

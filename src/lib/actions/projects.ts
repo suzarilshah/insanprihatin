@@ -6,8 +6,15 @@ import { eq, desc, and } from 'drizzle-orm'
 import { requireAuth } from '@/lib/auth-server'
 import { createVersion, logActivity } from '@/lib/versioning'
 import { notifyProjectPublished } from '@/lib/actions/notifications'
+import { ToyyibPayService, ToyyibPayError } from '@/lib/toyyibpay'
 
-export async function getProjects(options?: { published?: boolean; category?: string; status?: string; limit?: number }) {
+export async function getProjects(options?: {
+  published?: boolean
+  category?: string
+  status?: string
+  limit?: number
+  donationEnabled?: boolean
+}) {
   const conditions = []
 
   if (options?.published !== undefined) {
@@ -20,6 +27,10 @@ export async function getProjects(options?: { published?: boolean; category?: st
 
   if (options?.status) {
     conditions.push(eq(projects.status, options.status))
+  }
+
+  if (options?.donationEnabled !== undefined) {
+    conditions.push(eq(projects.donationEnabled, options.donationEnabled))
   }
 
   const projectsList = await db.query.projects.findMany({
@@ -56,12 +67,35 @@ export async function createProject(data: {
   metaTitle?: string
   metaDescription?: string
   isPublished?: boolean
+  // Donation fields
+  donationEnabled?: boolean
+  donationGoal?: number
 }) {
   const user = await requireAuth()
+
+  // If donation is enabled, create ToyyibPay category
+  let toyyibpayCategoryCode: string | undefined
+  if (data.donationEnabled && ToyyibPayService.isConfigured()) {
+    try {
+      toyyibpayCategoryCode = await ToyyibPayService.createCategory({
+        catname: data.title.substring(0, 30), // Max 30 chars
+        catdescription: `Donations for ${data.title}`.substring(0, 100), // Max 100 chars
+      })
+      console.log(`Created ToyyibPay category for project: ${toyyibpayCategoryCode}`)
+    } catch (error) {
+      console.error('Failed to create ToyyibPay category:', error)
+      // Don't fail the project creation, just log the error
+      // Category can be created later when updating
+    }
+  }
 
   const project = await db.insert(projects).values({
     ...data,
     gallery: data.gallery,
+    donationEnabled: data.donationEnabled,
+    donationGoal: data.donationGoal,
+    donationRaised: 0,
+    toyyibpayCategoryCode,
   }).returning()
 
   // Create version record
@@ -91,6 +125,7 @@ export async function createProject(data: {
   }
 
   revalidatePath('/projects')
+  revalidatePath('/donate')
   return { success: true, project: project[0] }
 }
 
@@ -112,6 +147,9 @@ export async function updateProject(id: string, data: {
   metaTitle?: string
   metaDescription?: string
   isPublished?: boolean
+  // Donation fields
+  donationEnabled?: boolean
+  donationGoal?: number
 }) {
   const user = await requireAuth()
 
@@ -130,9 +168,40 @@ export async function updateProject(id: string, data: {
     changeType = data.isPublished ? 'publish' : 'unpublish'
   }
 
+  // If donation is being enabled and no category exists, create one
+  let toyyibpayCategoryCode = existing.toyyibpayCategoryCode
+  if (
+    data.donationEnabled &&
+    !existing.toyyibpayCategoryCode &&
+    ToyyibPayService.isConfigured()
+  ) {
+    try {
+      const projectTitle = data.title || existing.title
+      toyyibpayCategoryCode = await ToyyibPayService.createCategory({
+        catname: projectTitle.substring(0, 30),
+        catdescription: `Donations for ${projectTitle}`.substring(0, 100),
+      })
+      console.log(`Created ToyyibPay category for project ${id}: ${toyyibpayCategoryCode}`)
+    } catch (error) {
+      console.error('Failed to create ToyyibPay category:', error)
+      // Don't fail the update, just log the error
+    }
+  }
+
+  // Prepare update data
+  const updateData: Record<string, unknown> = {
+    ...data,
+    updatedAt: new Date(),
+  }
+
+  // Only update category code if we created a new one
+  if (toyyibpayCategoryCode && toyyibpayCategoryCode !== existing.toyyibpayCategoryCode) {
+    updateData.toyyibpayCategoryCode = toyyibpayCategoryCode
+  }
+
   await db
     .update(projects)
-    .set({ ...data, updatedAt: new Date() })
+    .set(updateData)
     .where(eq(projects.id, id))
 
   // Get updated data
@@ -169,6 +238,7 @@ export async function updateProject(id: string, data: {
   }
 
   revalidatePath('/projects')
+  revalidatePath('/donate')
   if (data.slug) {
     revalidatePath(`/projects/${data.slug}`)
   }
