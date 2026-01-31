@@ -253,8 +253,8 @@ export default function OrgChart({
 
       {/* Tree View */}
       {viewMode === 'tree' && (
-        <ZoomPanContainer>
-          <div className="flex items-start justify-center p-20 min-w-max">
+        <div className="overflow-x-auto pb-12 pt-4 scrollbar-hide">
+          <div className="flex items-start justify-center min-w-max px-8">
             {treeData.map((root, index) => (
               <OrgChartNode
                 key={root.id}
@@ -264,7 +264,7 @@ export default function OrgChart({
               />
             ))}
           </div>
-        </ZoomPanContainer>
+        </div>
       )}
 
       {/* Department View */}
