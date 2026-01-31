@@ -1,6 +1,7 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 
 export type TeamMemberNode = {
@@ -57,8 +58,15 @@ export default function OrgChartNode({
   showDetails = true,
   onMemberClick,
 }: OrgChartNodeProps) {
+  const [isCollapsed, setIsCollapsed] = useState(false)
   const color = departmentColor || getDepartmentColor(member.department)
   const hasChildren = member.children && member.children.length > 0
+  
+  // Toggle collapse
+  const toggleCollapse = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setIsCollapsed(!isCollapsed)
+  }
 
   return (
     <div className="flex flex-col items-center">
@@ -67,167 +75,184 @@ export default function OrgChartNode({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: depth * 0.1, duration: 0.4 }}
-        whileHover={{ y: -4, scale: 1.02 }}
-        onClick={() => onMemberClick?.(member)}
-        className={`
-          relative bg-white rounded-2xl overflow-hidden cursor-pointer
-          border border-gray-100 transition-all duration-300
-          ${isRoot ? 'shadow-dramatic' : 'shadow-elevated hover:shadow-dramatic'}
-          ${isRoot ? 'min-w-[280px] max-w-[320px]' : 'min-w-[200px] max-w-[240px]'}
-        `}
+        className="relative z-10"
       >
-        {/* Top color bar */}
-        <div className={`h-1.5 bg-gradient-to-r ${color}`} />
+        <div
+          onClick={() => onMemberClick?.(member)}
+          className={`
+            relative bg-white rounded-2xl overflow-hidden cursor-pointer
+            border border-gray-100 transition-all duration-300
+            group
+            ${isRoot ? 'shadow-2xl scale-105' : 'shadow-elevated hover:shadow-dramatic hover:-translate-y-1'}
+            ${isRoot ? 'w-[280px]' : 'w-[220px]'}
+          `}
+        >
+          {/* Top color bar with shimmer effect */}
+          <div className="relative h-1.5 overflow-hidden">
+            <div className={`absolute inset-0 bg-gradient-to-r ${color}`} />
+            <div className="absolute inset-0 bg-white/30 skew-x-12 translate-x-[-100%] group-hover:animate-shimmer" />
+          </div>
 
-        {/* Content */}
-        <div className={`${isRoot ? 'p-6' : 'p-4'} text-center`}>
-          {/* Avatar */}
-          <div className={`relative mx-auto mb-4 ${isRoot ? 'w-24 h-24' : 'w-16 h-16'}`}>
-            <div className={`absolute inset-0 rounded-full bg-gradient-to-br ${color} opacity-20`} />
-            <div className={`
-              relative w-full h-full rounded-full overflow-hidden
-              border-4 border-white shadow-elevated
-            `}>
-              {member.image ? (
-                <Image
-                  src={member.image}
-                  alt={member.name}
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                <div className={`
-                  w-full h-full bg-gradient-to-br ${color}
-                  flex items-center justify-center text-white
-                  ${isRoot ? 'text-2xl' : 'text-lg'} font-display font-bold
-                `}>
-                  {member.name.split(' ').map((n) => n[0]).slice(0, 2).join('')}
-                </div>
+          {/* Content */}
+          <div className={`${isRoot ? 'p-6' : 'p-5'} text-center bg-white`}>
+            {/* Avatar with Glow */}
+            <div className={`relative mx-auto mb-4 ${isRoot ? 'w-24 h-24' : 'w-16 h-16'} transition-transform duration-300 group-hover:scale-105`}>
+              <div className={`absolute -inset-1 rounded-full bg-gradient-to-br ${color} opacity-20 blur-md group-hover:opacity-40 transition-opacity`} />
+              <div className={`
+                relative w-full h-full rounded-full overflow-hidden
+                border-[3px] border-white shadow-sm
+              `}>
+                {member.image ? (
+                  <Image
+                    src={member.image}
+                    alt={member.name}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className={`
+                    w-full h-full bg-gradient-to-br ${color}
+                    flex items-center justify-center text-white
+                    ${isRoot ? 'text-2xl' : 'text-lg'} font-display font-bold
+                  `}>
+                    {member.name.split(' ').map((n) => n[0]).slice(0, 2).join('')}
+                  </div>
+                )}
+              </div>
+
+              {/* Status indicator */}
+              {member.isActive && (
+                <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white shadow-sm" title="Active" />
               )}
             </div>
 
-            {/* Status indicator */}
-            {member.isActive && (
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white" />
+            {/* Name & Position */}
+            <h3 className={`
+              font-heading font-bold text-foundation-charcoal leading-tight mb-1
+              ${isRoot ? 'text-lg' : 'text-sm'}
+            `}>
+              {member.name}
+            </h3>
+            <p className={`
+              text-teal-600 font-medium tracking-wide
+              ${isRoot ? 'text-sm' : 'text-xs'}
+            `}>
+              {member.position}
+            </p>
+
+            {/* Department Badge */}
+            {showDetails && member.department && (
+              <span className={`
+                inline-flex items-center gap-1.5 mt-3 px-2.5 py-0.5
+                bg-gray-50 rounded-full border border-gray-100
+                ${isRoot ? 'text-xs' : 'text-[10px]'} text-gray-500 font-medium
+              `}>
+                {member.department}
+              </span>
             )}
           </div>
 
-          {/* Name & Position */}
-          <h3 className={`
-            font-heading font-semibold text-foundation-charcoal
-            ${isRoot ? 'text-lg' : 'text-sm'}
-          `}>
-            {member.name}
-          </h3>
-          <p className={`text-teal-600 font-medium ${isRoot ? 'text-sm' : 'text-xs'} mt-1`}>
-            {member.position}
-          </p>
-
-          {showDetails && member.department && (
-            <span className={`
-              inline-flex items-center gap-1.5 mt-2 px-2.5 py-1
-              bg-gray-50 rounded-full
-              ${isRoot ? 'text-xs' : 'text-[10px]'} text-gray-500 font-medium
-            `}>
-              <span className={`w-2 h-2 rounded-full bg-gradient-to-r ${color}`} />
-              {member.department}
-            </span>
-          )}
-
-          {/* Contact Icons - Only for root/main leaders */}
-          {showDetails && isRoot && (member.email || member.linkedin) && (
-            <div className="flex justify-center gap-2 mt-4 pt-3 border-t border-gray-100">
-              {member.email && (
-                <a
-                  href={`mailto:${member.email}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="p-2 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
-                  title={member.email}
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                </a>
-              )}
-              {member.linkedin && (
-                <a
-                  href={member.linkedin}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                  title="LinkedIn Profile"
-                >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
-                  </svg>
-                </a>
-              )}
-              {member.phone && (
-                <a
-                  href={`tel:${member.phone}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                  title={member.phone}
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                  </svg>
-                </a>
-              )}
-            </div>
+          {/* Expand/Collapse Button */}
+          {hasChildren && (
+            <button
+              onClick={toggleCollapse}
+              className={`
+                absolute -bottom-3 left-1/2 -translate-x-1/2
+                w-6 h-6 rounded-full bg-white border border-gray-200 shadow-md
+                flex items-center justify-center
+                text-gray-400 hover:text-teal-600 hover:border-teal-200
+                transition-all z-20
+                ${isCollapsed ? 'rotate-0' : 'rotate-180'}
+              `}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
           )}
         </div>
       </motion.div>
 
-      {/* Children Connection Line */}
-      {hasChildren && (
-        <div className="flex flex-col items-center">
-          {/* Vertical line down from parent */}
+      {/* Children Connection System */}
+      <AnimatePresence>
+        {hasChildren && !isCollapsed && (
           <motion.div
-            initial={{ scaleY: 0 }}
-            animate={{ scaleY: 1 }}
-            transition={{ delay: depth * 0.1 + 0.2, duration: 0.3 }}
-            className="w-0.5 h-8 bg-gradient-to-b from-teal-300 to-teal-400 origin-top"
-          />
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="flex flex-col items-center"
+          >
+            {/* Vertical line down from parent */}
+            <div className="w-px h-8 bg-gray-300 relative">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-gray-300" />
+            </div>
 
-          {/* Horizontal connector line */}
-          {member.children && member.children.length > 1 && (
-            <motion.div
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{ delay: depth * 0.1 + 0.3, duration: 0.4 }}
-              className="h-0.5 bg-gradient-to-r from-teal-400 via-teal-300 to-teal-400 origin-center"
-              style={{
-                width: `calc(${(member.children.length - 1) * 100}% + ${(member.children.length - 1) * 2}rem)`,
-                maxWidth: '100%',
-              }}
-            />
-          )}
+            {/* Horizontal connector line container */}
+            <div className="relative flex justify-center px-4">
+              {/* The horizontal bar itself */}
+              {member.children && member.children.length > 1 && (
+                <div className="absolute top-0 left-0 right-0 h-px bg-gray-300 mx-[calc(50%/var(--child-count))]">
+                  {/* Dynamic width is handled by the container padding/margins naturally in flex, 
+                      but for a perfect tree line we need to span from first child center to last child center.
+                      Using a simplified approach with border-top on a wrapper div below.
+                  */}
+                </div>
+              )}
+              
+              {/* We need a specific structure for the lines. 
+                  Instead of a single div, let's use the individual child wrappers to create the lines.
+              */}
+            </div>
 
-          {/* Children Container */}
-          <div className="flex flex-wrap justify-center gap-6 mt-0">
-            {member.children?.map((child, index) => (
-              <div key={child.id} className="flex flex-col items-center">
-                {/* Vertical line to each child */}
-                <motion.div
-                  initial={{ scaleY: 0 }}
-                  animate={{ scaleY: 1 }}
-                  transition={{ delay: depth * 0.1 + 0.4 + index * 0.1, duration: 0.3 }}
-                  className="w-0.5 h-6 bg-gradient-to-b from-teal-400 to-teal-300 origin-top"
-                />
-                <OrgChartNode
-                  member={child}
-                  depth={depth + 1}
-                  departmentColor={color}
-                  showDetails={showDetails}
-                  onMemberClick={onMemberClick}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+            {/* Children Container */}
+            <div className="flex pt-4 relative">
+              {/* Horizontal line spanning children */}
+              {member.children && member.children.length > 1 && (
+                <div className="absolute top-0 left-0 right-0 h-4 overflow-hidden">
+                   {/* This approach is tricky. Let's use the individual child method: 
+                       Each child has a top line. 
+                       The parent has a bottom line.
+                   */}
+                </div>
+              )}
+
+              {member.children?.map((child, index, arr) => {
+                const isFirst = index === 0
+                const isLast = index === arr.length - 1
+                const isOnly = arr.length === 1
+
+                return (
+                  <div key={child.id} className="flex flex-col items-center px-4 relative">
+                    {/* Horizontal connector line for this child's section */}
+                    {!isOnly && (
+                      <>
+                        {/* Line to the left (if not first) */}
+                        <div className={`absolute top-0 left-0 w-1/2 h-px bg-gray-300 ${isFirst ? 'hidden' : 'block'}`} />
+                        {/* Line to the right (if not last) */}
+                        <div className={`absolute top-0 right-0 w-1/2 h-px bg-gray-300 ${isLast ? 'hidden' : 'block'}`} />
+                      </>
+                    )}
+                    
+                    {/* Vertical line down to this child */}
+                    <div className="w-px h-8 bg-gray-300 -mt-px mb-2 relative">
+                       {/* Connector Dot at T-junction */}
+                       {!isOnly && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-gray-300" />}
+                    </div>
+
+                    <OrgChartNode
+                      member={child}
+                      depth={depth + 1}
+                      departmentColor={color}
+                      showDetails={showDetails}
+                      onMemberClick={onMemberClick}
+                    />
+                  </div>
+                )
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

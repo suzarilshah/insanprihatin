@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import OrgChartNode, { type TeamMemberNode } from './OrgChartNode'
+import ZoomPanContainer from './ZoomPanContainer'
 
 interface OrgChartProps {
   members: TeamMemberNode[]
@@ -164,7 +165,7 @@ export default function OrgChart({
       {showFilters && (
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           {/* View Mode Toggle */}
-          <div className="flex bg-gray-100 rounded-xl p-1">
+          <div className="flex bg-white rounded-xl p-1 shadow-sm border border-gray-100">
             {[
               { mode: 'department' as const, label: 'By Department', icon: 'grid-3x3' },
               { mode: 'tree' as const, label: 'Hierarchy', icon: 'tree' },
@@ -176,8 +177,8 @@ export default function OrgChart({
                 className={`
                   px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300
                   ${viewMode === mode
-                    ? 'bg-white text-teal-600 shadow-md'
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'bg-foundation-charcoal text-white shadow-md'
+                    : 'text-gray-500 hover:text-teal-600 hover:bg-gray-50'
                   }
                 `}
               >
@@ -208,7 +209,7 @@ export default function OrgChart({
             <select
               value={selectedDepartment}
               onChange={(e) => setSelectedDepartment(e.target.value)}
-              className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+              className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 cursor-pointer hover:border-teal-400 transition-colors"
             >
               <option value="all">All Departments ({activeMembers.length})</option>
               {departments.map(dept => (
@@ -253,8 +254,8 @@ export default function OrgChart({
 
       {/* Tree View */}
       {viewMode === 'tree' && (
-        <div className="overflow-x-auto pb-8">
-          <div className="flex flex-col items-center gap-6 min-w-max px-4">
+        <ZoomPanContainer>
+          <div className="flex items-start justify-center p-20 min-w-max">
             {treeData.map((root, index) => (
               <OrgChartNode
                 key={root.id}
@@ -264,12 +265,12 @@ export default function OrgChart({
               />
             ))}
           </div>
-        </div>
+        </ZoomPanContainer>
       )}
 
       {/* Department View */}
       {viewMode === 'department' && (
-        <div className="space-y-12">
+        <div className="space-y-16">
           {Array.from(departmentGroups.entries()).map(([dept, deptMembers], deptIndex) => {
             const styles = getDepartmentStyles(dept)
             return (
@@ -279,12 +280,16 @@ export default function OrgChart({
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: deptIndex * 0.1 }}
+                className="relative"
               >
+                {/* Decorative Background for Department Section */}
+                <div className={`absolute -inset-4 bg-gradient-to-r ${styles.gradient} opacity-[0.03] rounded-3xl -z-10`} />
+
                 {/* Department Header */}
-                <div className="flex items-center gap-4 mb-6">
-                  <div className={`w-1.5 h-10 rounded-full bg-gradient-to-b ${styles.gradient}`} />
+                <div className="flex items-center gap-4 mb-8">
+                  <div className={`w-1.5 h-12 rounded-full bg-gradient-to-b ${styles.gradient}`} />
                   <div>
-                    <h3 className="font-heading text-xl font-semibold text-foundation-charcoal">
+                    <h3 className="font-heading text-2xl font-semibold text-foundation-charcoal">
                       {dept}
                     </h3>
                     <p className="text-sm text-gray-500">
@@ -294,7 +299,7 @@ export default function OrgChart({
                 </div>
 
                 {/* Department Members Grid */}
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                   {deptMembers.map((member, memberIndex) => (
                     <motion.div
                       key={member.id}
@@ -304,15 +309,15 @@ export default function OrgChart({
                       transition={{ delay: memberIndex * 0.05 }}
                       whileHover={{ y: -6, scale: 1.02 }}
                       onClick={() => handleMemberClick(member)}
-                      className="card-elegant overflow-hidden cursor-pointer group"
+                      className="card-elegant overflow-hidden cursor-pointer group bg-white border-transparent hover:border-teal-100"
                     >
                       {/* Top color bar */}
                       <div className={`h-1.5 bg-gradient-to-r ${styles.gradient}`} />
 
                       <div className="p-6 text-center">
                         {/* Avatar */}
-                        <div className="relative w-20 h-20 mx-auto mb-4">
-                          <div className={`absolute inset-0 rounded-full bg-gradient-to-br ${styles.gradient} opacity-20 group-hover:opacity-30 transition-opacity`} />
+                        <div className="relative w-24 h-24 mx-auto mb-5 transition-transform duration-500 group-hover:scale-105">
+                          <div className={`absolute inset-0 rounded-full bg-gradient-to-br ${styles.gradient} opacity-20 group-hover:opacity-30 transition-opacity blur-md`} />
                           <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-white shadow-elevated">
                             {member.image ? (
                               <Image
@@ -329,16 +334,16 @@ export default function OrgChart({
                           </div>
                         </div>
 
-                        <h4 className="font-heading text-lg font-semibold text-foundation-charcoal group-hover:text-teal-600 transition-colors">
+                        <h4 className="font-heading text-lg font-bold text-foundation-charcoal group-hover:text-teal-600 transition-colors">
                           {member.name}
                         </h4>
-                        <p className="text-teal-600 text-sm font-medium mt-1">
+                        <p className="text-teal-600 text-sm font-medium mt-1 mb-4">
                           {member.position}
                         </p>
 
                         {/* Contact Icons */}
                         {(member.email || member.linkedin) && (
-                          <div className="flex justify-center gap-2 mt-4 pt-3 border-t border-gray-100">
+                          <div className="flex justify-center gap-2 pt-4 border-t border-gray-50 opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0 duration-300">
                             {member.email && (
                               <a
                                 href={`mailto:${member.email}`}
@@ -571,5 +576,3 @@ export default function OrgChart({
     </div>
   )
 }
-
-export { OrgChartNode, type TeamMemberNode }
