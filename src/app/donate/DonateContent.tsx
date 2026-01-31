@@ -119,47 +119,53 @@ export default function DonateContent() {
   return (
     <div className="min-h-screen bg-foundation-pearl selection:bg-teal-100 selection:text-teal-900">
       
-      {/* Hero Background - Abstract & Premium */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-teal-100/40 rounded-full blur-[120px] animate-pulse-slow" />
-        <div className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-amber-100/40 rounded-full blur-[100px]" />
-        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03]" />
+      {/* Hero Background - Full Image with Premium Overlay */}
+      <div className="absolute inset-0 z-0 h-[85vh] w-full overflow-hidden">
+        <Image
+          src="https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?q=80&w=2670"
+          alt="Helping hands"
+          fill
+          className="object-cover"
+          priority
+        />
+        {/* Cinematic Overlay - ensuring nav visibility and text contrast */}
+        <div className="absolute inset-0 bg-gradient-to-b from-foundation-charcoal/80 via-foundation-charcoal/60 to-foundation-pearl" />
+        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.05] mix-blend-overlay" />
       </div>
 
-      <div className="relative z-10 container-wide pt-32 pb-20">
+      <div className="relative z-10 container-wide pt-40 pb-20">
         
         {/* Header Section */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
+        <div className="text-center max-w-4xl mx-auto mb-20">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-teal-100 shadow-sm mb-6"
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 shadow-sm mb-8"
           >
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
             </span>
-            <span className="text-sm font-medium text-teal-800 tracking-wide uppercase">2025 Impact Fund Open</span>
+            <span className="text-sm font-medium text-amber-100 tracking-wide uppercase">2025 Impact Fund Open</span>
           </motion.div>
           
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="heading-display text-5xl md:text-7xl mb-6 text-foundation-charcoal"
+            className="heading-display text-6xl md:text-8xl mb-8 text-white tracking-tight"
           >
-            Invest in <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-emerald-600">Sustainable</span> Futures.
+            Invest in <br/>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-300 via-emerald-300 to-teal-300 animate-gradient-x">Sustainable</span> Futures.
           </motion.h1>
           
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-xl text-gray-500 leading-relaxed"
+            className="text-2xl text-gray-200 leading-relaxed max-w-2xl mx-auto font-light"
           >
-            100% of your donation goes directly to verified community programs. 
-            <br className="hidden md:block" />
-            We cover our own operating costs.
+            Join a community of visionaries. 100% of your donation goes directly to verified programs.
           </motion.p>
         </div>
 
@@ -167,12 +173,12 @@ export default function DonateContent() {
           
           {/* LEFT: Donation Interface */}
           <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
             className="lg:col-span-7"
           >
-            <div className="bg-white rounded-3xl shadow-xl shadow-teal-900/5 border border-white/50 backdrop-blur-xl overflow-hidden relative">
+            <div className="bg-white rounded-[2rem] shadow-2xl shadow-black/20 border border-white/50 overflow-hidden relative backdrop-blur-xl">
               
               {/* Progress Bar */}
               <div className="h-1 bg-gray-100 w-full">
@@ -418,20 +424,20 @@ export default function DonateContent() {
 
           {/* RIGHT: Impact Visualization & Trust */}
           <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
             className="lg:col-span-5 space-y-6"
           >
             {/* Dynamic Impact Card */}
-            <div className="bg-gradient-to-br from-amber-400 to-orange-500 rounded-3xl p-1 shadow-lg text-white relative overflow-hidden group">
+            <div className="bg-gradient-to-br from-amber-400 to-orange-500 rounded-[2rem] p-1 shadow-2xl text-white relative overflow-hidden group">
               <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20" />
-              <div className="relative bg-white/10 backdrop-blur-sm rounded-[20px] p-8 h-full">
+              <div className="relative bg-white/10 backdrop-blur-md rounded-[1.8rem] p-8 h-full border border-white/20">
                 <div className="text-amber-100 text-sm font-semibold uppercase tracking-wider mb-2">Projected Impact</div>
-                <div className="text-4xl mb-4">{currentImpact.emoji}</div>
-                <h3 className="font-heading text-2xl font-bold mb-2">{currentImpact.label}</h3>
-                <p className="text-amber-50 text-lg leading-relaxed">
-                  Your <span className="font-bold text-white">RM {displayAmount}</span> donation helps provide {currentImpact.desc.toLowerCase()}.
+                <div className="text-5xl mb-4 transform group-hover:scale-110 transition-transform duration-500">{currentImpact.emoji}</div>
+                <h3 className="font-heading text-3xl font-bold mb-3">{currentImpact.label}</h3>
+                <p className="text-amber-50 text-xl leading-relaxed font-light">
+                  Your <span className="font-bold text-white">RM {displayAmount}</span> investment helps provide {currentImpact.desc.toLowerCase()}.
                 </p>
                 
                 {/* Progress Visual */}
@@ -442,7 +448,7 @@ export default function DonateContent() {
                   </div>
                   <div className="h-2 bg-black/10 rounded-full overflow-hidden">
                     <motion.div 
-                      className="h-full bg-white"
+                      className="h-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]"
                       initial={{ width: 0 }}
                       animate={{ width: `${Math.min((displayAmount / 2500) * 100, 100)}%` }}
                     />
@@ -452,7 +458,7 @@ export default function DonateContent() {
             </div>
 
             {/* Transparency Card */}
-            <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
+            <div className="bg-white/80 backdrop-blur-lg rounded-[2rem] p-8 border border-white shadow-xl">
               <h4 className="font-heading text-lg font-bold text-gray-900 mb-6">Where Your Money Goes</h4>
               <div className="space-y-4">
                 {[
@@ -471,18 +477,18 @@ export default function DonateContent() {
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-gray-400 mt-6 pt-6 border-t border-gray-100">
+              <p className="text-xs text-gray-500 mt-6 pt-6 border-t border-gray-100/50">
                 *Audited annually by Deloitte. 2025 Transparency Report available.
               </p>
             </div>
 
             {/* Security Badges */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-gray-100">
+              <div className="flex items-center gap-3 p-4 bg-white/80 backdrop-blur-sm rounded-2xl border border-white shadow-lg">
                 <span className="text-2xl">🔒</span>
                 <div className="text-xs font-medium text-gray-600">256-bit SSL<br/>Encryption</div>
               </div>
-              <div className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-gray-100">
+              <div className="flex items-center gap-3 p-4 bg-white/80 backdrop-blur-sm rounded-2xl border border-white shadow-lg">
                 <span className="text-2xl">🛡️</span>
                 <div className="text-xs font-medium text-gray-600">Official Tax<br/>Receipt</div>
               </div>
