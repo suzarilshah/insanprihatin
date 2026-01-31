@@ -39,6 +39,10 @@ export default function DonateContent() {
   // Donor Info
   const [donor, setDonor] = useState({ name: '', email: '', phone: '', isAnonymous: false })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Check for cancelled payment
+  const wasCancelled = searchParams.get('cancelled') === 'true'
 
   // Computed
   const currentImpact = IMPACT_TIERS.slice().reverse().find(t => amount >= t.threshold) || IMPACT_TIERS[0]
@@ -48,18 +52,68 @@ export default function DonateContent() {
   const handleAmountSelect = (val: number) => {
     setAmount(val)
     setCustomAmount('')
+    setError(null)
   }
 
   const handleCustomChange = (val: string) => {
     setCustomAmount(val)
     if (val) setAmount(parseFloat(val))
+    setError(null)
   }
 
   const handleSubmit = async () => {
+    if (!displayAmount || displayAmount < 1) {
+      setError('Please enter a valid donation amount')
+      return
+    }
+
+    if (!donor.isAnonymous && (!donor.name || !donor.email)) {
+      setError('Please provide your name and email')
+      return
+    }
+
     setIsSubmitting(true)
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    router.push(`/donate/success?amount=${displayAmount}&ref=${Math.random().toString(36).slice(2)}`)
+    setError(null)
+
+    try {
+      const response = await fetch('/api/donations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: displayAmount,
+          currency: 'MYR',
+          program: PROGRAMS.find(p => p.id === program)?.name || 'General Fund',
+          donorName: donor.isAnonymous ? 'Anonymous' : donor.name,
+          donorEmail: donor.email,
+          isAnonymous: donor.isAnonymous,
+          donationType: frequency,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to process donation')
+      }
+
+      // If there's a redirect URL (payment gateway), go there
+      if (data.redirectUrl) {
+        if (data.paymentMethod === 'toyyibpay') {
+          window.location.href = data.redirectUrl
+        } else {
+          // For manual payment, go to success page with bank details
+          router.push(`/donate/success?ref=${data.paymentReference}&method=manual&amount=${displayAmount}`)
+        }
+      } else {
+        // Fallback to success page
+        router.push(`/donate/success?ref=${data.paymentReference}&amount=${displayAmount}`)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -307,6 +361,13 @@ export default function DonateContent() {
                         </div>
                         <h3 className="font-heading text-2xl font-bold">Secure Checkout</h3>
                       </div>
+
+                      {/* Error Message */}
+                      {(error || wasCancelled) && (
+                        <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                          {error || 'Payment was cancelled. You can try again.'}
+                        </div>
+                      )}
 
                       <div className="bg-gray-50 rounded-2xl p-6 space-y-4 text-sm">
                         <div className="flex justify-between items-center">

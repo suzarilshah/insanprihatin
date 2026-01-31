@@ -1,10 +1,84 @@
 'use client'
 
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
+
+const DONATION_AMOUNTS = [50, 100, 250]
 
 export default function CTA() {
+  const router = useRouter()
+  const [selectedAmount, setSelectedAmount] = useState<number>(100)
+  const [customAmount, setCustomAmount] = useState<string>('')
+  const [selectedProgram, setSelectedProgram] = useState<string>('general')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const finalAmount = customAmount ? parseInt(customAmount) : selectedAmount
+
+  const handleAmountSelect = (amount: number) => {
+    setSelectedAmount(amount)
+    setCustomAmount('')
+    setError(null)
+  }
+
+  const handleCustomAmountChange = (value: string) => {
+    setCustomAmount(value)
+    setSelectedAmount(0)
+    setError(null)
+  }
+
+  const handleQuickDonate = async () => {
+    if (!finalAmount || finalAmount < 1) {
+      setError('Please select or enter a valid donation amount')
+      return
+    }
+
+    setIsSubmitting(true)
+    setError(null)
+
+    try {
+      const response = await fetch('/api/donations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: finalAmount,
+          currency: 'MYR',
+          program: selectedProgram,
+          isAnonymous: true, // Quick donations are anonymous by default
+          donorName: 'Quick Donor',
+          donorEmail: 'quickdonation@yayasaninsanprihatin.org',
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to process donation')
+      }
+
+      // If there's a redirect URL (payment gateway), go there
+      if (data.redirectUrl) {
+        if (data.paymentMethod === 'toyyibpay') {
+          window.location.href = data.redirectUrl
+        } else {
+          // For manual payment, go to success page with bank details
+          router.push(`/donate/success?ref=${data.paymentReference}&method=manual`)
+        }
+      } else {
+        // Fallback to success page
+        router.push(`/donate/success?ref=${data.paymentReference}`)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong')
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <section className="relative py-32 overflow-hidden">
       {/* Background */}
@@ -35,7 +109,7 @@ export default function CTA() {
 
             <p className="text-gray-400 text-lg leading-relaxed mb-8">
               Your contribution, no matter the size, creates ripples of positive change.
-              Join thousands of donors who are helping us build a more compassionate Malaysia.
+              Join our growing community of supporters who are helping us build a more compassionate Malaysia.
             </p>
 
             <div className="flex flex-wrap gap-4">
@@ -83,18 +157,27 @@ export default function CTA() {
                 </div>
               </div>
 
+              {/* Error Message */}
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                  {error}
+                </div>
+              )}
+
               {/* Amount Options */}
               <div className="grid grid-cols-3 gap-3 mb-6">
-                {['RM 50', 'RM 100', 'RM 250'].map((amount, index) => (
+                {DONATION_AMOUNTS.map((amount) => (
                   <button
                     key={amount}
+                    onClick={() => handleAmountSelect(amount)}
+                    disabled={isSubmitting}
                     className={`py-3 rounded-xl font-medium transition-all ${
-                      index === 1
-                        ? 'bg-teal-500 text-white'
+                      selectedAmount === amount && !customAmount
+                        ? 'bg-teal-500 text-white shadow-md'
                         : 'bg-gray-100 text-foundation-charcoal hover:bg-teal-50'
-                    }`}
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
-                    {amount}
+                    RM {amount}
                   </button>
                 ))}
               </div>
@@ -109,7 +192,11 @@ export default function CTA() {
                   <input
                     type="number"
                     placeholder="Enter amount"
-                    className="input-elegant pl-12"
+                    value={customAmount}
+                    onChange={(e) => handleCustomAmountChange(e.target.value)}
+                    disabled={isSubmitting}
+                    min="1"
+                    className="input-elegant pl-12 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -119,8 +206,13 @@ export default function CTA() {
                 <label className="block text-sm font-medium text-gray-600 mb-2">
                   Select program (optional)
                 </label>
-                <select className="input-elegant">
-                  <option value="">General Fund</option>
+                <select
+                  className="input-elegant"
+                  value={selectedProgram}
+                  onChange={(e) => setSelectedProgram(e.target.value)}
+                  disabled={isSubmitting}
+                >
+                  <option value="general">General Fund</option>
                   <option value="education">Education</option>
                   <option value="healthcare">Healthcare</option>
                   <option value="environment">Environment</option>
@@ -128,15 +220,43 @@ export default function CTA() {
                 </select>
               </div>
 
-              <Link
-                href="/donate"
-                className="block w-full btn-primary text-center"
+              {/* Amount Summary */}
+              {finalAmount > 0 && (
+                <div className="mb-4 p-3 bg-teal-50 rounded-xl text-center">
+                  <span className="text-sm text-gray-600">You are donating </span>
+                  <span className="font-bold text-teal-600">RM {finalAmount}</span>
+                  <span className="text-sm text-gray-600"> to {selectedProgram === 'general' ? 'General Fund' : selectedProgram}</span>
+                </div>
+              )}
+
+              <button
+                onClick={handleQuickDonate}
+                disabled={isSubmitting || !finalAmount || finalAmount < 1}
+                className="block w-full btn-primary text-center disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Continue to Donate
-              </Link>
+                {isSubmitting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Processing...
+                  </span>
+                ) : (
+                  'Donate Now'
+                )}
+              </button>
 
               <p className="text-center text-gray-400 text-xs mt-4">
-                Secure payment powered by trusted partners
+                🔒 Secure payment powered by trusted partners
+              </p>
+
+              {/* Link to full donate page */}
+              <p className="text-center text-gray-500 text-sm mt-4">
+                Want to include your details?{' '}
+                <Link href="/donate" className="text-teal-600 hover:underline font-medium">
+                  Donate with receipt →
+                </Link>
               </p>
             </div>
           </motion.div>

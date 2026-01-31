@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import { Suspense } from 'react'
 import { Header, Footer } from '@/components/layout'
 import DonateContent from './DonateContent'
 
@@ -11,12 +12,22 @@ export const metadata: Metadata = {
   },
 }
 
+function DonateLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-foundation-pearl">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500" />
+    </div>
+  )
+}
+
 export default function DonatePage() {
   return (
     <>
       <Header />
       <main>
-        <DonateContent />
+        <Suspense fallback={<DonateLoading />}>
+          <DonateContent />
+        </Suspense>
       </main>
       <Footer />
     </>

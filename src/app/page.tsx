@@ -1,15 +1,17 @@
 import { Header, Footer } from '@/components/layout'
-import { Hero, About, Impact, Programs, CTA } from '@/components/sections'
+import { Hero, Problem, Solution, HowItWorks, CTA } from '@/components/sections'
 import SchemaMarkup from '@/components/SEO/SchemaMarkup'
 import { generateOrganizationSchema, generateWebsiteSchema, generateDonationSchema } from '@/lib/seo'
 import { getHeroContent, getAboutContent, getImpactStats } from '@/lib/actions/content'
+import { getProjects } from '@/lib/actions/projects'
 
 export default async function HomePage() {
   // Fetch content from database
-  const [heroContent, aboutContent, impactStats] = await Promise.all([
+  const [heroContent, aboutContent, impactStats, projects] = await Promise.all([
     getHeroContent(),
     getAboutContent(),
     getImpactStats(),
+    getProjects({ limit: 3, published: true }),
   ])
 
   const schemas = [
@@ -31,15 +33,13 @@ export default async function HomePage() {
           ctaLink={heroContent?.ctaLink ?? undefined}
           backgroundImage={heroContent?.backgroundImage ?? undefined}
         />
-        <About
-          title={aboutContent?.title ?? undefined}
-          content={aboutContent?.content ?? undefined}
-          mission={aboutContent?.mission ?? undefined}
-          vision={aboutContent?.vision ?? undefined}
-          image={aboutContent?.image ?? undefined}
+        <Problem />
+        <Solution 
+          projects={projects} 
+          impactStats={impactStats} 
+          aboutContent={aboutContent}
         />
-        <Programs />
-        <Impact stats={impactStats} />
+        <HowItWorks />
         <CTA />
       </main>
       <Footer />
