@@ -4,7 +4,6 @@ import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import OrgChartNode, { type TeamMemberNode } from './OrgChartNode'
-import ZoomPanContainer from './ZoomPanContainer'
 
 interface OrgChartProps {
   members: TeamMemberNode[]
