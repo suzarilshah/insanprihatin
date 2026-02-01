@@ -73,6 +73,7 @@ export async function POST(
       paymentReference: receiptData.paymentReference,
       completedAt: receiptData.completedAt,
       pdfBuffer,
+      organization: receiptData.organization, // Pass organization config for email
     })
 
     if (!emailResult.success) {

@@ -462,6 +462,8 @@ function generateFormEmailHtml(notification: FormNotificationData): string {
 // DONATION RECEIPT EMAIL
 // ============================================
 
+import { type OrganizationConfig, getDefaultOrganizationConfig } from './organization-config'
+
 interface DonationReceiptData {
   receiptNumber: string
   donorName: string
@@ -472,6 +474,7 @@ interface DonationReceiptData {
   paymentReference: string
   completedAt: Date
   pdfBuffer?: Buffer
+  organization?: OrganizationConfig
 }
 
 /**
@@ -550,11 +553,16 @@ function generateDonationReceiptEmailHtml(
   data: DonationReceiptData,
   formattedAmount: string
 ): string {
+  // Use organization config from data if available, fallback to defaults
+  const org = data.organization || getDefaultOrganizationConfig()
+
   const completedDate = new Date(data.completedAt).toLocaleDateString('en-MY', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   })
+
+  const websiteUrl = org.website.startsWith('http') ? org.website : `https://${org.website}`
 
   return `
 <!DOCTYPE html>
@@ -583,7 +591,7 @@ function generateDonationReceiptEmailHtml(
         Dear ${escapeHtml(data.donorName)},
       </p>
       <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 30px;">
-        Thank you for your generous donation to Yayasan Insan Prihatin. Your support helps us continue our mission of empowering communities and transforming lives.
+        Thank you for your generous donation to ${escapeHtml(org.name)}. Your support helps us continue our mission of ${escapeHtml(org.tagline.toLowerCase())}.
       </p>
 
       <!-- Receipt Card -->
@@ -629,7 +637,7 @@ function generateDonationReceiptEmailHtml(
       <!-- Tax Notice -->
       <div style="background: #fef3c7; border-radius: 8px; padding: 15px; margin-bottom: 30px; border-left: 4px solid #f59e0b;">
         <p style="color: #92400e; font-size: 13px; line-height: 1.6; margin: 0;">
-          <strong>Tax Deduction Notice:</strong> Your donation may be eligible for tax deduction under Section 44(6) of the Income Tax Act 1967. Please retain this receipt for your tax records.
+          <strong>Tax Deduction Notice:</strong> Your donation may be eligible for tax deduction under Section 44(6) of the Income Tax Act 1967 (Tax Exemption Ref: ${escapeHtml(org.taxExemptionRef)}). Please retain this receipt for your tax records.
         </p>
       </div>
 
@@ -640,7 +648,7 @@ function generateDonationReceiptEmailHtml(
 
       <!-- CTA -->
       <div style="text-align: center;">
-        <a href="https://insanprihatin.org/donate"
+        <a href="${websiteUrl}/donate"
            style="display: inline-block; background: linear-gradient(135deg, #0d9488 0%, #0e7490 100%); color: white; padding: 14px 40px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">
           Support Another Cause
         </a>
@@ -650,15 +658,15 @@ function generateDonationReceiptEmailHtml(
     <!-- Footer -->
     <div style="padding: 25px; text-align: center; border-radius: 0 0 12px 12px; background: #f9fafb; border: 1px solid #e5e7eb; border-top: none;">
       <p style="color: #374151; font-size: 14px; font-weight: 600; margin: 0 0 10px;">
-        Yayasan Insan Prihatin
+        ${escapeHtml(org.name)}
       </p>
       <p style="color: #6b7280; font-size: 12px; margin: 0 0 5px;">
-        Empowering Communities, Transforming Lives
+        ${escapeHtml(org.tagline)}
       </p>
       <p style="color: #6b7280; font-size: 12px; margin: 0;">
-        <a href="https://insanprihatin.org" style="color: #0d9488; text-decoration: none;">insanprihatin.org</a>
+        <a href="${websiteUrl}" style="color: #0d9488; text-decoration: none;">${escapeHtml(org.website)}</a>
         &nbsp;|&nbsp;
-        <a href="mailto:info@insanprihatin.org" style="color: #0d9488; text-decoration: none;">info@insanprihatin.org</a>
+        <a href="mailto:${escapeHtml(org.email)}" style="color: #0d9488; text-decoration: none;">${escapeHtml(org.email)}</a>
       </p>
     </div>
   </div>

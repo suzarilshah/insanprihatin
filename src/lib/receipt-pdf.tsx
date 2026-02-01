@@ -2,7 +2,7 @@
  * PDF Receipt Template
  *
  * Professional A4 receipt template for donations using @react-pdf/renderer.
- * Includes organization branding, donor details, and tax deduction information.
+ * Includes organization branding with logo, donor details, and tax deduction information.
  */
 
 import React from 'react'
@@ -11,16 +11,12 @@ import {
   Page,
   Text,
   View,
+  Image,
   StyleSheet,
-  Font,
 } from '@react-pdf/renderer'
 import { ReceiptData, organizationDetails, formatAmount, formatReceiptDate } from './receipt'
-
-// Register custom fonts (optional - uses default if not available)
-// Font.register({
-//   family: 'Inter',
-//   src: 'https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiJ-Ek-_EeA.woff2',
-// })
+import path from 'path'
+import fs from 'fs'
 
 // Define styles
 const styles = StyleSheet.create({
@@ -39,26 +35,39 @@ const styles = StyleSheet.create({
     borderBottomColor: '#0D9488',
   },
   logoSection: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 15,
+    maxWidth: '60%',
+  },
+  logo: {
+    width: 60,
+    height: 60,
+    objectFit: 'contain',
+  },
+  orgInfo: {
     flexDirection: 'column',
+    flex: 1,
   },
   orgName: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: 'Helvetica-Bold',
     color: '#0D9488',
-    marginBottom: 4,
+    marginBottom: 3,
   },
   orgTagline: {
-    fontSize: 9,
+    fontSize: 8,
     color: '#6B7280',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   orgDetails: {
-    fontSize: 8,
+    fontSize: 7,
     color: '#6B7280',
     lineHeight: 1.4,
   },
   receiptTitle: {
     textAlign: 'right',
+    alignItems: 'flex-end',
   },
   receiptLabel: {
     fontSize: 24,
@@ -212,27 +221,75 @@ interface ReceiptPDFProps {
   data: ReceiptData
 }
 
+/**
+ * Get logo source - tries to load the logo as base64 for PDF rendering
+ */
+function getLogoSource(logoUrl?: string): string | null {
+  if (!logoUrl) return null
+
+  // If it's already a data URL or full URL, use it directly
+  if (logoUrl.startsWith('data:') || logoUrl.startsWith('http://') || logoUrl.startsWith('https://')) {
+    return logoUrl
+  }
+
+  // Try to read local file and convert to base64
+  try {
+    // For local paths starting with /, look in the public directory
+    const publicPath = path.join(process.cwd(), 'public', logoUrl)
+    if (fs.existsSync(publicPath)) {
+      const imageBuffer = fs.readFileSync(publicPath)
+      const base64 = imageBuffer.toString('base64')
+      const mimeType = logoUrl.endsWith('.png') ? 'image/png' : 'image/jpeg'
+      return `data:${mimeType};base64,${base64}`
+    }
+
+    // Also try the root directory for files like YIP-main-logo-transparent.png
+    const rootPath = path.join(process.cwd(), logoUrl.replace(/^\//, ''))
+    if (fs.existsSync(rootPath)) {
+      const imageBuffer = fs.readFileSync(rootPath)
+      const base64 = imageBuffer.toString('base64')
+      const mimeType = logoUrl.endsWith('.png') ? 'image/png' : 'image/jpeg'
+      return `data:${mimeType};base64,${base64}`
+    }
+  } catch (error) {
+    console.error('Failed to load logo for PDF:', error)
+  }
+
+  return null
+}
+
 export function ReceiptPDF({ data }: ReceiptPDFProps) {
+  // Use organization config from data if available, fallback to defaults
+  const org = data.organization || organizationDetails
+
+  // Get logo source
+  const logoSrc = getLogoSource(org.logoUrl)
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         {/* Watermark */}
         <Text style={styles.watermark}>OFFICIAL RECEIPT</Text>
 
-        {/* Header */}
+        {/* Header with Logo */}
         <View style={styles.header}>
           <View style={styles.logoSection}>
-            <Text style={styles.orgName}>{organizationDetails.name}</Text>
-            <Text style={styles.orgTagline}>Empowering Communities, Transforming Lives</Text>
-            <Text style={styles.orgDetails}>
-              {organizationDetails.address.join('\n')}
-            </Text>
-            <Text style={styles.orgDetails}>
-              Tel: {organizationDetails.phone}
-            </Text>
-            <Text style={styles.orgDetails}>
-              Email: {organizationDetails.email}
-            </Text>
+            {logoSrc && (
+              <Image src={logoSrc} style={styles.logo} />
+            )}
+            <View style={styles.orgInfo}>
+              <Text style={styles.orgName}>{org.name}</Text>
+              <Text style={styles.orgTagline}>{org.tagline}</Text>
+              <Text style={styles.orgDetails}>
+                {org.address.join('\n')}
+              </Text>
+              <Text style={styles.orgDetails}>
+                Tel: {org.phone}
+              </Text>
+              <Text style={styles.orgDetails}>
+                Email: {org.email}
+              </Text>
+            </View>
           </View>
           <View style={styles.receiptTitle}>
             <Text style={styles.receiptLabel}>RECEIPT</Text>
@@ -319,11 +376,11 @@ export function ReceiptPDF({ data }: ReceiptPDFProps) {
           <View style={styles.taxNotice}>
             <Text style={styles.taxTitle}>Tax Deduction Notice</Text>
             <Text style={styles.taxText}>
-              {organizationDetails.name} is a registered charitable organization under the
-              Companies Commission of Malaysia (Registration No: {organizationDetails.registrationNumber}).
+              {org.name} is a registered charitable organization under the
+              Companies Commission of Malaysia (Registration No: {org.registrationNumber}).
               {'\n\n'}
               Your donation may be eligible for tax deduction under Section 44(6) of the
-              Income Tax Act 1967. Tax Exemption Reference: {organizationDetails.taxExemptionRef}
+              Income Tax Act 1967. Tax Exemption Reference: {org.taxExemptionRef}
               {'\n\n'}
               Please retain this receipt for your tax records.
             </Text>
@@ -335,13 +392,13 @@ export function ReceiptPDF({ data }: ReceiptPDFProps) {
           <View style={styles.footerContent}>
             <View>
               <Text style={styles.footerLeft}>
-                {organizationDetails.name}
+                {org.name}
               </Text>
               <Text style={styles.footerLeft}>
-                Registration No: {organizationDetails.registrationNumber}
+                Registration No: {org.registrationNumber}
               </Text>
               <Text style={styles.footerLeft}>
-                Website: {organizationDetails.website}
+                Website: {org.website}
               </Text>
             </View>
             <View>
@@ -354,7 +411,7 @@ export function ReceiptPDF({ data }: ReceiptPDFProps) {
             </View>
           </View>
           <Text style={styles.verificationText}>
-            This is an electronically generated receipt. For verification, please contact {organizationDetails.email}
+            This is an electronically generated receipt. For verification, please contact {org.email}
           </Text>
         </View>
       </Page>

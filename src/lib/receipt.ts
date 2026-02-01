@@ -5,8 +5,9 @@
  * for donations to Yayasan Insan Prihatin.
  */
 
-import { db, donations, siteSettings } from '@/db'
+import { db, donations, projects } from '@/db'
 import { eq, sql } from 'drizzle-orm'
+import { getOrganizationConfig, type OrganizationConfig } from './organization-config'
 
 export interface ReceiptData {
   receiptNumber: string
@@ -22,6 +23,8 @@ export interface ReceiptData {
   completedAt: Date
   createdAt: Date
   message?: string
+  // Organization details (fetched from config)
+  organization?: OrganizationConfig
 }
 
 /**
@@ -58,7 +61,7 @@ export async function generateReceiptNumber(): Promise<string> {
 }
 
 /**
- * Get receipt data for a donation
+ * Get receipt data for a donation (includes organization config)
  */
 export async function getReceiptData(paymentReference: string): Promise<ReceiptData | null> {
   const donation = await db.query.donations.findFirst({
@@ -73,11 +76,14 @@ export async function getReceiptData(paymentReference: string): Promise<ReceiptD
   let projectTitle: string | undefined
   if (donation.projectId) {
     const project = await db.query.projects.findFirst({
-      where: eq(sql`id`, donation.projectId),
+      where: eq(projects.id, donation.projectId),
       columns: { title: true },
     })
     projectTitle = project?.title
   }
+
+  // Get organization config from database
+  const organization = await getOrganizationConfig()
 
   // Note: Amount is stored in cents, convert to currency units
   return {
@@ -94,14 +100,17 @@ export async function getReceiptData(paymentReference: string): Promise<ReceiptD
     completedAt: donation.completedAt || donation.createdAt,
     createdAt: donation.createdAt,
     message: donation.message || undefined,
+    organization,
   }
 }
 
 /**
- * Organization details for receipt
+ * Organization details for receipt (deprecated - use getOrganizationConfig instead)
+ * Kept for backwards compatibility
  */
 export const organizationDetails = {
   name: 'Yayasan Insan Prihatin',
+  tagline: 'Empowering Communities, Transforming Lives',
   registrationNumber: 'PPM-001-10-12345678',
   taxExemptionRef: 'LHDN.01/35/42/51/179-6.6000',
   address: [
@@ -113,6 +122,7 @@ export const organizationDetails = {
   phone: '+60 3-1234 5678',
   email: 'info@insanprihatin.org',
   website: 'www.insanprihatin.org',
+  logoUrl: '/YIP-main-logo-transparent.png',
 }
 
 /**

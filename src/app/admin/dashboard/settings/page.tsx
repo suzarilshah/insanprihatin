@@ -4,6 +4,9 @@ import { useState, useEffect, useTransition } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { getSiteSetting, updateSiteSetting } from '@/lib/actions/content'
+import { getDefaultOrganizationConfig } from '@/lib/organization-config'
+
+const defaultOrgConfig = getDefaultOrganizationConfig()
 
 export default function SettingsPage() {
   const [isPending, startTransition] = useTransition()
@@ -29,6 +32,12 @@ export default function SettingsPage() {
     // Email notification settings
     notificationEmail: '',
     emailNotificationsEnabled: true,
+    // Organization config for receipts
+    orgRegistrationNumber: defaultOrgConfig.registrationNumber,
+    orgTaxExemptionRef: defaultOrgConfig.taxExemptionRef,
+    orgWebsite: defaultOrgConfig.website,
+    orgLogoUrl: defaultOrgConfig.logoUrl,
+    orgFullAddress: defaultOrgConfig.address.join('\n'),
   })
   const [isSendingTestEmail, setIsSendingTestEmail] = useState(false)
   const [testEmailResult, setTestEmailResult] = useState<{ type: 'success' | 'error', text: string } | null>(null)
@@ -45,6 +54,7 @@ export default function SettingsPage() {
           social,
           notificationEmail,
           emailNotificationsEnabled,
+          organizationConfig,
         ] = await Promise.all([
           getSiteSetting('siteName'),
           getSiteSetting('siteTagline'),
@@ -54,7 +64,16 @@ export default function SettingsPage() {
           getSiteSetting('social'),
           getSiteSetting('notificationEmail'),
           getSiteSetting('emailNotificationsEnabled'),
+          getSiteSetting('organizationConfig'),
         ])
+
+        const orgConfig = organizationConfig as {
+          registrationNumber?: string
+          taxExemptionRef?: string
+          website?: string
+          logoUrl?: string
+          address?: string[]
+        } | null
 
         setSettings(prev => ({
           ...prev,
@@ -66,6 +85,12 @@ export default function SettingsPage() {
           ...((social as Record<string, string>) || {}),
           notificationEmail: (notificationEmail as string) || prev.notificationEmail,
           emailNotificationsEnabled: emailNotificationsEnabled !== false,
+          // Organization config
+          orgRegistrationNumber: orgConfig?.registrationNumber || prev.orgRegistrationNumber,
+          orgTaxExemptionRef: orgConfig?.taxExemptionRef || prev.orgTaxExemptionRef,
+          orgWebsite: orgConfig?.website || prev.orgWebsite,
+          orgLogoUrl: orgConfig?.logoUrl || prev.orgLogoUrl,
+          orgFullAddress: orgConfig?.address?.join('\n') || (address as string) || prev.orgFullAddress,
         }))
       } catch (error) {
         console.error('Failed to load settings:', error)
@@ -95,6 +120,14 @@ export default function SettingsPage() {
           }),
           updateSiteSetting('notificationEmail', settings.notificationEmail),
           updateSiteSetting('emailNotificationsEnabled', settings.emailNotificationsEnabled),
+          // Save organization config for receipts
+          updateSiteSetting('organizationConfig', {
+            registrationNumber: settings.orgRegistrationNumber,
+            taxExemptionRef: settings.orgTaxExemptionRef,
+            website: settings.orgWebsite,
+            logoUrl: settings.orgLogoUrl,
+            address: settings.orgFullAddress.split('\n').map(line => line.trim()).filter(Boolean),
+          }),
         ])
         setMessage({ type: 'success', text: 'Settings saved successfully!' })
       } catch (error) {
@@ -148,6 +181,7 @@ export default function SettingsPage() {
 
   const tabs = [
     { id: 'general', label: 'General', icon: '⚙️' },
+    { id: 'organization', label: 'Organization', icon: '🏛️' },
     { id: 'contact', label: 'Contact', icon: '📍' },
     { id: 'email', label: 'Email Notifications', icon: '📧' },
     { id: 'social', label: 'Social Media', icon: '📱' },
@@ -242,6 +276,103 @@ export default function SettingsPage() {
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
                   />
                 </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'organization' && (
+            <div className="bg-white rounded-2xl border border-gray-100 p-6">
+              <h2 className="font-heading text-lg font-semibold text-foundation-charcoal mb-2">
+                Organization Details
+              </h2>
+              <p className="text-gray-500 text-sm mb-6">
+                These details appear on donation receipts, official documents, and the website.
+              </p>
+              <div className="space-y-6">
+                <div className="p-4 bg-teal-50 border border-teal-200 rounded-xl">
+                  <div className="flex gap-3">
+                    <svg className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                      <p className="text-sm font-medium text-teal-800">Important for Receipts</p>
+                      <p className="text-xs text-teal-700 mt-1">
+                        These details will be used in donation receipts sent to donors. Make sure the registration number and tax exemption reference are accurate.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Registration Number</label>
+                    <input
+                      type="text"
+                      value={settings.orgRegistrationNumber}
+                      onChange={(e) => setSettings({ ...settings, orgRegistrationNumber: e.target.value })}
+                      placeholder="PPM-001-10-12345678"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">ROS/SSM registration number</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Tax Exemption Reference</label>
+                    <input
+                      type="text"
+                      value={settings.orgTaxExemptionRef}
+                      onChange={(e) => setSettings({ ...settings, orgTaxExemptionRef: e.target.value })}
+                      placeholder="LHDN.01/35/42/51/179-6.6000"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">LHDN tax deduction reference</p>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Full Address (for Receipts)</label>
+                  <textarea
+                    value={settings.orgFullAddress}
+                    onChange={(e) => setSettings({ ...settings, orgFullAddress: e.target.value })}
+                    rows={4}
+                    placeholder={"No. 1, Jalan Prihatin\nTaman Kasih Sayang\n50000 Kuala Lumpur\nMalaysia"}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 resize-none font-mono text-sm"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Enter each line of the address on a new line</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Website URL</label>
+                  <input
+                    type="text"
+                    value={settings.orgWebsite}
+                    onChange={(e) => setSettings({ ...settings, orgWebsite: e.target.value })}
+                    placeholder="www.insanprihatin.org"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Logo URL (for Receipts)</label>
+                  <input
+                    type="text"
+                    value={settings.orgLogoUrl}
+                    onChange={(e) => setSettings({ ...settings, orgLogoUrl: e.target.value })}
+                    placeholder="/YIP-main-logo-transparent.png"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Path to the logo image (e.g., /logo.png or https://...)</p>
+                </div>
+                {settings.orgLogoUrl && (
+                  <div className="p-4 bg-gray-50 rounded-xl">
+                    <p className="text-sm font-medium text-gray-700 mb-3">Logo Preview</p>
+                    <div className="bg-white p-4 rounded-lg border border-gray-200 inline-block">
+                      <img
+                        src={settings.orgLogoUrl}
+                        alt="Organization Logo"
+                        className="h-16 w-auto object-contain"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none'
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
