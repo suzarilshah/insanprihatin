@@ -63,6 +63,11 @@ async function logWebhookEvent(
 // POST - Handle ToyyibPay webhook callback
 export async function POST(request: NextRequest) {
   const startTime = Date.now()
+  const requestId = `webhook_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`
+
+  console.log(`\n${'='.repeat(60)}`)
+  console.log(`[Webhook ${requestId}] ToyyibPay callback received`)
+  console.log(`${'='.repeat(60)}`)
 
   try {
     // ===== PARSE WEBHOOK PAYLOAD =====
@@ -70,13 +75,17 @@ export async function POST(request: NextRequest) {
     const contentType = request.headers.get('content-type') || ''
     let webhookData: Record<string, string> = {}
 
+    console.log(`[Webhook ${requestId}] Content-Type: ${contentType}`)
+
     if (contentType.includes('application/json')) {
       webhookData = await request.json()
+      console.log(`[Webhook ${requestId}] Parsed as JSON`)
     } else if (contentType.includes('application/x-www-form-urlencoded')) {
       const formData = await request.formData()
       formData.forEach((value, key) => {
         webhookData[key] = value.toString()
       })
+      console.log(`[Webhook ${requestId}] Parsed as form-urlencoded`)
     } else {
       // Try to parse as URL params (ToyyibPay sometimes sends this way)
       const text = await request.text()
@@ -84,16 +93,19 @@ export async function POST(request: NextRequest) {
       params.forEach((value, key) => {
         webhookData[key] = value
       })
+      console.log(`[Webhook ${requestId}] Parsed as URL params`)
     }
 
-    // Log raw webhook data for debugging (excluding sensitive info)
-    console.log('ToyyibPay webhook received:', {
+    // Log raw webhook data for debugging
+    console.log(`[Webhook ${requestId}] Payload:`, {
       timestamp: new Date().toISOString(),
-      contentType,
       refno: webhookData.refno,
       status: webhookData.status,
+      reason: webhookData.reason,
       billcode: webhookData.billcode,
       order_id: webhookData.order_id,
+      amount: webhookData.amount,
+      transaction_id: webhookData.transaction_id,
     })
 
     // ===== EXTRACT CALLBACK DATA =====
@@ -113,12 +125,15 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!paymentReference) {
-      console.error('Webhook missing payment reference:', webhookData)
+      console.error(`[Webhook ${requestId}] Missing payment reference in payload`)
+      console.error(`[Webhook ${requestId}] Full payload:`, webhookData)
       return NextResponse.json(
         { error: 'Missing payment reference' },
         { status: 400 }
       )
     }
+
+    console.log(`[Webhook ${requestId}] Payment reference: ${paymentReference}`)
 
     // ===== FIND DONATION =====
 
@@ -127,12 +142,15 @@ export async function POST(request: NextRequest) {
     })
 
     if (!donation) {
-      console.error(`Donation not found for reference: ${paymentReference}`)
+      console.error(`[Webhook ${requestId}] Donation not found for reference: ${paymentReference}`)
       return NextResponse.json(
         { error: 'Donation not found' },
         { status: 404 }
       )
     }
+
+    console.log(`[Webhook ${requestId}] Found donation: ${donation.id}`)
+    console.log(`[Webhook ${requestId}] Current DB status: ${donation.paymentStatus}`)
 
     // Log callback received
     await logWebhookEvent(donation.id, 'callback_received', {
@@ -150,7 +168,7 @@ export async function POST(request: NextRequest) {
     // If donation is already completed or failed, skip processing
     // This prevents duplicate processing of webhooks
     if (donation.paymentStatus === 'completed' || donation.paymentStatus === 'refunded') {
-      console.log(`Donation ${paymentReference} already processed, skipping`)
+      console.log(`[Webhook ${requestId}] Donation already processed (${donation.paymentStatus}), skipping`)
       return NextResponse.json({
         success: true,
         message: 'Already processed',
@@ -161,6 +179,7 @@ export async function POST(request: NextRequest) {
     // ===== MAP PAYMENT STATUS =====
 
     const newStatus = ToyyibPayService.mapPaymentStatus(paymentStatus)
+    console.log(`[Webhook ${requestId}] ToyyibPay status '${paymentStatus}' mapped to '${newStatus}'`)
 
     // ===== UPDATE DONATION =====
 
@@ -308,7 +327,9 @@ export async function POST(request: NextRequest) {
     // ===== RETURN SUCCESS =====
 
     const processingTime = Date.now() - startTime
-    console.log(`Webhook processed for ${paymentReference} in ${processingTime}ms: ${newStatus}`)
+    console.log(`[Webhook ${requestId}] Processing completed in ${processingTime}ms`)
+    console.log(`[Webhook ${requestId}] Final status: ${newStatus}`)
+    console.log(`${'='.repeat(60)}\n`)
 
     return NextResponse.json({
       success: true,
@@ -318,7 +339,11 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Webhook processing error:', error)
+    console.error(`[Webhook] Processing error:`, error)
+    console.error(`[Webhook] Error details:`, {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+    })
     return NextResponse.json(
       { error: 'Webhook processing failed' },
       { status: 500 }

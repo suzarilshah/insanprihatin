@@ -16,6 +16,26 @@ import { headers } from 'next/headers'
  * - Session tracking for fraud prevention
  */
 
+// Get base URL dynamically from request or environment
+function getBaseUrl(request?: NextRequest): string {
+  // Try to get from request headers first (most accurate for current environment)
+  if (request) {
+    const host = request.headers.get('host')
+    const protocol = request.headers.get('x-forwarded-proto') || 'http'
+    if (host) {
+      return `${protocol}://${host}`
+    }
+  }
+
+  // Fall back to environment variable
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    return process.env.NEXT_PUBLIC_SITE_URL
+  }
+
+  // Default to localhost
+  return 'http://localhost:3000'
+}
+
 // Generate a unique session ID
 function generateSessionId(): string {
   return `sess_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`
@@ -142,8 +162,20 @@ export async function GET(request: NextRequest) {
 
 // POST - Create new donation and initiate payment
 export async function POST(request: NextRequest) {
+  const requestId = `donation_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`
+  console.log(`\n${'='.repeat(60)}`)
+  console.log(`[Donation ${requestId}] New donation request received`)
+  console.log(`${'='.repeat(60)}`)
+
   try {
     const body = await request.json()
+    console.log(`[Donation ${requestId}] Request body:`, {
+      amount: body.amount,
+      currency: body.currency,
+      projectId: body.projectId,
+      isAnonymous: body.isAnonymous,
+      donorEmail: body.donorEmail ? '***@***' : null,
+    })
     const {
       donorName,
       donorEmail,
@@ -276,10 +308,19 @@ export async function POST(request: NextRequest) {
 
     // ===== TOYYIBPAY INTEGRATION =====
 
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    // Get base URL dynamically - uses request origin for localhost testing
+    const baseUrl = getBaseUrl(request)
     const successUrl = `${baseUrl}/donate/success?ref=${paymentReference}`
     const failedUrl = `${baseUrl}/donate/failed?ref=${paymentReference}`
     const callbackUrl = `${baseUrl}/api/donations/webhook`
+
+    // Log the URLs being used for debugging
+    console.log('[Donation] Base URL configuration:', {
+      baseUrl,
+      successUrl,
+      callbackUrl,
+      timestamp: new Date().toISOString(),
+    })
 
     // Check if ToyyibPay is configured
     if (ToyyibPayService.isConfigured()) {
@@ -335,6 +376,11 @@ export async function POST(request: NextRequest) {
         // Get payment URL
         const paymentUrl = ToyyibPayService.getPaymentUrl(billCode)
 
+        console.log(`[Donation ${requestId}] Bill created successfully`)
+        console.log(`[Donation ${requestId}] Bill code: ${billCode}`)
+        console.log(`[Donation ${requestId}] Payment URL: ${paymentUrl}`)
+        console.log(`${'='.repeat(60)}\n`)
+
         return NextResponse.json({
           success: true,
           message: 'Donation initiated successfully',
@@ -345,7 +391,11 @@ export async function POST(request: NextRequest) {
         })
 
       } catch (error) {
-        console.error('ToyyibPay error:', error)
+        console.error(`[Donation ${requestId}] ToyyibPay error:`, error)
+        console.error(`[Donation ${requestId}] Error details:`, {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          code: error instanceof ToyyibPayError ? error.code : 'UNKNOWN',
+        })
 
         // Log error
         await logDonationEvent(donation.id, 'error', {
@@ -387,7 +437,11 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Donation error:', error)
+    console.error(`[Donation] Error processing donation:`, error)
+    console.error(`[Donation] Error details:`, {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+    })
     return NextResponse.json(
       { error: 'Failed to process donation. Please try again.' },
       { status: 500 }

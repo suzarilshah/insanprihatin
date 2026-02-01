@@ -11,6 +11,21 @@ import { headers } from 'next/headers'
  * Creates a new ToyyibPay bill with the same donation details.
  */
 
+// Get base URL dynamically from request or environment
+function getBaseUrl(request?: NextRequest): string {
+  if (request) {
+    const host = request.headers.get('host')
+    const protocol = request.headers.get('x-forwarded-proto') || 'http'
+    if (host) {
+      return `${protocol}://${host}`
+    }
+  }
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    return process.env.NEXT_PUBLIC_SITE_URL
+  }
+  return 'http://localhost:3000'
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -86,10 +101,16 @@ export async function POST(request: NextRequest) {
       categoryCode = await ToyyibPayService.getOrCreateGeneralFundCategory()
     }
 
-    // Generate URLs
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    // Generate URLs dynamically
+    const baseUrl = getBaseUrl(request)
     const successUrl = `${baseUrl}/donate/success?ref=${donation.paymentReference}`
     const callbackUrl = `${baseUrl}/api/donations/webhook`
+
+    console.log('[Retry] Base URL configuration:', {
+      baseUrl,
+      reference: donation.paymentReference,
+      attemptNumber: (donation.paymentAttempts || 0) + 1,
+    })
 
     try {
       // Create new ToyyibPay bill
