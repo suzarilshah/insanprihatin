@@ -34,159 +34,171 @@ interface SolutionProps {
 
 export default function Solution({ projects = [], impactStats = [], aboutContent }: SolutionProps) {
   return (
-    <section className="section-padding bg-foundation-pearl relative overflow-hidden">
-      {/* Decorative Mesh */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-teal-100/30 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
+    <section className="section-padding bg-foundation-charcoal relative overflow-hidden text-white">
+      {/* Dark Aesthetic Background */}
+      <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay" />
+      <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-teal-900/20 rounded-full blur-[120px] translate-x-1/2 -translate-y-1/2" />
       
       <div className="container-wide relative z-10">
         
-        {/* Header Section: Mission Context */}
-        <div className="text-center max-w-3xl mx-auto mb-20">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="inline-flex items-center gap-2 mb-6"
-          >
-            <span className="accent-line" />
-            <span className="text-teal-600 font-medium uppercase tracking-wider text-sm">Our Solution</span>
-          </motion.div>
-          
-          <motion.h2 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="heading-section text-foundation-charcoal mb-8"
-          >
-            Holistic Community <br />
-            <span className="text-gradient">Development</span>
-          </motion.h2>
-
-          {aboutContent?.mission && (
-            <motion.p
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-20 border-b border-white/10 pb-12">
+          <div className="max-w-2xl">
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
-              className="body-large text-gray-600"
+              className="text-amber-400 font-medium uppercase tracking-widest text-xs mb-4"
             >
-              {aboutContent.mission}
-            </motion.p>
-          )}
+              Our Approach
+            </motion.div>
+            <motion.h2 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="heading-section text-white"
+            >
+              Holistic Solutions for <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-emerald-300">Lasting Impact</span>
+            </motion.h2>
+          </div>
+          
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+          >
+            <Link href="/projects" className="btn-outline border-white/20 text-white hover:bg-white hover:text-foundation-charcoal">
+              View All Projects
+            </Link>
+          </motion.div>
         </div>
 
-        {/* Impact Stats Grid - Trust Indicators */}
-        {impactStats && impactStats.length > 0 && (
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-24"
-          >
-            {impactStats.map((stat, i) => (
-              <div key={stat.id} className="card-elegant p-8 text-center hover-lift">
-                <div className="font-display text-4xl lg:text-5xl font-bold text-teal-600 mb-2">
-                  {stat.value}{stat.suffix}
-                </div>
-                <div className="text-gray-500 font-medium uppercase tracking-wide text-xs">
-                  {stat.label}
-                </div>
-              </div>
-            ))}
-          </motion.div>
-        )}
-
-        {/* Projects Bento Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 auto-rows-[400px]">
-          {/* Main Feature (Large) */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="md:col-span-2 card-elegant group relative overflow-hidden"
-          >
-            {projects[0] && (
+        {/* Bento Grid Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-[300px]">
+          
+          {/* Main Feature - Large Card */}
+          {projects[0] && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="md:col-span-8 md:row-span-2 relative group rounded-3xl overflow-hidden border border-white/10"
+            >
               <Link href={`/projects/${projects[0].slug}`} className="block h-full">
-                <div className="absolute inset-0">
-                  <Image
-                    src={projects[0].featuredImage || "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=2000"}
-                    alt={projects[0].title}
-                    fill
-                    className="object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-foundation-charcoal/90 via-foundation-charcoal/20 to-transparent" />
-                </div>
-                <div className="absolute bottom-0 left-0 p-8 md:p-12">
-                  <span className="inline-block px-4 py-1 rounded-full bg-amber-400 text-foundation-charcoal text-xs font-bold uppercase tracking-wider mb-4">
-                    Featured Project
-                  </span>
-                  <h3 className="font-display text-3xl md:text-4xl text-white mb-4">
+                <Image
+                  src={projects[0].featuredImage || "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=2000"}
+                  alt={projects[0].title}
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-teal-900 via-teal-900/40 to-transparent opacity-90 group-hover:opacity-80 transition-opacity" />
+                
+                <div className="absolute bottom-0 left-0 p-10 max-w-2xl">
+                  <div className="inline-block px-3 py-1 bg-amber-400 text-foundation-charcoal text-xs font-bold uppercase tracking-wider rounded-full mb-4">
+                    {projects[0].category || 'Featured'}
+                  </div>
+                  <h3 className="text-4xl md:text-5xl font-heading text-white mb-4 leading-tight">
                     {projects[0].title}
                   </h3>
-                  <p className="text-gray-200 line-clamp-2 max-w-lg mb-6">
+                  <p className="text-lg text-gray-200 line-clamp-2 mb-6 font-light">
                     {projects[0].description}
                   </p>
-                  <span className="btn-primary bg-white text-teal-900 border-none">
-                    View Impact
+                  <span className="inline-flex items-center text-amber-300 font-medium group-hover:translate-x-2 transition-transform">
+                    Read Story <svg className="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                   </span>
                 </div>
               </Link>
-            )}
+            </motion.div>
+          )}
+
+          {/* Stats Card - Dark */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="md:col-span-4 bg-teal-800/60 backdrop-blur-md border border-white/10 rounded-3xl p-8 flex flex-col justify-center relative overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/20 rounded-full blur-[50px]" />
+            <h4 className="text-teal-200 uppercase tracking-widest text-xs font-medium mb-2">Total Impact</h4>
+            <div className="text-5xl font-display font-bold text-white mb-2">
+              {impactStats[0]?.value || '15K'}{impactStats[0]?.suffix || '+'}
+            </div>
+            <p className="text-teal-100">{impactStats[0]?.label || 'Lives Changed'}</p>
           </motion.div>
 
-          {/* Secondary Features (Stacked) */}
-          <div className="space-y-8 flex flex-col h-full">
-            {projects.slice(1, 3).map((project, i) => (
-               <motion.div
-                key={project.id}
-                initial={{ opacity: 0, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.2 + (i * 0.1) }}
-                className="flex-1 card-elegant group relative overflow-hidden"
-              >
-                <Link href={`/projects/${project.slug}`} className="block h-full">
-                  <div className="absolute inset-0">
-                    <Image
-                      src={project.featuredImage || `https://images.unsplash.com/photo-${i === 0 ? '1509099836130-7bd59aa27f3b' : '1532629345422-7515f3d16520'}?q=80&w=1000`}
-                      alt={project.title}
-                      fill
-                      className="object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-foundation-charcoal/90 to-transparent" />
-                  </div>
-                  <div className="absolute bottom-0 left-0 p-6">
-                    <span className="text-amber-400 text-xs font-bold uppercase tracking-wider mb-2 block">
-                      {project.category || 'Initiative'}
-                    </span>
-                    <h3 className="font-heading text-xl text-white mb-2">
-                      {project.title}
-                    </h3>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-            
-            {/* View All Link Card */}
-            {projects.length < 3 && (
-               <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                className="flex-1 card-elegant bg-teal-900 flex items-center justify-center group cursor-pointer"
-              >
-                <Link href="/projects" className="text-center p-8">
-                  <div className="w-16 h-16 rounded-full border border-white/20 flex items-center justify-center mx-auto mb-4 group-hover:bg-white/10 transition-colors">
-                    <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                  </div>
-                  <h3 className="text-white font-heading text-xl">View All Projects</h3>
-                </Link>
-              </motion.div>
-            )}
-          </div>
+          {/* Secondary Project 1 */}
+          {projects[1] && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 }}
+              className="md:col-span-4 relative group rounded-3xl overflow-hidden border border-white/10"
+            >
+              <Link href={`/projects/${projects[1].slug}`} className="block h-full">
+                <Image
+                  src={projects[1].featuredImage || "https://images.unsplash.com/photo-1532629345422-7515f3d16520?q=80&w=1000"}
+                  alt={projects[1].title}
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-teal-900/60 group-hover:bg-teal-900/40 transition-colors" />
+                <div className="absolute bottom-0 left-0 p-8">
+                  <h3 className="text-2xl font-heading text-white mb-2">{projects[1].title}</h3>
+                  <p className="text-sm text-gray-200 line-clamp-2">{projects[1].description}</p>
+                </div>
+              </Link>
+            </motion.div>
+          )}
+
+           {/* Secondary Project 2 */}
+           {projects[2] && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.4 }}
+              className="md:col-span-4 relative group rounded-3xl overflow-hidden border border-white/10"
+            >
+              <Link href={`/projects/${projects[2].slug}`} className="block h-full">
+                <Image
+                  src={projects[2].featuredImage || "https://images.unsplash.com/photo-1596422846543-75c6fc197f07?q=80&w=1000"}
+                  alt={projects[2].title}
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-teal-900/60 group-hover:bg-teal-900/40 transition-colors" />
+                <div className="absolute bottom-0 left-0 p-8">
+                  <h3 className="text-2xl font-heading text-white mb-2">{projects[2].title}</h3>
+                  <p className="text-sm text-gray-200 line-clamp-2">{projects[2].description}</p>
+                </div>
+              </Link>
+            </motion.div>
+          )}
+
+          {/* About/Mission Snippet */}
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.5 }}
+            className="md:col-span-4 bg-gradient-to-br from-amber-400 to-amber-600 rounded-3xl p-8 flex flex-col justify-between"
+          >
+            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-white mb-4">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+            </div>
+            <div>
+              <h4 className="text-white font-heading text-xl mb-2">Our Mission</h4>
+              <p className="text-white/90 text-sm leading-relaxed mb-4 line-clamp-3">
+                {aboutContent?.mission || "Empowering communities through sustainable development and direct aid intervention."}
+              </p>
+              <Link href="/about" className="text-white text-xs font-bold uppercase tracking-wider hover:underline">Read More →</Link>
+            </div>
+          </motion.div>
+          
         </div>
 
       </div>

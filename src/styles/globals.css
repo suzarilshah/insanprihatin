@@ -2,38 +2,38 @@
 
 @theme {
   /* Colors - Primary palette from logo (UNCHANGED) */
-  --color-amber-50: #FFF8E7;
-  --color-amber-100: #FFEFC4;
-  --color-amber-200: #FFE29E;
-  --color-amber-300: #FFD270;
-  --color-amber-400: #F5A623;
-  --color-amber-500: #E8942A;
-  --color-amber-600: #D4801F;
-  --color-amber-700: #B56B18;
-  --color-amber-800: #925512;
-  --color-amber-900: #70400D;
+  --color-amber-50: #FFFDE7;
+  --color-amber-100: #FFF9C4;
+  --color-amber-200: #FFF59D;
+  --color-amber-300: #FFF176;
+  --color-amber-400: #FFEE58;
+  --color-amber-500: #F6A800;
+  --color-amber-600: #FB8C00;
+  --color-amber-700: #F57C00;
+  --color-amber-800: #EF6C00;
+  --color-amber-900: #E65100;
 
-  --color-teal-50: #E6F7F7;
-  --color-teal-100: #C2EBEB;
-  --color-teal-200: #99DEDE;
-  --color-teal-300: #6DCFCF;
-  --color-teal-400: #2AADAD;
-  --color-teal-500: #1E9696;
-  --color-teal-600: #1B7474;
-  --color-teal-700: #166060;
-  --color-teal-800: #124A4A;
-  --color-teal-900: #0D3636;
+  --color-teal-50: #E0F2F1;
+  --color-teal-100: #B2DFDB;
+  --color-teal-200: #80CBC4;
+  --color-teal-300: #4DB6AC;
+  --color-teal-400: #26A69A;
+  --color-teal-500: #009CA6;
+  --color-teal-600: #00897B;
+  --color-teal-700: #00796B;
+  --color-teal-800: #00695C;
+  --color-teal-900: #004D40;
 
-  --color-sky-50: #E8F6FC;
-  --color-sky-100: #C8EAF8;
-  --color-sky-200: #A3DCF3;
-  --color-sky-300: #73CBEC;
-  --color-sky-400: #3BABE8;
-  --color-sky-500: #2D9BD4;
-  --color-sky-600: #2383B5;
-  --color-sky-700: #1C6A93;
-  --color-sky-800: #165271;
-  --color-sky-900: #103B51;
+  --color-sky-50: #E1F5FE;
+  --color-sky-100: #B3E5FC;
+  --color-sky-200: #81D4FA;
+  --color-sky-300: #4FC3F7;
+  --color-sky-400: #29B6F6;
+  --color-sky-500: #3FACD7;
+  --color-sky-600: #039BE5;
+  --color-sky-700: #0288D1;
+  --color-sky-800: #0277BD;
+  --color-sky-900: #01579B;
 
   /* Foundation semantic colors */
   --color-foundation-charcoal: #2D3436;

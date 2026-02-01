@@ -1,0 +1,47 @@
+# NeonDB Configuration
+DATABASE_URL="postgresql://neondb_owner:npg_CZdcg3jiVJF9@ep-broad-glitter-ah23m0xs-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require"
+
+# Neon Auth Configuration
+NEON_AUTH_URL="https://ep-broad-glitter-ah23m0xs.neonauth.c-3.us-east-1.aws.neon.tech/neondb/auth"
+NEON_AUTH_JWKS_URL="https://ep-broad-glitter-ah23m0xs.neonauth.c-3.us-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json"
+
+# Appwrite Configuration
+NEXT_PUBLIC_APPWRITE_ENDPOINT="https://sgp.cloud.appwrite.io/v1"
+NEXT_PUBLIC_APPWRITE_PROJECT_ID="insanprihatin"
+APPWRITE_API_KEY="standard_5875f964cfdc16daaeeee055f03d9d895dda6e93baa192b15e52269e91b8d18ac594f7c93dc1678d35c4282f5eb66623d3dbfc890f18d043a8a490bac21c06f9968cc294521ff68d7c523c945b75166b8a857228ce9b53c60efeab96c5e25905b2e05939e0e34ee7b33047eabea102b859a9fa9a60f51f26540b26e35008b849"
+NEXT_PUBLIC_APPWRITE_BUCKET_ID="yip-bucket"
+
+# Site Configuration
+NEXT_PUBLIC_SITE_URL="https://insanprihatin.org"
+NEXT_PUBLIC_SITE_NAME="Yayasan Insan Prihatin"
+
+# Admin Authentication
+# Change this password in production!
+ADMIN_PASSWORD="YIP@dm1n2024!"
+# JWT secret for session tokens (should be a random string in production)
+JWT_SECRET="yip-jwt-secret-change-in-production-to-random-string"
+
+RESEND_API_KEY="re_6hDJMBhs_EC9An6hsQBJE1uHSja6nh9Bq"
+#UNSPLASH_ACCESS_KEY="6YU9j3JG8k53Dv2qX8GQx5A-OZ5QyZ6H7S8Z-P8K"
+
+UNSPLASH_ACCESS_KEY="ngLGMs3Sam4tN3eZmS8Fl80oc40gapzlIgXL-lPzSeU"
+
+# ===========================================
+# Microsoft 365 / Entra ID Integration
+# ===========================================
+# Configure these when you have your M365 tenant ready.
+# See: src/lib/microsoft-graph.ts for implementation details
+#
+# Steps to configure:
+# 1. Go to Azure Portal > Entra ID > App registrations
+# 2. Register a new application
+# 3. Configure API permissions:
+#    - User.Read (delegated)
+#    - User.Read.All (application)
+#    - Directory.Read.All (application)
+# 4. Create a client secret
+# 5. Fill in the values below
+#
+# AZURE_AD_CLIENT_ID=""
+# AZURE_AD_CLIENT_SECRET=""
+# AZURE_AD_TENANT_ID=""

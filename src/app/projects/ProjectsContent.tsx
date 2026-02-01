@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
+import Methodology from '@/components/sections/Methodology'
 
 type Project = {
   id: string
@@ -84,7 +85,7 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
   return (
     <div>
       {/* Premium Hero Section */}
-      <section className="relative py-32 overflow-hidden">
+      <section className="relative min-h-[70vh] flex items-center overflow-hidden">
         {/* Background */}
         <div className="absolute inset-0">
           <Image
@@ -94,7 +95,8 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
             className="object-cover"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-br from-teal-900/95 via-teal-800/90 to-sky-900/85" />
+          {/* Nav-Safe Gradient */}
+          <div className="absolute inset-0 bg-gradient-to-b from-foundation-charcoal/90 via-foundation-charcoal/60 to-foundation-pearl" />
           <div className="absolute inset-0 bg-dots opacity-10" />
           <div className="grain" />
         </div>
@@ -106,21 +108,21 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
           className="absolute top-1/4 right-1/4 w-[400px] h-[400px] bg-amber-400/20 rounded-full blur-[100px]"
         />
 
-        <div className="relative container-wide z-10">
+        <div className="relative container-wide z-10 pt-20">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="max-w-3xl"
+            className="max-w-4xl"
           >
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
-              className="badge-premium bg-white/10 text-white/90 mb-8"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/10 mb-8"
             >
-              <span className="accent-dot" />
-              <span className="text-sm font-medium tracking-wide">Our Work</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+              <span className="text-sm font-medium tracking-wide text-white uppercase">Our Impact Portfolio</span>
             </motion.div>
 
             <h1 className="heading-display text-white mb-6">
@@ -130,15 +132,15 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
                 transition={{ delay: 0.3 }}
                 className="block"
               >
-                Projects &
+                Engineering
               </motion.span>
               <motion.span
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="text-gradient-amber"
+                className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 animate-gradient-x"
               >
-                Initiatives
+                Sustainable Change
               </motion.span>
             </h1>
 
@@ -146,10 +148,10 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="body-large text-white/80 max-w-2xl"
+              className="body-large text-white/80 max-w-2xl border-l-2 border-amber-400/50 pl-6"
             >
-              Explore our ongoing and completed projects that are creating lasting impact
-              across communities in Malaysia.
+              We don't just provide aid; we build systems. From infrastructure to education,
+              every project is designed for long-term community resilience and measurable outcomes.
             </motion.p>
           </motion.div>
 
@@ -160,23 +162,26 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
             transition={{ delay: 0.7 }}
             className="mt-12"
           >
-            <div className="card-glass-dark inline-flex gap-8 md:gap-12 p-6">
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl inline-flex gap-8 md:gap-12 p-6">
               {[
-                { value: `${totalProjects}+`, label: 'Total Projects' },
-                { value: totalBeneficiaries > 0 ? `${(totalBeneficiaries / 1000).toFixed(0)}K+` : '0', label: 'Beneficiaries' },
-                { value: `${uniqueLocations || 1}+`, label: 'Locations' },
+                { value: `${totalProjects}+`, label: 'Active Projects' },
+                { value: totalBeneficiaries > 0 ? `${(totalBeneficiaries / 1000).toFixed(0)}K+` : '0', label: 'Lives Impacted' },
+                { value: `${uniqueLocations || 1}+`, label: 'Communities Served' },
               ].map((stat, index) => (
                 <div key={index} className="text-center">
                   <div className="font-display text-2xl lg:text-3xl font-bold text-white">
                     {stat.value}
                   </div>
-                  <div className="text-white/60 text-sm">{stat.label}</div>
+                  <div className="text-white/60 text-sm uppercase tracking-wide">{stat.label}</div>
                 </div>
               ))}
             </div>
           </motion.div>
         </div>
       </section>
+
+      {/* Methodology Section - The "How" */}
+      <Methodology />
 
       {/* Projects Section */}
       <section className="section-padding bg-foundation-pearl relative">
@@ -185,6 +190,15 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-teal-100/30 rounded-full blur-[150px]" />
 
         <div className="relative container-wide">
+          <div className="text-center mb-16">
+             <h2 className="heading-section text-foundation-charcoal mb-4">
+               Our <span className="text-teal-600 italic font-serif">Initiatives</span>
+             </h2>
+             <p className="text-gray-500 max-w-xl mx-auto">
+               Filter by category to see how we are addressing specific challenges across the nation.
+             </p>
+          </div>
+
           {/* Category Filter - Premium Pills */}
           {categories.length > 1 && (
             <motion.div
@@ -202,7 +216,7 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
                   onClick={() => setActiveCategory(category.id)}
                   className={`flex items-center gap-2 px-6 py-3.5 rounded-full font-medium transition-all duration-400 ${
                     activeCategory === category.id
-                      ? 'bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-elevated'
+                      ? 'bg-foundation-charcoal text-white shadow-lg'
                       : 'bg-white text-gray-600 hover:bg-teal-50 hover:text-teal-600 shadow-sm border border-gray-100'
                   }`}
                 >
@@ -244,7 +258,7 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
                     >
                       <Link
                         href={`/projects/${project.slug}`}
-                        className="block card-elegant overflow-hidden group h-full"
+                        className="block bg-white rounded-3xl overflow-hidden group h-full flex flex-col shadow-lg border border-gray-100 hover:shadow-2xl transition-all duration-500"
                       >
                         {/* Image */}
                         <div className="relative aspect-[16/10] overflow-hidden">
@@ -275,11 +289,11 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
                         </div>
 
                         {/* Content */}
-                        <div className="p-6">
+                        <div className="p-8 flex flex-col flex-grow">
                           <div className="flex items-center gap-2 mb-3">
                             {project.category && (
                               <>
-                                <span className="text-teal-600 text-sm font-semibold capitalize">
+                                <span className="text-teal-600 text-sm font-bold uppercase tracking-wide">
                                   {project.category}
                                 </span>
                                 <span className="w-1 h-1 bg-gray-300 rounded-full" />
@@ -288,20 +302,20 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
                             <span className="text-gray-400 text-sm">{project.location || 'Malaysia'}</span>
                           </div>
 
-                          <h3 className="font-heading text-xl font-semibold text-foundation-charcoal mb-2 group-hover:text-teal-600 transition-colors">
+                          <h3 className="font-heading text-xl font-bold text-foundation-charcoal mb-2 group-hover:text-teal-600 transition-colors">
                             {project.title}
                           </h3>
 
                           {project.subtitle && (
-                            <p className="text-teal-600 text-sm font-medium mb-2">{project.subtitle}</p>
+                            <p className="text-teal-600 text-sm font-medium mb-3">{project.subtitle}</p>
                           )}
 
-                          <p className="text-gray-500 text-sm mb-5 line-clamp-2">
+                          <p className="text-gray-500 text-sm mb-6 line-clamp-2 flex-grow leading-relaxed">
                             {project.description}
                           </p>
 
                           {/* Meta */}
-                          <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                          <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
                             {project.beneficiaries ? (
                               <div className="flex items-center gap-1.5 text-sm text-gray-500">
                                 <svg className="w-4 h-4 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -314,8 +328,8 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
                               <div />
                             )}
 
-                            <div className="flex items-center gap-1 text-teal-600 font-medium text-sm group-hover:gap-2 transition-all">
-                              Learn more
+                            <div className="flex items-center gap-1 text-teal-600 font-bold text-sm uppercase tracking-wider group-hover:gap-2 transition-all">
+                              View Impact
                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                               </svg>
@@ -327,7 +341,7 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
                   )
                 })
               ) : (
-                <div className="col-span-full text-center py-16">
+                <div className="col-span-full text-center py-20 bg-white rounded-3xl border border-gray-100 border-dashed">
                   <div className="text-6xl mb-4">📦</div>
                   <h3 className="font-heading text-xl font-semibold text-foundation-charcoal mb-2">
                     No Projects Yet
@@ -348,7 +362,7 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
       {/* Impact CTA Section */}
       <section className="py-24 bg-white">
         <div className="container-wide">
-          <div className="relative card-elegant overflow-hidden">
+          <div className="relative rounded-[3rem] overflow-hidden shadow-2xl">
             {/* Background */}
             <div className="absolute inset-0">
               <Image
@@ -360,7 +374,7 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
               <div className="absolute inset-0 bg-gradient-to-r from-teal-900/95 via-teal-800/90 to-teal-900/80" />
             </div>
 
-            <div className="relative py-16 px-8 lg:px-16 z-10">
+            <div className="relative py-20 px-8 lg:px-20 z-10">
               <div className="grid lg:grid-cols-2 gap-12 items-center">
                 <div>
                   <motion.span
@@ -373,15 +387,15 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
                   </motion.span>
 
                   <h2 className="heading-subsection text-white mb-4">
-                    Want to Support Our Projects?
+                    Scale Our Impact
                   </h2>
-                  <p className="text-white/80 text-lg mb-8">
-                    Your contribution can help us reach more communities and create lasting change.
-                    Every ringgit makes a difference.
+                  <p className="text-white/80 text-lg mb-8 leading-relaxed">
+                    We have the roadmap, but we need fuel. Your contribution accelerates
+                    essential projects in communities that cannot wait.
                   </p>
 
                   <div className="flex flex-wrap gap-4">
-                    <Link href="/donate" className="btn-secondary">
+                    <Link href="/donate" className="btn-secondary shadow-lg hover:shadow-glow-amber">
                       Make a Donation
                       <svg className="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -389,7 +403,7 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
                     </Link>
                     <Link
                       href="/contact"
-                      className="btn-outline border-white/40 text-white hover:bg-white hover:text-teal-700"
+                      className="btn-outline border-white/40 text-white hover:bg-white hover:text-teal-900"
                     >
                       Partner With Us
                     </Link>
@@ -399,10 +413,10 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
                 <div className="hidden lg:block">
                   <div className="grid grid-cols-2 gap-4">
                     {[
-                      { value: 'RM 2.5M', label: 'Raised This Year' },
-                      { value: '25+', label: 'Corporate Partners' },
-                      { value: '1,200+', label: 'Monthly Donors' },
-                      { value: '100%', label: 'Transparent' },
+                      { value: 'RM 2.5M', label: 'Target Impact Fund' },
+                      { value: '100%', label: 'Transparency Rate' },
+                      { value: '2025', label: 'Year Established' },
+                      { value: 'Zero', label: 'Hidden Costs' },
                     ].map((stat, i) => (
                       <motion.div
                         key={i}
@@ -410,12 +424,12 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: i * 0.1 }}
-                        className="card-glass-dark p-6 text-center"
+                        className="bg-white/10 backdrop-blur-md border border-white/10 p-6 rounded-2xl text-center"
                       >
                         <div className="font-display text-2xl font-bold text-white mb-1">
                           {stat.value}
                         </div>
-                        <div className="text-white/60 text-sm">{stat.label}</div>
+                        <div className="text-white/60 text-sm uppercase tracking-wide">{stat.label}</div>
                       </motion.div>
                     ))}
                   </div>

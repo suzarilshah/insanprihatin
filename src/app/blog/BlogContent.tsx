@@ -88,7 +88,7 @@ export default function BlogContent({ posts }: BlogContentProps) {
   return (
     <div>
       {/* Premium Hero Section */}
-      <section className="relative py-32 overflow-hidden">
+      <section className="relative min-h-[60vh] flex items-center overflow-hidden">
         {/* Background */}
         <div className="absolute inset-0">
           <Image
@@ -98,7 +98,8 @@ export default function BlogContent({ posts }: BlogContentProps) {
             className="object-cover"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-br from-teal-900/95 via-teal-800/90 to-sky-900/85" />
+          {/* Nav-Safe Gradient */}
+          <div className="absolute inset-0 bg-gradient-to-b from-foundation-charcoal/90 via-foundation-charcoal/60 to-foundation-pearl" />
           <div className="absolute inset-0 bg-dots opacity-10" />
           <div className="grain" />
         </div>
@@ -110,21 +111,21 @@ export default function BlogContent({ posts }: BlogContentProps) {
           className="absolute top-1/4 right-1/4 w-[400px] h-[400px] bg-amber-400/20 rounded-full blur-[100px]"
         />
 
-        <div className="relative container-wide z-10">
+        <div className="relative container-wide z-10 pt-20">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-center max-w-3xl mx-auto"
+            className="text-center max-w-4xl mx-auto"
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
-              className="badge-premium bg-white/10 text-white/90 mx-auto mb-8"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/10 mb-8"
             >
-              <span className="accent-dot" />
-              <span className="text-sm font-medium tracking-wide">Blog & News</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+              <span className="text-sm font-medium tracking-wide text-white uppercase">The Journal</span>
             </motion.div>
 
             <h1 className="heading-display text-white mb-6">
@@ -134,15 +135,15 @@ export default function BlogContent({ posts }: BlogContentProps) {
                 transition={{ delay: 0.3 }}
                 className="block"
               >
-                Stories of
+                Chronicles of
               </motion.span>
               <motion.span
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="text-gradient-amber"
+                className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 animate-gradient-x"
               >
-                Impact
+                Transformation
               </motion.span>
             </h1>
 
@@ -150,10 +151,10 @@ export default function BlogContent({ posts }: BlogContentProps) {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="body-large text-white/80"
+              className="body-large text-white/80 max-w-2xl mx-auto"
             >
-              Stay updated with the latest news, impact stories, and events from
-              Yayasan Insan Prihatin.
+              Voices from the ground, updates on our progress, and stories of the growing
+              impact we are building together. This is where our journey finds its narrative.
             </motion.p>
           </motion.div>
         </div>
@@ -161,80 +162,88 @@ export default function BlogContent({ posts }: BlogContentProps) {
 
       {/* Featured Post Section */}
       {featuredPost && (
-        <section className="relative -mt-16 z-20 pb-16">
+        <section className="relative -mt-32 z-20 pb-16">
           <div className="container-wide">
             <motion.div
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.6 }}
             >
               <Link
                 href={`/blog/${featuredPost.slug}`}
-                className="block card-elegant overflow-hidden group"
+                className="block bg-white rounded-[2rem] overflow-hidden shadow-2xl group border border-gray-100"
               >
-                <div className="grid lg:grid-cols-2 min-h-[400px]">
-                  <div className="relative aspect-[16/10] lg:aspect-auto overflow-hidden">
+                <div className="grid lg:grid-cols-2 min-h-[500px]">
+                  <div className="relative overflow-hidden h-[300px] lg:h-auto">
                     <Image
                       src={featuredPost.featuredImage || defaultImage}
                       alt={featuredPost.title}
                       fill
-                      className="object-cover transition-transform duration-700 group-hover:scale-110"
+                      className="object-cover transition-transform duration-1000 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-foundation-charcoal/40 via-transparent to-transparent lg:bg-gradient-to-r" />
                     <div className="absolute top-6 left-6">
-                      <span className="badge-premium bg-amber-400 text-foundation-charcoal">
+                      <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-400 text-foundation-charcoal border border-amber-300 shadow-md">
                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                         </svg>
-                        <span className="text-sm font-semibold">Featured</span>
+                        <span className="text-xs font-bold uppercase tracking-wide">Editor's Pick</span>
                       </span>
                     </div>
                   </div>
 
-                  <div className="p-8 lg:p-12 flex flex-col justify-center bg-white">
-                    <div className="flex items-center gap-3 mb-4">
-                      {featuredPost.category && (
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${categoryColors[featuredPost.category] || 'bg-gray-100 text-gray-700'}`}>
-                          {featuredPost.category}
-                        </span>
-                      )}
-                      <span className="text-gray-400">•</span>
-                      <span className="text-gray-500 text-sm">{getReadTime(featuredPost.content)} read</span>
+                  <div className="p-8 lg:p-16 flex flex-col justify-center bg-white relative">
+                    <div className="absolute top-0 right-0 p-4 opacity-5">
+                      <svg className="w-64 h-64 text-foundation-charcoal" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M14 17H4v2h10v-2zm6-8H4v2h16V9zM4 15h16v-2H4v2zM4 5v2h16V5H4z" />
+                      </svg>
                     </div>
 
-                    <h2 className="font-heading text-2xl lg:text-3xl font-bold text-foundation-charcoal mb-4 group-hover:text-teal-600 transition-colors">
-                      {featuredPost.title}
-                    </h2>
-
-                    <p className="text-gray-600 text-lg mb-6 line-clamp-3">
-                      {featuredPost.excerpt || featuredPost.content.substring(0, 200) + '...'}
-                    </p>
-
-                    <div className="flex items-center justify-between pt-6 border-t border-gray-100">
-                      <div className="flex items-center gap-3">
-                        <div className="relative w-10 h-10 rounded-full overflow-hidden">
-                          <Image
-                            src={defaultAuthorImage}
-                            alt="Author"
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                        <div>
-                          <div className="font-medium text-foundation-charcoal text-sm">
-                            Admin
-                          </div>
-                          <div className="text-gray-500 text-xs">
-                            {featuredPost.publishedAt ? formatDate(featuredPost.publishedAt) : formatDate(featuredPost.createdAt)}
-                          </div>
-                        </div>
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-3 mb-6">
+                        {featuredPost.category && (
+                          <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${categoryColors[featuredPost.category] || 'bg-gray-100 text-gray-700'}`}>
+                            {featuredPost.category}
+                          </span>
+                        )}
+                        <span className="text-gray-300">|</span>
+                        <span className="text-gray-500 text-sm font-medium">{getReadTime(featuredPost.content)} read</span>
                       </div>
 
-                      <div className="flex items-center gap-2 text-teal-600 font-semibold text-sm group-hover:gap-3 transition-all">
-                        Read Article
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                        </svg>
+                      <h2 className="font-display text-3xl lg:text-5xl font-bold text-foundation-charcoal mb-6 group-hover:text-teal-600 transition-colors leading-tight">
+                        {featuredPost.title}
+                      </h2>
+
+                      <p className="text-gray-600 text-lg mb-8 line-clamp-3 leading-relaxed">
+                        {featuredPost.excerpt || featuredPost.content.substring(0, 250) + '...'}
+                      </p>
+
+                      <div className="flex items-center justify-between pt-8 border-t border-gray-100">
+                        <div className="flex items-center gap-4">
+                          <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-md">
+                            <Image
+                              src={defaultAuthorImage}
+                              alt="Author"
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                          <div>
+                            <div className="font-bold text-foundation-charcoal text-sm">
+                              Yayasan Team
+                            </div>
+                            <div className="text-gray-500 text-xs">
+                              {featuredPost.publishedAt ? formatDate(featuredPost.publishedAt) : formatDate(featuredPost.createdAt)}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 text-teal-600 font-bold text-sm uppercase tracking-wider group-hover:gap-3 transition-all">
+                          Read Story
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                          </svg>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -252,6 +261,12 @@ export default function BlogContent({ posts }: BlogContentProps) {
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-teal-100/30 rounded-full blur-[150px]" />
 
         <div className="relative container-wide">
+          <div className="text-center mb-16">
+             <h2 className="heading-section text-foundation-charcoal mb-4">
+               Latest <span className="text-teal-600 italic font-serif">Updates</span>
+             </h2>
+          </div>
+
           {/* Category Filter - Premium Pills */}
           {categories.length > 1 && (
             <motion.div
@@ -268,7 +283,7 @@ export default function BlogContent({ posts }: BlogContentProps) {
                   onClick={() => setActiveCategory(category.id)}
                   className={`flex items-center gap-2 px-5 py-3 rounded-full font-medium transition-all duration-300 ${
                     activeCategory === category.id
-                      ? 'bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-elevated'
+                      ? 'bg-foundation-charcoal text-white shadow-lg'
                       : 'bg-white text-gray-600 hover:bg-teal-50 hover:text-teal-600 shadow-sm border border-gray-100'
                   }`}
                 >
@@ -307,7 +322,7 @@ export default function BlogContent({ posts }: BlogContentProps) {
                   >
                     <Link
                       href={`/blog/${post.slug}`}
-                      className="block card-elegant overflow-hidden group h-full"
+                      className="block bg-white rounded-3xl overflow-hidden group h-full flex flex-col shadow-lg border border-gray-100 hover:shadow-2xl transition-all duration-500"
                     >
                       {/* Image */}
                       <div className="relative aspect-[16/10] overflow-hidden">
@@ -322,7 +337,7 @@ export default function BlogContent({ posts }: BlogContentProps) {
                         {/* Category badge */}
                         {post.category && (
                           <div className="absolute top-4 left-4">
-                            <span className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize ${categoryColors[post.category] || 'bg-gray-100 text-gray-700'}`}>
+                            <span className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${categoryColors[post.category] || 'bg-gray-100 text-gray-700'}`}>
                               {post.category}
                             </span>
                           </div>
@@ -337,19 +352,19 @@ export default function BlogContent({ posts }: BlogContentProps) {
                       </div>
 
                       {/* Content */}
-                      <div className="p-6">
-                        <h3 className="font-heading text-lg font-semibold text-foundation-charcoal mb-3 group-hover:text-teal-600 transition-colors line-clamp-2">
+                      <div className="p-8 flex flex-col flex-grow">
+                        <h3 className="font-heading text-xl font-bold text-foundation-charcoal mb-3 group-hover:text-teal-600 transition-colors line-clamp-2 leading-tight">
                           {post.title}
                         </h3>
 
-                        <p className="text-gray-500 text-sm mb-5 line-clamp-2">
+                        <p className="text-gray-500 text-sm mb-5 line-clamp-3 flex-grow leading-relaxed">
                           {post.excerpt || post.content.substring(0, 150) + '...'}
                         </p>
 
                         {/* Author & Date */}
-                        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
                           <div className="flex items-center gap-3">
-                            <div className="relative w-8 h-8 rounded-full overflow-hidden">
+                            <div className="relative w-8 h-8 rounded-full overflow-hidden border border-gray-100">
                               <Image
                                 src={defaultAuthorImage}
                                 alt="Author"
@@ -358,8 +373,8 @@ export default function BlogContent({ posts }: BlogContentProps) {
                               />
                             </div>
                             <div className="text-xs">
-                              <div className="font-medium text-foundation-charcoal">
-                                Admin
+                              <div className="font-bold text-foundation-charcoal">
+                                Team
                               </div>
                               <div className="text-gray-400">
                                 {post.publishedAt ? formatDate(post.publishedAt) : formatDate(post.createdAt)}
@@ -367,7 +382,7 @@ export default function BlogContent({ posts }: BlogContentProps) {
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-1 text-teal-600 font-medium text-sm group-hover:gap-2 transition-all">
+                          <div className="flex items-center gap-1 text-teal-600 font-bold text-xs uppercase tracking-wider group-hover:gap-2 transition-all">
                             Read
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -379,7 +394,7 @@ export default function BlogContent({ posts }: BlogContentProps) {
                   </motion.div>
                 ))
               ) : posts.length === 0 ? (
-                <div className="col-span-full text-center py-16">
+                <div className="col-span-full text-center py-16 bg-white rounded-3xl border border-dashed border-gray-200">
                   <div className="text-6xl mb-4">📝</div>
                   <h3 className="font-heading text-xl font-semibold text-foundation-charcoal mb-2">
                     No Blog Posts Yet
@@ -398,9 +413,9 @@ export default function BlogContent({ posts }: BlogContentProps) {
       </section>
 
       {/* Newsletter Section */}
-      <section className="py-24 bg-white">
+      <section className="py-24 bg-white relative overflow-hidden">
         <div className="container-wide">
-          <div className="relative card-elegant overflow-hidden">
+          <div className="relative rounded-[3rem] overflow-hidden shadow-2xl">
             {/* Background */}
             <div className="absolute inset-0">
               <Image
@@ -410,42 +425,41 @@ export default function BlogContent({ posts }: BlogContentProps) {
                 className="object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-r from-teal-900/95 via-teal-800/90 to-teal-900/80" />
+              <div className="absolute inset-0 bg-grid opacity-20" />
             </div>
 
-            <div className="relative py-16 px-8 lg:px-16 z-10">
+            <div className="relative py-20 px-8 lg:px-16 z-10">
               <div className="max-w-2xl mx-auto text-center">
                 <motion.span
                   initial={{ opacity: 0, scale: 0.8 }}
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
-                  className="inline-block text-5xl mb-4"
+                  className="inline-block text-6xl mb-6"
                 >
                   📬
                 </motion.span>
 
                 <h2 className="heading-subsection text-white mb-4">
-                  Subscribe to Our Newsletter
+                  Join Our Community of Changemakers
                 </h2>
-                <p className="text-white/80 text-lg mb-8">
-                  Get the latest stories, news, and updates delivered straight to your inbox.
+                <p className="text-white/80 text-lg mb-10">
+                  Get exclusive updates on our projects, inspiring stories from the field, 
+                  and invitations to upcoming events.
                 </p>
 
                 <form className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto">
                   <input
                     type="email"
                     placeholder="Enter your email address"
-                    className="flex-1 px-6 py-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    className="flex-1 px-6 py-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all"
                   />
-                  <button type="submit" className="btn-secondary whitespace-nowrap">
-                    Subscribe
-                    <svg className="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                    </svg>
+                  <button type="submit" className="btn-secondary whitespace-nowrap shadow-lg hover:shadow-glow-amber">
+                    Subscribe Now
                   </button>
                 </form>
 
-                <p className="text-white/50 text-sm mt-4">
-                  We respect your privacy. Unsubscribe anytime.
+                <p className="text-white/40 text-xs mt-6">
+                  We respect your inbox. Zero spam, just impact. Unsubscribe anytime.
                 </p>
               </div>
             </div>

@@ -183,8 +183,8 @@ export default function OrgChartNode({
             className="flex flex-col items-center"
           >
             {/* Vertical line down from parent */}
-            <div className="w-px h-8 bg-gray-300 relative">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-gray-300" />
+            <div className="w-px h-8 bg-gradient-to-b from-gray-200 to-gray-300 relative">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-teal-500 shadow-sm" />
             </div>
 
             {/* Horizontal connector line container */}
@@ -234,7 +234,7 @@ export default function OrgChartNode({
                     )}
                     
                     {/* Vertical line down to this child */}
-                    <div className="w-px h-8 bg-gray-300 -mt-px mb-2 relative">
+                    <div className="w-px h-8 bg-gradient-to-b from-gray-300 to-gray-200 -mt-px mb-2 relative">
                        {/* Connector Dot at T-junction */}
                        {!isOnly && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-gray-300" />}
                     </div>
