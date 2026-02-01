@@ -134,6 +134,8 @@ export const donations = pgTable('donations', {
   toyyibpayTransactionId: text('toyyibpay_transaction_id'),
   paymentMethod: text('payment_method').default('fpx'), // fpx, card
   paymentAttempts: integer('payment_attempts').default(0),
+  // Environment tracking - distinguishes sandbox from production donations
+  environment: text('environment').default('production'), // 'sandbox' | 'production'
   // Receipt tracking
   receiptSentAt: timestamp('receipt_sent_at'),
   receiptNumber: text('receipt_number'),

@@ -15,6 +15,9 @@ import { eq } from 'drizzle-orm'
 const TOYYIBPAY_URL = process.env.TOYYIBPAY_URL || 'https://dev.toyyibpay.com'
 const TOYYIBPAY_SECRET_KEY = process.env.TOYYIBPAY_SECRET_KEY || ''
 
+// Environment detection - sandbox uses dev.toyyibpay.com
+export type ToyyibPayEnvironment = 'sandbox' | 'production'
+
 // Status codes from ToyyibPay
 export const TOYYIBPAY_STATUS = {
   SUCCESS: '1',
@@ -116,6 +119,25 @@ export class ToyyibPayService {
    */
   static getBaseUrl(): string {
     return TOYYIBPAY_URL
+  }
+
+  /**
+   * Detect if we're using sandbox or production environment
+   * Sandbox URL contains 'dev.' prefix
+   */
+  static getEnvironment(): ToyyibPayEnvironment {
+    const url = TOYYIBPAY_URL.toLowerCase()
+    if (url.includes('dev.toyyibpay') || url.includes('sandbox') || url.includes('localhost')) {
+      return 'sandbox'
+    }
+    return 'production'
+  }
+
+  /**
+   * Check if currently in sandbox mode
+   */
+  static isSandbox(): boolean {
+    return this.getEnvironment() === 'sandbox'
   }
 
   /**

@@ -280,6 +280,11 @@ export async function POST(request: NextRequest) {
 
     const amountInCents = Math.round(amount * 100)
 
+    // Detect ToyyibPay environment (sandbox vs production)
+    const paymentEnvironment = ToyyibPayService.isConfigured()
+      ? ToyyibPayService.getEnvironment()
+      : 'production'
+
     const [donation] = await db.insert(donations).values({
       donorName: isAnonymous ? 'Anonymous' : donorName,
       donorEmail: donorEmail || null,
@@ -292,6 +297,7 @@ export async function POST(request: NextRequest) {
       paymentStatus: 'pending',
       paymentReference,
       paymentAttempts: 1,
+      environment: paymentEnvironment, // Track sandbox vs production
       sessionId,
       ipAddress: headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || null,
       userAgent: headersList.get('user-agent') || null,
