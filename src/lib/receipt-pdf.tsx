@@ -37,13 +37,13 @@ const styles = StyleSheet.create({
   logoSection: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 15,
-    maxWidth: '60%',
+    width: '65%',
   },
   logo: {
     width: 60,
     height: 60,
     objectFit: 'contain',
+    marginRight: 12,
   },
   orgInfo: {
     flexDirection: 'column',
@@ -53,21 +53,32 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Helvetica-Bold',
     color: '#0D9488',
-    marginBottom: 3,
+    marginBottom: 4,
   },
   orgTagline: {
+    fontSize: 9,
+    color: '#6B7280',
+    marginBottom: 8,
+  },
+  orgContactRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 4,
+  },
+  orgAddressLine: {
     fontSize: 8,
     color: '#6B7280',
-    marginBottom: 6,
+    lineHeight: 1.5,
   },
-  orgDetails: {
-    fontSize: 7,
+  orgContactInfo: {
+    fontSize: 8,
     color: '#6B7280',
-    lineHeight: 1.4,
+    marginTop: 4,
   },
   receiptTitle: {
     textAlign: 'right',
     alignItems: 'flex-end',
+    width: '35%',
   },
   receiptLabel: {
     fontSize: 24,
@@ -280,15 +291,13 @@ export function ReceiptPDF({ data }: ReceiptPDFProps) {
             <View style={styles.orgInfo}>
               <Text style={styles.orgName}>{org.name}</Text>
               <Text style={styles.orgTagline}>{org.tagline}</Text>
-              <Text style={styles.orgDetails}>
-                {org.address.join('\n')}
-              </Text>
-              <Text style={styles.orgDetails}>
-                Tel: {org.phone}
-              </Text>
-              <Text style={styles.orgDetails}>
-                Email: {org.email}
-              </Text>
+              <View>
+                {org.address.map((line, index) => (
+                  <Text key={index} style={styles.orgAddressLine}>{line}</Text>
+                ))}
+              </View>
+              <Text style={styles.orgContactInfo}>Tel: {org.phone}</Text>
+              <Text style={styles.orgContactInfo}>Email: {org.email}</Text>
             </View>
           </View>
           <View style={styles.receiptTitle}>
