@@ -6,6 +6,29 @@ import { eq, asc, and } from 'drizzle-orm'
 import { requireAuth } from '@/lib/auth-server'
 import { createVersion, logActivity } from '@/lib/versioning'
 import { notifyTeamUpdate, notifyOrgChartUpdate } from '@/lib/actions/notifications'
+import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
+
+type LocalizedField = LocalizedString | string
+
+// Helper to get string value from LocalizedString (for logging/notifications)
+const l = (value: LocalizedString | string | null | undefined): string => {
+  if (!value) return ''
+  if (typeof value === 'string') return value
+  return getLocalizedValue(value, 'en')
+}
+
+// Helper to convert string to LocalizedString (for database insertion)
+const toLocalized = (value: LocalizedField | null | undefined): LocalizedString | undefined => {
+  if (!value) return undefined
+  if (typeof value === 'string') return { en: value, ms: value }
+  return value
+}
+
+// Helper for required LocalizedString fields
+const toLocalizedRequired = (value: LocalizedField): LocalizedString => {
+  if (typeof value === 'string') return { en: value, ms: value }
+  return value
+}
 
 export async function getTeamMembers(options?: { department?: string; active?: boolean }) {
   const conditions = []
@@ -35,9 +58,9 @@ export async function getTeamMember(id: string) {
 
 export async function createTeamMember(data: {
   name: string
-  position: string
+  position: LocalizedField
   department?: string
-  bio?: string
+  bio?: LocalizedField
   image?: string
   email?: string
   phone?: string
@@ -48,7 +71,16 @@ export async function createTeamMember(data: {
   const user = await requireAuth()
 
   const member = await db.insert(teamMembers).values({
-    ...data,
+    name: data.name,
+    position: toLocalizedRequired(data.position),
+    department: data.department,
+    bio: toLocalized(data.bio),
+    image: data.image,
+    email: data.email,
+    phone: data.phone,
+    linkedin: data.linkedin,
+    sortOrder: data.sortOrder,
+    parentId: data.parentId,
     isActive: true,
   }).returning()
 
@@ -74,7 +106,7 @@ export async function createTeamMember(data: {
     memberId: member[0].id,
     memberName: data.name,
     action: 'added',
-    details: data.position,
+    details: l(data.position),
   })
 
   revalidatePath('/about')
@@ -83,9 +115,9 @@ export async function createTeamMember(data: {
 
 export async function updateTeamMember(id: string, data: {
   name?: string
-  position?: string
+  position?: LocalizedField
   department?: string
-  bio?: string
+  bio?: LocalizedField
   image?: string
   email?: string
   phone?: string
@@ -105,9 +137,25 @@ export async function updateTeamMember(id: string, data: {
     return { success: false, error: 'Team member not found' }
   }
 
+  // Build update data with LocalizedString conversion
+  const updateData: Record<string, unknown> = {
+    updatedAt: new Date(),
+    ...(data.name !== undefined && { name: data.name }),
+    ...(data.position !== undefined && { position: toLocalizedRequired(data.position) }),
+    ...(data.department !== undefined && { department: data.department }),
+    ...(data.bio !== undefined && { bio: toLocalized(data.bio) }),
+    ...(data.image !== undefined && { image: data.image }),
+    ...(data.email !== undefined && { email: data.email }),
+    ...(data.phone !== undefined && { phone: data.phone }),
+    ...(data.linkedin !== undefined && { linkedin: data.linkedin }),
+    ...(data.sortOrder !== undefined && { sortOrder: data.sortOrder }),
+    ...(data.parentId !== undefined && { parentId: data.parentId }),
+    ...(data.isActive !== undefined && { isActive: data.isActive }),
+  }
+
   await db
     .update(teamMembers)
-    .set({ ...data, updatedAt: new Date() })
+    .set(updateData)
     .where(eq(teamMembers.id, id))
 
   // Get updated data
@@ -134,7 +182,7 @@ export async function updateTeamMember(id: string, data: {
   })
 
   // Create notification for team member update
-  const positionChanged = data.position && data.position !== existing.position
+  const positionChanged = data.position && l(data.position) !== l(existing.position)
   const parentChanged = data.parentId !== undefined && data.parentId !== existing.parentId
 
   if (positionChanged) {
@@ -142,7 +190,7 @@ export async function updateTeamMember(id: string, data: {
       memberId: id,
       memberName: data.name || existing.name,
       action: 'position_changed',
-      details: `${existing.position} → ${data.position}`,
+      details: `${l(existing.position)} → ${l(data.position)}`,
     })
   } else if (parentChanged) {
     await notifyOrgChartUpdate({
@@ -261,4 +309,198 @@ export async function getPotentialParents(excludeId?: string) {
   }
 
   return members
+}
+
+// Initialize official team members from Trust Deed (Surat Ikatan Amanah)
+// This function clears existing team members and adds the real organizational structure
+export async function initializeOfficialTeam() {
+  const user = await requireAuth()
+
+  // Clear existing team members
+  await db.delete(teamMembers)
+
+  // Generate UUIDs for parent relationships
+  const crypto = await import('crypto')
+  const founderAdlyId = crypto.randomUUID()
+  const founderAshrafId = crypto.randomUUID()
+  const chairmanMariamId = crypto.randomUUID()
+  const financeDirectorSheikKhuzaifahId = crypto.randomUUID()
+  const communicationsHeadAmmarId = crypto.randomUUID()
+  const headOfItSuzarilId = crypto.randomUUID()
+
+  // Real team members from Trust Deed (Surat Ikatan Amanah)
+  const officialTeam = [
+    // Founders (Board of Directors level)
+    {
+      id: founderAdlyId,
+      name: 'Adly bin Zahari',
+      position: { en: 'Founder', ms: 'Pengasas' },
+      department: 'Board of Directors',
+      bio: {
+        en: 'Co-founder of Yayasan Insan Prihatin, dedicated to community welfare and sustainable development.',
+        ms: 'Pengasas bersama Yayasan Insan Prihatin, berdedikasi kepada kebajikan komuniti dan pembangunan mampan.'
+      },
+      sortOrder: 1,
+      hierarchyLevel: 0,
+      parentId: null,
+      isActive: true,
+    },
+    {
+      id: founderAshrafId,
+      name: 'Ashraf Mukhlis bin Minghat',
+      position: { en: 'Founder', ms: 'Pengasas' },
+      department: 'Board of Directors',
+      bio: {
+        en: 'Co-founder of Yayasan Insan Prihatin, committed to education and social development.',
+        ms: 'Pengasas bersama Yayasan Insan Prihatin, komited kepada pendidikan dan pembangunan sosial.'
+      },
+      sortOrder: 2,
+      hierarchyLevel: 0,
+      parentId: null,
+      isActive: true,
+    },
+
+    // Board of Trustees
+    {
+      id: chairmanMariamId,
+      name: 'Mariam binti Ilias',
+      position: { en: 'Chairman', ms: 'Pengerusi' },
+      department: 'Board of Trustees',
+      bio: {
+        en: 'Chairman of the Board of Trustees, overseeing governance and strategic direction of the foundation.',
+        ms: 'Pengerusi Lembaga Pemegang Amanah, menyelia tadbir urus dan hala tuju strategik yayasan.'
+      },
+      sortOrder: 3,
+      hierarchyLevel: 1,
+      parentId: founderAdlyId,
+      isActive: true,
+    },
+    {
+      id: financeDirectorSheikKhuzaifahId,
+      name: 'Sheikh Khuzaifah bin Sheik Abu Bakar',
+      position: { en: 'Finance Director', ms: 'Pengarah Kewangan' },
+      department: 'Board of Trustees',
+      bio: {
+        en: 'Finance Director responsible for financial oversight and compliance.',
+        ms: 'Pengarah Kewangan bertanggungjawab untuk pengawasan dan pematuhan kewangan.'
+      },
+      sortOrder: 4,
+      hierarchyLevel: 1,
+      parentId: chairmanMariamId,
+      isActive: true,
+    },
+    {
+      id: communicationsHeadAmmarId,
+      name: 'Mohamad Ammar bin Atan',
+      position: { en: 'Head of Corporate Communication', ms: 'Ketua Komunikasi Korporat' },
+      department: 'Board of Trustees',
+      bio: {
+        en: 'Head of Corporate Communication, managing public relations and organizational communications.',
+        ms: 'Ketua Komunikasi Korporat, menguruskan perhubungan awam dan komunikasi organisasi.'
+      },
+      sortOrder: 5,
+      hierarchyLevel: 1,
+      parentId: chairmanMariamId,
+      isActive: true,
+    },
+
+    // Finance Department
+    {
+      id: crypto.randomUUID(),
+      name: 'Ainul Khairiyah binti Asrul Affendi',
+      position: { en: 'Accountant', ms: 'Akauntan' },
+      department: 'Finance',
+      bio: {
+        en: 'Accountant managing financial records and reporting.',
+        ms: 'Akauntan menguruskan rekod kewangan dan pelaporan.'
+      },
+      sortOrder: 6,
+      hierarchyLevel: 2,
+      parentId: financeDirectorSheikKhuzaifahId,
+      isActive: true,
+    },
+    {
+      id: crypto.randomUUID(),
+      name: 'Afifah',
+      position: { en: 'Finance Officer', ms: 'Pegawai Kewangan' },
+      department: 'Finance',
+      bio: {
+        en: 'Finance Officer supporting financial operations.',
+        ms: 'Pegawai Kewangan menyokong operasi kewangan.'
+      },
+      sortOrder: 7,
+      hierarchyLevel: 2,
+      parentId: financeDirectorSheikKhuzaifahId,
+      isActive: true,
+    },
+
+    // IT Department
+    {
+      id: headOfItSuzarilId,
+      name: 'Ts. Suzaril Shah',
+      position: { en: 'Head of IT', ms: 'Ketua IT' },
+      department: 'Information Technology',
+      bio: {
+        en: 'Head of IT, leading technology initiatives and digital transformation.',
+        ms: 'Ketua IT, memimpin inisiatif teknologi dan transformasi digital.'
+      },
+      sortOrder: 8,
+      hierarchyLevel: 2,
+      parentId: chairmanMariamId,
+      isActive: true,
+    },
+    {
+      id: crypto.randomUUID(),
+      name: 'Aizat',
+      position: { en: 'IT Officer', ms: 'Pegawai IT' },
+      department: 'Information Technology',
+      bio: {
+        en: 'IT Officer supporting technology operations and systems.',
+        ms: 'Pegawai IT menyokong operasi dan sistem teknologi.'
+      },
+      sortOrder: 9,
+      hierarchyLevel: 3,
+      parentId: headOfItSuzarilId,
+      isActive: true,
+    },
+
+    // Admin Office
+    {
+      id: crypto.randomUUID(),
+      name: 'Firah',
+      position: { en: 'Admin Officer', ms: 'Pegawai Pentadbiran' },
+      department: 'Administration',
+      bio: {
+        en: 'Admin Officer managing office operations and administrative tasks.',
+        ms: 'Pegawai Pentadbiran menguruskan operasi pejabat dan tugas pentadbiran.'
+      },
+      sortOrder: 10,
+      hierarchyLevel: 2,
+      parentId: chairmanMariamId,
+      isActive: true,
+    },
+  ]
+
+  // Insert all team members
+  for (const member of officialTeam) {
+    await db.insert(teamMembers).values(member)
+  }
+
+  // Log activity
+  await logActivity('system_update', 'Initialized official team structure from Trust Deed', {
+    user: { id: user.id, email: user.email, name: user.name },
+    metadata: { teamCount: officialTeam.length },
+  })
+
+  // Create notification
+  await notifyOrgChartUpdate({
+    changeType: 'hierarchy',
+    affectedCount: officialTeam.length,
+    details: 'Official organizational structure initialized from Trust Deed',
+  })
+
+  revalidatePath('/about')
+  revalidatePath('/admin/dashboard/team')
+
+  return { success: true, count: officialTeam.length }
 }

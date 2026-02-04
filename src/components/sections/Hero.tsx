@@ -91,15 +91,20 @@ export default function Hero({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: "easeOut" }}
             >
-              {/* Premium Badge */}
+              {/* Premium Badge with Official Slogan */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.6 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-md mb-8"
+                className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-8"
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                <span className="text-xs font-medium text-white tracking-widest uppercase shadow-sm">{subtitle}</span>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-md">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                  <span className="text-xs font-medium text-white tracking-widest uppercase shadow-sm">{subtitle}</span>
+                </div>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-400/20 border border-amber-400/30 backdrop-blur-md">
+                  <span className="text-sm font-display font-bold text-amber-300 italic">&ldquo;Ini Rumah Kita&rdquo;</span>
+                </div>
               </motion.div>
 
               <h1 className="heading-display text-white mb-8 leading-[1.1] drop-shadow-lg">

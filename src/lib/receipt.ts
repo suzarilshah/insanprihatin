@@ -8,6 +8,7 @@
 import { db, donations, projects } from '@/db'
 import { eq, sql } from 'drizzle-orm'
 import { getOrganizationConfig, type OrganizationConfig } from './organization-config'
+import { getLocalizedValue, type LocalizedString } from '@/i18n/config'
 
 export interface ReceiptData {
   receiptNumber: string
@@ -79,7 +80,10 @@ export async function getReceiptData(paymentReference: string): Promise<ReceiptD
       where: eq(projects.id, donation.projectId),
       columns: { title: true },
     })
-    projectTitle = project?.title
+    // Extract string from LocalizedString (default to English)
+    if (project?.title) {
+      projectTitle = getLocalizedValue(project.title as LocalizedString, 'en')
+    }
   }
 
   // Get organization config from database
@@ -106,20 +110,23 @@ export async function getReceiptData(paymentReference: string): Promise<ReceiptD
 
 /**
  * Organization details for receipt (deprecated - use getOrganizationConfig instead)
- * Kept for backwards compatibility
+ * Kept for backwards compatibility - updated with official address from Trust Deed
  */
 export const organizationDetails = {
   name: 'Yayasan Insan Prihatin',
-  tagline: 'Empowering Communities, Transforming Lives',
+  legalName: 'Pemegang Amanah Yayasan Insan Prihatin',
+  tagline: 'Ihsan untuk Insan',
+  slogan: 'Ini Rumah Kita',
+  fullSlogan: 'Ihsan untuk Insan: Menghilangkan Kelaparan, Kejahilan dan Kedukaan',
   registrationNumber: 'PPAB-23/2025',
   taxExemptionRef: '', // Not yet tax deductible
   address: [
-    'No. 1, Jalan Prihatin',
-    'Taman Kasih Sayang',
-    '50000 Kuala Lumpur',
-    'Malaysia',
+    'D-G-05 Jalan PKAK 2',
+    'Pusat Komersil Ayer Keroh',
+    '75450 Ayer Keroh',
+    'Melaka, Malaysia',
   ],
-  phone: '+60 3-1234 5678',
+  phone: '+60 12-345 6789',
   email: 'info@insanprihatin.org',
   website: 'www.insanprihatin.org',
   logoUrl: '/YIP-main-logo-transparent.png',

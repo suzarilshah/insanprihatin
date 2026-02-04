@@ -2,33 +2,38 @@
 
 import { motion, useScroll, useTransform } from 'framer-motion'
 import Image from 'next/image'
-import Link from 'next/link'
+import { Link } from '@/i18n/navigation'
 import { useRef } from 'react'
 import { OrgChart } from '@/components/org-chart'
+import { type LocalizedString, type Locale, getLocalizedValue } from '@/i18n/config'
 
+// Types with LocalizedString support
 type TeamMember = {
   id: string
   name: string
-  position: string
+  position: LocalizedString | string
   department: string | null
-  bio: string | null
+  bio: LocalizedString | string | null
   image: string | null
   email: string | null
   phone: string | null
   linkedin: string | null
   sortOrder: number | null
   parentId: string | null
+  hierarchyLevel?: number | null
   isActive: boolean | null
   createdAt: Date
   updatedAt: Date
+  microsoftId?: string | null
+  microsoftSyncedAt?: Date | null
 }
 
 type AboutData = {
   id: string
-  title: string
-  content: string
-  mission: string | null
-  vision: string | null
+  title: LocalizedString | string
+  content: LocalizedString | string
+  mission: LocalizedString | string | null
+  vision: LocalizedString | string | null
   values: unknown
   image: string | null
   updatedAt: Date
@@ -36,9 +41,9 @@ type AboutData = {
 
 type ImpactStat = {
   id: string
-  label: string
+  label: LocalizedString | string
   value: string
-  suffix: string | null
+  suffix: LocalizedString | string | null
   icon: string | null
   sortOrder: number | null
   isActive: boolean | null
@@ -49,6 +54,7 @@ interface AboutContentProps {
   teamMembers: TeamMember[]
   aboutData: AboutData
   impactStats: ImpactStat[]
+  locale?: Locale
 }
 
 const timeline = [
@@ -85,7 +91,69 @@ const defaultImpactStats = [
   { value: '2025', label: 'Established', description: 'Beginning our journey' },
 ]
 
-export default function AboutContent({ teamMembers, aboutData, impactStats }: AboutContentProps) {
+// Three main objectives from Trust Deed
+const objectives = {
+  en: [
+    {
+      title: 'Education',
+      malay: 'Pendidikan',
+      description: 'Providing educational support and opportunities for underprivileged students to ensure equal access to quality education.',
+      icon: '🎓',
+      color: 'from-sky-500 to-blue-600',
+      bgColor: 'bg-sky-50',
+      borderColor: 'border-sky-100',
+    },
+    {
+      title: 'Social',
+      malay: 'Sosial',
+      description: 'Addressing social welfare needs and building stronger community bonds through outreach programs.',
+      icon: '🤝',
+      color: 'from-amber-500 to-orange-600',
+      bgColor: 'bg-amber-50',
+      borderColor: 'border-amber-100',
+    },
+    {
+      title: 'Welfare',
+      malay: 'Kebajikan',
+      description: 'Delivering essential welfare services to those in need, including food aid, healthcare support, and emergency assistance.',
+      icon: '❤️',
+      color: 'from-rose-500 to-red-600',
+      bgColor: 'bg-rose-50',
+      borderColor: 'border-rose-100',
+    },
+  ],
+  ms: [
+    {
+      title: 'Pendidikan',
+      malay: 'Pendidikan',
+      description: 'Menyediakan sokongan pendidikan dan peluang untuk pelajar kurang bernasib baik bagi memastikan akses sama rata kepada pendidikan berkualiti.',
+      icon: '🎓',
+      color: 'from-sky-500 to-blue-600',
+      bgColor: 'bg-sky-50',
+      borderColor: 'border-sky-100',
+    },
+    {
+      title: 'Sosial',
+      malay: 'Sosial',
+      description: 'Menangani keperluan kebajikan sosial dan membina ikatan komuniti yang lebih kukuh melalui program jangkauan.',
+      icon: '🤝',
+      color: 'from-amber-500 to-orange-600',
+      bgColor: 'bg-amber-50',
+      borderColor: 'border-amber-100',
+    },
+    {
+      title: 'Kebajikan',
+      malay: 'Kebajikan',
+      description: 'Menyampaikan perkhidmatan kebajikan penting kepada mereka yang memerlukan, termasuk bantuan makanan, sokongan kesihatan, dan bantuan kecemasan.',
+      icon: '❤️',
+      color: 'from-rose-500 to-red-600',
+      bgColor: 'bg-rose-50',
+      borderColor: 'border-rose-100',
+    },
+  ],
+}
+
+export default function AboutContent({ teamMembers, aboutData, impactStats, locale = 'en' }: AboutContentProps) {
   const heroRef = useRef<HTMLElement>(null)
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -94,18 +162,27 @@ export default function AboutContent({ teamMembers, aboutData, impactStats }: Ab
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
   const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1])
 
+  // Helper to get localized value
+  const l = (value: LocalizedString | string | null | undefined): string => {
+    return getLocalizedValue(value as LocalizedString, locale)
+  }
+
   // Use database impact stats if available, otherwise fallback to defaults
   const displayImpactStats = impactStats.length > 0
     ? impactStats.map(stat => ({
-        value: stat.value + (stat.suffix || ''),
-        label: stat.label,
-        description: `${stat.label}`,
+        value: stat.value + l(stat.suffix),
+        label: l(stat.label),
+        description: l(stat.label),
       }))
     : defaultImpactStats
 
-  // Use about data if available
-  const mission = aboutData?.mission || 'To empower underprivileged communities through sustainable programs in education, healthcare, and economic development, creating lasting positive change across Malaysia.'
-  const vision = aboutData?.vision || 'A Malaysia where every individual has equal opportunities to thrive, contribute to society, and live with dignity regardless of their background or circumstances.'
+  // Use about data if available with localization
+  const mission = l(aboutData?.mission) || (locale === 'ms'
+    ? 'Memperkasa komuniti kurang bernasib baik melalui program mampan dalam pendidikan, penjagaan kesihatan, dan pembangunan ekonomi.'
+    : 'To empower underprivileged communities through sustainable programs in education, healthcare, and economic development.')
+  const vision = l(aboutData?.vision) || (locale === 'ms'
+    ? 'Malaysia di mana setiap individu mempunyai peluang sama untuk berkembang maju dan hidup bermaruah.'
+    : 'A Malaysia where every individual has equal opportunities to thrive, contribute to society, and live with dignity.')
   const values = (aboutData?.values as string[] | null) || ['Compassion', 'Integrity', 'Excellence', 'Collaboration', 'Innovation']
 
   return (
@@ -227,6 +304,101 @@ export default function AboutContent({ teamMembers, aboutData, impactStats }: Ab
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Our Objectives Section - From Trust Deed */}
+      <section className="section-padding bg-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-dots opacity-20" />
+        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-teal-100/20 rounded-full blur-[100px]" />
+        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-amber-100/20 rounded-full blur-[100px]" />
+
+        <div className="container-wide relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 border border-teal-100 mx-auto mb-6">
+              <span className="w-1.5 h-1.5 rounded-full bg-teal-500" />
+              <span className="text-sm font-medium text-teal-700 uppercase tracking-wide">
+                {locale === 'ms' ? 'Tiga Tunjang Utama' : 'Three Main Pillars'}
+              </span>
+            </div>
+            <h2 className="heading-section text-foundation-charcoal mb-4">
+              {locale === 'ms' ? 'Objektif ' : 'Our '}
+              <span className="text-teal-600 italic font-serif">
+                {locale === 'ms' ? 'Kami' : 'Objectives'}
+              </span>
+            </h2>
+            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+              {locale === 'ms'
+                ? 'Ditubuhkan berdasarkan Surat Ikatan Amanah, yayasan kami berfokus kepada tiga objektif utama untuk membina masyarakat yang lebih baik.'
+                : 'Founded on our Trust Deed, our foundation focuses on three core objectives to build a better community.'}
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {(locale === 'ms' ? objectives.ms : objectives.en).map((objective, index) => (
+              <motion.div
+                key={objective.title}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.15 }}
+                className={`relative p-8 rounded-3xl ${objective.bgColor} border ${objective.borderColor} group hover:shadow-2xl transition-all duration-500`}
+              >
+                {/* Decorative gradient */}
+                <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${objective.color} opacity-10 rounded-full blur-2xl group-hover:opacity-20 transition-opacity`} />
+
+                <div className="relative z-10">
+                  {/* Icon */}
+                  <div className="text-5xl mb-6 group-hover:scale-110 transition-transform duration-300">
+                    {objective.icon}
+                  </div>
+
+                  {/* Title */}
+                  <h3 className="font-display text-2xl font-bold text-foundation-charcoal mb-2">
+                    {objective.title}
+                  </h3>
+
+                  {/* Malay subtitle */}
+                  {locale !== 'ms' && (
+                    <p className={`text-sm font-medium bg-gradient-to-r ${objective.color} bg-clip-text text-transparent mb-4`}>
+                      {objective.malay}
+                    </p>
+                  )}
+
+                  {/* Description */}
+                  <p className="text-gray-600 leading-relaxed">
+                    {objective.description}
+                  </p>
+                </div>
+
+                {/* Bottom accent line */}
+                <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${objective.color} rounded-b-3xl opacity-50 group-hover:opacity-100 transition-opacity`} />
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Slogan */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mt-16"
+          >
+            <blockquote className="relative">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-6xl text-teal-200 font-serif">&ldquo;</div>
+              <p className="text-2xl md:text-3xl font-display font-bold text-foundation-charcoal mb-2">
+                Ini Rumah Kita
+              </p>
+              <p className="text-lg text-gray-500 italic">
+                Ihsan untuk Insan: Menghilangkan Kelaparan, Kejahilan dan Kedukaan
+              </p>
+            </blockquote>
+          </motion.div>
         </div>
       </section>
 
@@ -401,7 +573,11 @@ export default function AboutContent({ teamMembers, aboutData, impactStats }: Ab
             transition={{ delay: 0.2 }}
           >
             <OrgChart
-              members={teamMembers as Parameters<typeof OrgChart>[0]['members']}
+              members={teamMembers.map(member => ({
+                ...member,
+                position: l(member.position),
+                bio: l(member.bio),
+              })) as Parameters<typeof OrgChart>[0]['members']}
               variant="department"
               showFilters={true}
             />

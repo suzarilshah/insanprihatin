@@ -83,7 +83,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12 lg:gap-8">
           {/* Brand Column */}
           <div className="lg:col-span-2">
-            <Link href="/" className="inline-flex items-center gap-3 mb-6">
+            <Link href="/" className="inline-flex items-center gap-3 mb-4">
               <div className="relative w-14 h-14">
                 <Image
                   src="/images/logo.png"
@@ -99,9 +99,28 @@ export default function Footer() {
                 </span>
               </div>
             </Link>
+
+            {/* Official Slogan */}
+            <div className="mb-4 pl-1">
+              <p className="text-lg font-display font-bold text-white italic mb-1">
+                &ldquo;Ini Rumah Kita&rdquo;
+              </p>
+              <p className="text-sm text-amber-400/80 italic">
+                Ihsan untuk Insan: Menghilangkan Kelaparan, Kejahilan dan Kedukaan
+              </p>
+            </div>
+
+            {/* Official Address */}
+            <address className="not-italic text-gray-400 text-sm leading-relaxed mb-4 max-w-sm">
+              <p className="font-medium text-gray-300 mb-1">Registered Address:</p>
+              D-G-05 Jalan PKAK 2<br />
+              Pusat Komersil Ayer Keroh<br />
+              75450 Ayer Keroh<br />
+              Melaka, Malaysia
+            </address>
+
             <p className="text-gray-400 leading-relaxed mb-6 max-w-sm">
               Empowering communities through compassion, education, and sustainable development.
-              Together, we create lasting impact.
             </p>
             <div className="flex items-center gap-4">
               {socialLinks.map((social) => (
