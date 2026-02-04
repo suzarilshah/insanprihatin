@@ -111,8 +111,8 @@ export async function getReceiptData(paymentReference: string): Promise<ReceiptD
 export const organizationDetails = {
   name: 'Yayasan Insan Prihatin',
   tagline: 'Empowering Communities, Transforming Lives',
-  registrationNumber: 'PPM-001-10-12345678',
-  taxExemptionRef: 'LHDN.01/35/42/51/179-6.6000',
+  registrationNumber: 'PPAB-23/2025',
+  taxExemptionRef: '', // Not yet tax deductible
   address: [
     'No. 1, Jalan Prihatin',
     'Taman Kasih Sayang',

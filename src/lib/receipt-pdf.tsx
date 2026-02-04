@@ -1,8 +1,8 @@
 /**
  * PDF Receipt Template
  *
- * Professional A4 receipt template for donations using @react-pdf/renderer.
- * Includes organization branding with logo, donor details, and tax deduction information.
+ * Professional A4 single-page receipt template for donations using @react-pdf/renderer.
+ * Includes organization branding with logo and donor details.
  */
 
 import React from 'react'
@@ -18,10 +18,10 @@ import { ReceiptData, organizationDetails, formatAmount, formatReceiptDate } fro
 import path from 'path'
 import fs from 'fs'
 
-// Define styles
+// Define styles - optimized for single page A4
 const styles = StyleSheet.create({
   page: {
-    padding: 50,
+    padding: 40,
     fontSize: 10,
     fontFamily: 'Helvetica',
     backgroundColor: '#FFFFFF',
@@ -29,8 +29,8 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 30,
-    paddingBottom: 20,
+    marginBottom: 20,
+    paddingBottom: 15,
     borderBottomWidth: 2,
     borderBottomColor: '#0D9488',
   },
@@ -40,8 +40,8 @@ const styles = StyleSheet.create({
     width: '65%',
   },
   logo: {
-    width: 60,
-    height: 60,
+    width: 55,
+    height: 55,
     objectFit: 'contain',
     marginRight: 12,
   },
@@ -50,30 +50,25 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   orgName: {
-    fontSize: 16,
+    fontSize: 15,
     fontFamily: 'Helvetica-Bold',
     color: '#0D9488',
-    marginBottom: 4,
+    marginBottom: 3,
   },
   orgTagline: {
-    fontSize: 9,
+    fontSize: 8,
     color: '#6B7280',
-    marginBottom: 8,
-  },
-  orgContactRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: 4,
+    marginBottom: 6,
   },
   orgAddressLine: {
-    fontSize: 8,
+    fontSize: 7,
     color: '#6B7280',
-    lineHeight: 1.5,
+    lineHeight: 1.4,
   },
   orgContactInfo: {
-    fontSize: 8,
+    fontSize: 7,
     color: '#6B7280',
-    marginTop: 4,
+    marginTop: 3,
   },
   receiptTitle: {
     textAlign: 'right',
@@ -81,32 +76,32 @@ const styles = StyleSheet.create({
     width: '35%',
   },
   receiptLabel: {
-    fontSize: 24,
+    fontSize: 22,
     fontFamily: 'Helvetica-Bold',
     color: '#1F2937',
-    marginBottom: 4,
+    marginBottom: 3,
   },
   receiptNumber: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: 'Helvetica-Bold',
     color: '#0D9488',
-    marginBottom: 4,
+    marginBottom: 3,
   },
   receiptDate: {
-    fontSize: 9,
+    fontSize: 8,
     color: '#6B7280',
   },
   mainContent: {
-    marginTop: 20,
+    marginTop: 15,
   },
   section: {
-    marginBottom: 25,
+    marginBottom: 18,
   },
   sectionTitle: {
-    fontSize: 11,
+    fontSize: 10,
     fontFamily: 'Helvetica-Bold',
     color: '#374151',
-    marginBottom: 10,
+    marginBottom: 8,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -116,111 +111,107 @@ const styles = StyleSheet.create({
   },
   infoItem: {
     width: '50%',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   infoLabel: {
-    fontSize: 8,
+    fontSize: 7,
     color: '#6B7280',
     marginBottom: 2,
     textTransform: 'uppercase',
   },
   infoValue: {
-    fontSize: 10,
+    fontSize: 9,
     color: '#1F2937',
     fontFamily: 'Helvetica-Bold',
   },
   amountSection: {
     backgroundColor: '#F0FDFA',
-    padding: 20,
+    padding: 16,
     borderRadius: 8,
-    marginVertical: 20,
+    marginVertical: 15,
     alignItems: 'center',
   },
   amountLabel: {
-    fontSize: 10,
+    fontSize: 9,
     color: '#6B7280',
-    marginBottom: 5,
+    marginBottom: 4,
     textTransform: 'uppercase',
   },
   amountValue: {
-    fontSize: 32,
+    fontSize: 28,
     fontFamily: 'Helvetica-Bold',
     color: '#0D9488',
-  },
-  amountCurrency: {
-    fontSize: 14,
-    color: '#0D9488',
-    marginTop: 2,
   },
   messageSection: {
     backgroundColor: '#F9FAFB',
-    padding: 15,
+    padding: 12,
     borderRadius: 6,
-    marginVertical: 15,
+    marginVertical: 12,
   },
   messageLabel: {
-    fontSize: 8,
+    fontSize: 7,
     color: '#6B7280',
-    marginBottom: 5,
+    marginBottom: 4,
     textTransform: 'uppercase',
   },
   messageText: {
-    fontSize: 10,
+    fontSize: 9,
     color: '#374151',
     fontStyle: 'italic',
-    lineHeight: 1.5,
+    lineHeight: 1.4,
   },
-  taxNotice: {
-    backgroundColor: '#FEF3C7',
+  thankYouSection: {
+    backgroundColor: '#F0FDF4',
     padding: 15,
     borderRadius: 6,
-    marginVertical: 20,
+    marginVertical: 15,
+    alignItems: 'center',
   },
-  taxTitle: {
-    fontSize: 10,
+  thankYouText: {
+    fontSize: 11,
     fontFamily: 'Helvetica-Bold',
-    color: '#92400E',
-    marginBottom: 6,
+    color: '#166534',
+    marginBottom: 4,
   },
-  taxText: {
+  thankYouSubtext: {
     fontSize: 9,
-    color: '#92400E',
-    lineHeight: 1.5,
+    color: '#166534',
+    textAlign: 'center',
   },
   footer: {
     position: 'absolute',
-    bottom: 50,
-    left: 50,
-    right: 50,
+    bottom: 40,
+    left: 40,
+    right: 40,
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
-    paddingTop: 15,
+    paddingTop: 12,
   },
   footerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   footerLeft: {
-    fontSize: 8,
+    fontSize: 7,
     color: '#6B7280',
     lineHeight: 1.4,
   },
   footerRight: {
     textAlign: 'right',
-    fontSize: 8,
+    fontSize: 7,
     color: '#6B7280',
   },
   verificationText: {
-    fontSize: 7,
+    fontSize: 6,
     color: '#9CA3AF',
-    marginTop: 10,
+    marginTop: 8,
     textAlign: 'center',
   },
   watermark: {
     position: 'absolute',
     top: '40%',
     left: '25%',
-    fontSize: 60,
+    fontSize: 50,
     color: '#E5E7EB',
     opacity: 0.3,
     transform: 'rotate(-30deg)',
@@ -381,17 +372,11 @@ export function ReceiptPDF({ data }: ReceiptPDFProps) {
             </View>
           )}
 
-          {/* Tax Notice */}
-          <View style={styles.taxNotice}>
-            <Text style={styles.taxTitle}>Tax Deduction Notice</Text>
-            <Text style={styles.taxText}>
-              {org.name} is a registered charitable organization under the
-              Companies Commission of Malaysia (Registration No: {org.registrationNumber}).
-              {'\n\n'}
-              Your donation may be eligible for tax deduction under Section 44(6) of the
-              Income Tax Act 1967. Tax Exemption Reference: {org.taxExemptionRef}
-              {'\n\n'}
-              Please retain this receipt for your tax records.
+          {/* Thank You Section */}
+          <View style={styles.thankYouSection}>
+            <Text style={styles.thankYouText}>Thank You For Your Generosity!</Text>
+            <Text style={styles.thankYouSubtext}>
+              Your donation helps us continue our mission of empowering communities.
             </Text>
           </View>
         </View>
