@@ -93,7 +93,7 @@ export default function Solution({ projects = [], impactStats = [], aboutContent
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-teal-900 via-teal-900/40 to-transparent opacity-90 group-hover:opacity-80 transition-opacity" />
+                <div className="absolute inset-0 bg-gradient-to-t from-teal-950 via-teal-900/60 to-transparent opacity-90 group-hover:opacity-80 transition-opacity" />
                 
                 <div className="absolute bottom-0 left-0 p-10 max-w-2xl">
                   <div className="inline-block px-3 py-1 bg-amber-400 text-foundation-charcoal text-xs font-bold uppercase tracking-wider rounded-full mb-4">
@@ -145,7 +145,7 @@ export default function Solution({ projects = [], impactStats = [], aboutContent
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-teal-900/60 group-hover:bg-teal-900/40 transition-colors" />
+                <div className="absolute inset-0 bg-teal-950/70 group-hover:bg-teal-900/60 transition-colors" />
                 <div className="absolute bottom-0 left-0 p-8">
                   <h3 className="text-2xl font-heading text-white mb-2">{projects[1].title}</h3>
                   <p className="text-sm text-gray-200 line-clamp-2">{projects[1].description}</p>
@@ -170,7 +170,7 @@ export default function Solution({ projects = [], impactStats = [], aboutContent
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-teal-900/60 group-hover:bg-teal-900/40 transition-colors" />
+                <div className="absolute inset-0 bg-teal-950/70 group-hover:bg-teal-900/60 transition-colors" />
                 <div className="absolute bottom-0 left-0 p-8">
                   <h3 className="text-2xl font-heading text-white mb-2">{projects[2].title}</h3>
                   <p className="text-sm text-gray-200 line-clamp-2">{projects[2].description}</p>

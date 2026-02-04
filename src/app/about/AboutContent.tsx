@@ -125,7 +125,7 @@ export default function AboutContent({ teamMembers, aboutData, impactStats }: Ab
         </motion.div>
 
         {/* Cinematic Gradient Overlay - Nav Safe */}
-        <div className="absolute inset-0 bg-gradient-to-b from-foundation-charcoal/90 via-foundation-charcoal/60 to-foundation-pearl" />
+        <div className="absolute inset-0 bg-gradient-to-b from-foundation-charcoal/95 via-foundation-charcoal/80 to-foundation-charcoal/40" />
         
         {/* Texture */}
         <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.04] mix-blend-overlay" />

@@ -96,7 +96,7 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
             priority
           />
           {/* Nav-Safe Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-b from-foundation-charcoal/90 via-foundation-charcoal/60 to-foundation-pearl" />
+          <div className="absolute inset-0 bg-gradient-to-b from-foundation-charcoal/95 via-foundation-charcoal/80 to-foundation-charcoal/40" />
           <div className="absolute inset-0 bg-dots opacity-10" />
           <div className="grain" />
         </div>

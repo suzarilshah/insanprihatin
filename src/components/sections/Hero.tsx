@@ -52,7 +52,7 @@ export default function Hero({
         </motion.div>
         
         {/* Cinematic Gradient Overlay - Critical for Nav Visibility */}
-        <div className="absolute inset-0 bg-gradient-to-b from-teal-900/90 via-teal-900/40 to-foundation-pearl" />
+        <div className="absolute inset-0 bg-gradient-to-b from-teal-950/90 via-teal-900/70 to-teal-900/40" />
         
         {/* Noise Texture for Film Grain Effect */}
         <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay pointer-events-none" />
@@ -102,14 +102,14 @@ export default function Hero({
                 <span className="text-xs font-medium text-white tracking-widest uppercase shadow-sm">{subtitle}</span>
               </motion.div>
 
-              <h1 className="heading-display text-white mb-8 leading-[1.1]">
+              <h1 className="heading-display text-white mb-8 leading-[1.1] drop-shadow-lg">
                 <span className="block">{title.split(' ').slice(0, 2).join(' ')}</span>
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-teal-300 via-sky-200 to-white animate-gradient-x">
                   {title.split(' ').slice(2).join(' ')}
                 </span>
               </h1>
 
-              <p className="body-large text-white/90 mb-10 max-w-xl font-light leading-relaxed border-l-4 border-amber-400 pl-6 bg-gradient-to-r from-black/10 to-transparent py-2">
+              <p className="body-large text-white/95 mb-10 max-w-xl font-light leading-relaxed border-l-4 border-amber-400 pl-6 bg-black/20 backdrop-blur-sm py-4 pr-6 rounded-r-2xl drop-shadow-md">
                 {description}
               </p>
 

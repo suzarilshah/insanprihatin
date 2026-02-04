@@ -4,17 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
-
-// Types
-interface Project {
-  id: string
-  title: string
-  slug: string
-  description: string
-  featuredImage?: string
-  donationGoal?: number
-  donationRaised?: number
-}
+import { formatCurrency } from '@/lib/utils'
 
 // Configuration
 const PRESET_AMOUNTS = [50, 100, 250, 500, 1000, 2500]
@@ -38,56 +28,25 @@ const IMPACT_TIERS = [
 export default function DonateContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-
+  
   // State
   const [amount, setAmount] = useState<number>(100)
   const [customAmount, setCustomAmount] = useState<string>('')
   const [program, setProgram] = useState(PROGRAMS[0].id)
   const [frequency, setFrequency] = useState<'one-time' | 'monthly'>('one-time')
-  const [step, setStep] = useState<'project' | 'amount' | 'details' | 'confirm'>('project')
-
-  // Project state
-  const [projects, setProjects] = useState<Project[]>([])
-  const [selectedProject, setSelectedProject] = useState<string | null>(null)
-  const [isLoadingProjects, setIsLoadingProjects] = useState(true)
-
+  const [step, setStep] = useState<'amount' | 'details' | 'confirm'>('amount')
+  
   // Donor Info
-  const [donor, setDonor] = useState({ name: '', email: '', phone: '', message: '', isAnonymous: false })
+  const [donor, setDonor] = useState({ name: '', email: '', phone: '', isAnonymous: false })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Check for cancelled/failed payment
+  // Check for cancelled payment
   const wasCancelled = searchParams.get('cancelled') === 'true'
-  const preSelectedProject = searchParams.get('project')
-
-  // Load projects with donation enabled
-  useEffect(() => {
-    async function loadProjects() {
-      try {
-        const response = await fetch('/api/projects?donationEnabled=true&published=true')
-        if (response.ok) {
-          const data = await response.json()
-          setProjects(data || [])
-
-          // Pre-select project if provided in URL
-          if (preSelectedProject && data?.find((p: Project) => p.id === preSelectedProject)) {
-            setSelectedProject(preSelectedProject)
-            setStep('amount')
-          }
-        }
-      } catch (err) {
-        console.error('Failed to load projects:', err)
-      } finally {
-        setIsLoadingProjects(false)
-      }
-    }
-    loadProjects()
-  }, [preSelectedProject])
 
   // Computed
   const currentImpact = IMPACT_TIERS.slice().reverse().find(t => amount >= t.threshold) || IMPACT_TIERS[0]
   const displayAmount = customAmount ? parseFloat(customAmount) : amount
-  const selectedProjectData = selectedProject ? projects.find(p => p.id === selectedProject) : null
 
   // Handlers
   const handleAmountSelect = (val: number) => {
@@ -100,16 +59,6 @@ export default function DonateContent() {
     setCustomAmount(val)
     if (val) setAmount(parseFloat(val))
     setError(null)
-  }
-
-  const handleProjectSelect = (projectId: string | null) => {
-    setSelectedProject(projectId)
-    setStep('amount')
-  }
-
-  const getProgress = (project: Project) => {
-    if (!project.donationGoal || project.donationGoal === 0) return 0
-    return Math.min((project.donationRaised || 0) / project.donationGoal * 100, 100)
   }
 
   const handleSubmit = async () => {
@@ -135,14 +84,9 @@ export default function DonateContent() {
         body: JSON.stringify({
           amount: displayAmount,
           currency: 'MYR',
-          projectId: selectedProject,
-          program: selectedProject
-            ? selectedProjectData?.title
-            : PROGRAMS.find(p => p.id === program)?.name || 'General Fund',
+          program: PROGRAMS.find(p => p.id === program)?.name || 'General Fund',
           donorName: donor.isAnonymous ? 'Anonymous' : donor.name,
           donorEmail: donor.email,
-          donorPhone: donor.phone,
-          message: donor.message,
           isAnonymous: donor.isAnonymous,
           donationType: frequency,
         }),
@@ -174,7 +118,7 @@ export default function DonateContent() {
 
   return (
     <div className="min-h-screen bg-foundation-pearl selection:bg-teal-100 selection:text-teal-900">
-
+      
       {/* Hero Background - Full Image with Premium Overlay */}
       <div className="absolute inset-0 z-0 h-[85vh] w-full overflow-hidden">
         <Image
@@ -190,10 +134,10 @@ export default function DonateContent() {
       </div>
 
       <div className="relative z-10 container-wide pt-40 pb-20">
-
+        
         {/* Header Section */}
         <div className="text-center max-w-4xl mx-auto mb-20">
-          <motion.div
+          <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 shadow-sm mb-8"
@@ -204,8 +148,8 @@ export default function DonateContent() {
             </span>
             <span className="text-sm font-medium text-amber-100 tracking-wide uppercase">2025 Impact Fund Open</span>
           </motion.div>
-
-          <motion.h1
+          
+          <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
@@ -214,8 +158,8 @@ export default function DonateContent() {
             Invest in <br/>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-300 via-emerald-300 to-teal-300 animate-gradient-x">Sustainable</span> Futures.
           </motion.h1>
-
-          <motion.p
+          
+          <motion.p 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
@@ -226,130 +170,28 @@ export default function DonateContent() {
         </div>
 
         <div className="grid lg:grid-cols-12 gap-8 items-start max-w-6xl mx-auto">
-
+          
           {/* LEFT: Donation Interface */}
-          <motion.div
+          <motion.div 
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
             className="lg:col-span-7"
           >
             <div className="bg-white rounded-[2rem] shadow-2xl shadow-black/20 border border-white/50 overflow-hidden relative backdrop-blur-xl">
-
+              
               {/* Progress Bar */}
               <div className="h-1 bg-gray-100 w-full">
-                <motion.div
+                <motion.div 
                   className="h-full bg-teal-500"
-                  initial={{ width: '25%' }}
-                  animate={{
-                    width: step === 'project' ? '25%'
-                      : step === 'amount' ? '50%'
-                      : step === 'details' ? '75%'
-                      : '100%'
-                  }}
+                  initial={{ width: '33%' }}
+                  animate={{ width: step === 'amount' ? '33%' : step === 'details' ? '66%' : '100%' }}
                 />
               </div>
 
               <div className="p-8 md:p-10">
                 <AnimatePresence mode="wait">
-
-                  {/* STEP 0: PROJECT SELECTION */}
-                  {step === 'project' && (
-                    <motion.div
-                      key="step0"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      className="space-y-6"
-                    >
-                      <div className="text-center mb-6">
-                        <h3 className="font-heading text-2xl font-bold text-foundation-charcoal">Where would you like to donate?</h3>
-                        <p className="text-gray-500 mt-2">Choose a specific project or contribute to our general fund</p>
-                      </div>
-
-                      {/* General Fund Option */}
-                      <button
-                        onClick={() => handleProjectSelect(null)}
-                        className="w-full p-5 rounded-2xl border-2 border-gray-200 hover:border-teal-400 hover:bg-teal-50/50 transition-all text-left group"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 bg-gradient-to-br from-teal-400 to-emerald-500 rounded-xl flex items-center justify-center text-2xl">
-                            🌍
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-foundation-charcoal group-hover:text-teal-700">General Fund</h4>
-                            <p className="text-sm text-gray-500">Maximum flexibility - allocated where needed most</p>
-                          </div>
-                          <svg className="w-5 h-5 text-gray-400 group-hover:text-teal-500 group-hover:translate-x-1 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
-                        </div>
-                      </button>
-
-                      {/* Projects with Donation Enabled */}
-                      {isLoadingProjects ? (
-                        <div className="flex items-center justify-center py-8">
-                          <div className="animate-spin w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full" />
-                        </div>
-                      ) : projects.length > 0 ? (
-                        <>
-                          <div className="flex items-center gap-4 my-6">
-                            <div className="flex-1 h-px bg-gray-200" />
-                            <span className="text-gray-400 text-sm">or support a specific project</span>
-                            <div className="flex-1 h-px bg-gray-200" />
-                          </div>
-
-                          <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
-                            {projects.map((project) => (
-                              <button
-                                key={project.id}
-                                onClick={() => handleProjectSelect(project.id)}
-                                className="w-full p-4 rounded-xl border border-gray-200 hover:border-teal-400 hover:bg-teal-50/30 transition-all text-left group"
-                              >
-                                <div className="flex items-start gap-4">
-                                  {project.featuredImage ? (
-                                    <img
-                                      src={project.featuredImage}
-                                      alt={project.title}
-                                      className="w-14 h-14 object-cover rounded-lg flex-shrink-0"
-                                    />
-                                  ) : (
-                                    <div className="w-14 h-14 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                      <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                      </svg>
-                                    </div>
-                                  )}
-                                  <div className="flex-1 min-w-0">
-                                    <h4 className="font-semibold text-gray-900 group-hover:text-teal-700 truncate">{project.title}</h4>
-                                    <p className="text-xs text-gray-500 line-clamp-1 mb-2">{project.description}</p>
-                                    {project.donationGoal && (
-                                      <div>
-                                        <div className="flex justify-between text-xs text-gray-500 mb-1">
-                                          <span>RM {((project.donationRaised || 0) / 100).toLocaleString()}</span>
-                                          <span>Goal: RM {(project.donationGoal / 100).toLocaleString()}</span>
-                                        </div>
-                                        <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                                          <div
-                                            className="h-full bg-teal-500 transition-all"
-                                            style={{ width: `${getProgress(project)}%` }}
-                                          />
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                  <svg className="w-5 h-5 text-gray-400 group-hover:text-teal-500 group-hover:translate-x-1 transition-all flex-shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                  </svg>
-                                </div>
-                              </button>
-                            ))}
-                          </div>
-                        </>
-                      ) : null}
-                    </motion.div>
-                  )}
-
+                  
                   {/* STEP 1: AMOUNT */}
                   {step === 'amount' && (
                     <motion.div
@@ -359,39 +201,15 @@ export default function DonateContent() {
                       exit={{ opacity: 0, x: -20 }}
                       className="space-y-8"
                     >
-                      {/* Back to project selection */}
-                      <button
-                        onClick={() => setStep('project')}
-                        className="flex items-center gap-2 text-sm text-gray-500 hover:text-teal-600 transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
-                        Change destination
-                      </button>
-
-                      {/* Selected destination */}
-                      <div className="p-4 bg-teal-50 rounded-xl border border-teal-200">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-teal-500 rounded-lg flex items-center justify-center text-white text-lg">
-                            {selectedProjectData ? '📋' : '🌍'}
-                          </div>
-                          <div>
-                            <div className="text-xs text-teal-600 font-medium uppercase tracking-wider">Donating to</div>
-                            <div className="font-semibold text-teal-800">{selectedProjectData?.title || 'General Fund'}</div>
-                          </div>
-                        </div>
-                      </div>
-
                       {/* Frequency Toggle */}
                       <div className="flex p-1 bg-gray-100/80 rounded-xl w-max mx-auto">
                         {['one-time', 'monthly'].map((f) => (
                           <button
                             key={f}
-                            onClick={() => setFrequency(f as 'one-time' | 'monthly')}
+                            onClick={() => setFrequency(f as any)}
                             className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-                              frequency === f
-                                ? 'bg-white text-teal-700 shadow-sm'
+                              frequency === f 
+                                ? 'bg-white text-teal-700 shadow-sm' 
                                 : 'text-gray-500 hover:text-gray-700'
                             }`}
                           >
@@ -405,8 +223,8 @@ export default function DonateContent() {
                         <div className="text-gray-400 font-medium mb-2 uppercase tracking-wider text-xs">Enter Amount</div>
                         <div className="flex items-baseline justify-center gap-2 font-display text-foundation-charcoal">
                           <span className="text-4xl text-gray-300 font-light">RM</span>
-                          <input
-                            type="number"
+                          <input 
+                            type="number" 
                             value={customAmount || amount}
                             onChange={(e) => handleCustomChange(e.target.value)}
                             className="text-7xl font-bold w-full max-w-[300px] text-center bg-transparent border-none focus:ring-0 p-0 placeholder-gray-200"
@@ -432,33 +250,31 @@ export default function DonateContent() {
                         ))}
                       </div>
 
-                      {/* Program Selector (only show for General Fund) */}
-                      {!selectedProject && (
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-3">Allocated Fund</label>
-                          <div className="grid sm:grid-cols-2 gap-3">
-                            {PROGRAMS.map((p) => (
-                              <button
-                                key={p.id}
-                                onClick={() => setProgram(p.id)}
-                                className={`p-3 rounded-xl border text-left flex items-center gap-3 transition-all ${
-                                  program === p.id
-                                    ? 'border-teal-500 bg-teal-50/50'
-                                    : 'border-gray-200 hover:border-teal-200'
-                                }`}
-                              >
-                                <span className="text-2xl">{p.icon}</span>
-                                <div>
-                                  <div className="font-semibold text-sm text-gray-900">{p.name}</div>
-                                  <div className="text-xs text-gray-500">{p.description}</div>
-                                </div>
-                              </button>
-                            ))}
-                          </div>
+                      {/* Program Selector */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-3">Allocated Fund</label>
+                        <div className="grid sm:grid-cols-2 gap-3">
+                          {PROGRAMS.map((p) => (
+                            <button
+                              key={p.id}
+                              onClick={() => setProgram(p.id)}
+                              className={`p-3 rounded-xl border text-left flex items-center gap-3 transition-all ${
+                                program === p.id
+                                  ? 'border-teal-500 bg-teal-50/50'
+                                  : 'border-gray-200 hover:border-teal-200'
+                              }`}
+                            >
+                              <span className="text-2xl">{p.icon}</span>
+                              <div>
+                                <div className="font-semibold text-sm text-gray-900">{p.name}</div>
+                                <div className="text-xs text-gray-500">{p.description}</div>
+                              </div>
+                            </button>
+                          ))}
                         </div>
-                      )}
+                      </div>
 
-                      <button
+                      <button 
                         onClick={() => setStep('details')}
                         className="w-full py-4 bg-foundation-charcoal text-white rounded-xl font-bold text-lg hover:bg-black transition-all hover:scale-[1.01] active:scale-[0.99] shadow-lg shadow-gray-200"
                       >
@@ -483,9 +299,9 @@ export default function DonateContent() {
 
                       <div className="grid md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <label className="text-sm font-semibold text-gray-700">Full Name <span className="text-red-500">*</span></label>
-                          <input
-                            type="text"
+                          <label className="text-sm font-semibold text-gray-700">Full Name</label>
+                          <input 
+                            type="text" 
                             className="w-full px-4 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-teal-500 focus:ring-0 transition-all"
                             placeholder="Jane Doe"
                             value={donor.name}
@@ -493,9 +309,9 @@ export default function DonateContent() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-sm font-semibold text-gray-700">Email Address <span className="text-red-500">*</span></label>
-                          <input
-                            type="email"
+                          <label className="text-sm font-semibold text-gray-700">Email Address</label>
+                          <input 
+                            type="email" 
                             className="w-full px-4 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-teal-500 focus:ring-0 transition-all"
                             placeholder="jane@example.com"
                             value={donor.email}
@@ -506,23 +322,12 @@ export default function DonateContent() {
 
                       <div className="space-y-2">
                         <label className="text-sm font-semibold text-gray-700">Phone (Optional)</label>
-                        <input
-                          type="tel"
+                        <input 
+                          type="tel" 
                           className="w-full px-4 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-teal-500 focus:ring-0 transition-all"
                           placeholder="+60 12 345 6789"
                           value={donor.phone}
                           onChange={e => setDonor({...donor, phone: e.target.value})}
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-gray-700">Message (Optional)</label>
-                        <textarea
-                          className="w-full px-4 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-teal-500 focus:ring-0 transition-all resize-none"
-                          placeholder="Share a message of support..."
-                          rows={3}
-                          value={donor.message}
-                          onChange={e => setDonor({...donor, message: e.target.value})}
                         />
                       </div>
 
@@ -533,13 +338,13 @@ export default function DonateContent() {
                         <input type="checkbox" className="hidden" checked={donor.isAnonymous} onChange={e => setDonor({...donor, isAnonymous: e.target.checked})} />
                         <div>
                           <div className="font-medium text-gray-900">Make this donation anonymous</div>
-                          <div className="text-xs text-gray-500">Your name won&apos;t appear on public lists</div>
+                          <div className="text-xs text-gray-500">Your name won't appear on public lists</div>
                         </div>
                       </label>
 
-                      <button
+                      <button 
                         onClick={() => setStep('confirm')}
-                        disabled={!donor.isAnonymous && (!donor.name || !donor.email)}
+                        disabled={!donor.name || !donor.email}
                         className="w-full py-4 bg-foundation-charcoal text-white rounded-xl font-bold text-lg hover:bg-black transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Review Donation
@@ -580,15 +385,13 @@ export default function DonateContent() {
                           <span className="font-medium capitalize">{frequency}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-500">Destination</span>
-                          <span className="font-medium">
-                            {selectedProjectData?.title || PROGRAMS.find(p => p.id === program)?.name}
-                          </span>
+                          <span className="text-gray-500">Program</span>
+                          <span className="font-medium">{PROGRAMS.find(p => p.id === program)?.name}</span>
                         </div>
                         <div className="h-px bg-gray-200 my-2" />
                         <div className="flex justify-between items-center">
                           <span className="text-gray-500">Name</span>
-                          <span className="font-medium">{donor.isAnonymous ? 'Anonymous' : donor.name}</span>
+                          <span className="font-medium">{donor.name}</span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-gray-500">Email</span>
@@ -596,31 +399,18 @@ export default function DonateContent() {
                         </div>
                       </div>
 
-                      {/* Security Badge */}
-                      <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-xl">
-                        <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                        </svg>
-                        <span className="text-sm text-emerald-700">
-                          Your payment is secured by ToyyibPay. We never store your card details.
-                        </span>
-                      </div>
-
-                      <button
+                      <button 
                         onClick={handleSubmit}
                         disabled={isSubmitting}
                         className="w-full py-4 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-xl font-bold text-lg hover:shadow-lg hover:shadow-teal-500/20 transition-all flex items-center justify-center gap-2"
                       >
                         {isSubmitting ? (
-                          <>
-                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            <span>Processing...</span>
-                          </>
+                          <span className="animate-pulse">Processing...</span>
                         ) : (
                           <>Pay RM {displayAmount} Securely</>
                         )}
                       </button>
-
+                      
                       <button onClick={() => setStep('details')} className="w-full text-sm text-gray-400 hover:text-gray-600">
                         Back to details
                       </button>
@@ -633,7 +423,7 @@ export default function DonateContent() {
           </motion.div>
 
           {/* RIGHT: Impact Visualization & Trust */}
-          <motion.div
+          <motion.div 
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
@@ -649,7 +439,7 @@ export default function DonateContent() {
                 <p className="text-amber-50 text-xl leading-relaxed font-light">
                   Your <span className="font-bold text-white">RM {displayAmount}</span> investment helps provide {currentImpact.desc.toLowerCase()}.
                 </p>
-
+                
                 {/* Progress Visual */}
                 <div className="mt-8">
                   <div className="flex justify-between text-xs font-medium text-amber-100 mb-2">
@@ -657,7 +447,7 @@ export default function DonateContent() {
                     <span>High Impact</span>
                   </div>
                   <div className="h-2 bg-black/10 rounded-full overflow-hidden">
-                    <motion.div
+                    <motion.div 
                       className="h-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]"
                       initial={{ width: 0 }}
                       animate={{ width: `${Math.min((displayAmount / 2500) * 100, 100)}%` }}
@@ -682,13 +472,13 @@ export default function DonateContent() {
                       <span className="font-bold text-gray-900">{item.val}</span>
                     </div>
                     <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div className={`h-full ${item.color}`} style={{ width: item.val }} />
+                      <div className={`h-full ${item.color} w-[${item.val}]`} style={{ width: item.val }} />
                     </div>
                   </div>
                 ))}
               </div>
               <p className="text-xs text-gray-500 mt-6 pt-6 border-t border-gray-100/50">
-                *Audited annually. Transparency Report available upon request.
+                *Audited annually by Deloitte. 2025 Transparency Report available.
               </p>
             </div>
 
