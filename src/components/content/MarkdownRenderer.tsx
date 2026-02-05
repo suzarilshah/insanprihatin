@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import rehypeSanitize from 'rehype-sanitize'
 import EmbeddedForm from './EmbeddedForm'
+import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
 
 interface FormField {
   id: string
@@ -25,12 +26,19 @@ interface ContentForm {
   id: string
   name: string
   slug: string
-  title?: string
-  description?: string
-  submitButtonText?: string
-  successMessage?: string
+  title?: LocalizedString | string
+  description?: LocalizedString | string
+  submitButtonText?: LocalizedString | string
+  successMessage?: LocalizedString | string
   fields: FormField[]
   isActive: boolean
+}
+
+// Helper to get string from LocalizedString (default to English)
+const l = (value: LocalizedString | string | null | undefined): string => {
+  if (!value) return ''
+  if (typeof value === 'string') return value
+  return getLocalizedValue(value, 'en')
 }
 
 interface MarkdownRendererProps {

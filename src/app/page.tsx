@@ -4,6 +4,18 @@ import SchemaMarkup from '@/components/SEO/SchemaMarkup'
 import { generateOrganizationSchema, generateWebsiteSchema, generateDonationSchema } from '@/lib/seo'
 import { getHeroContent, getAboutContent, getImpactStats } from '@/lib/actions/content'
 import { getProjects } from '@/lib/actions/projects'
+import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
+
+// Force dynamic to prevent prerender errors during build
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+// Helper to get string from LocalizedString (default to English for root page)
+const l = (value: LocalizedString | string | null | undefined): string | undefined => {
+  if (!value) return undefined
+  if (typeof value === 'string') return value
+  return getLocalizedValue(value, 'en')
+}
 
 export default async function HomePage() {
   // Fetch content from database
@@ -26,10 +38,10 @@ export default async function HomePage() {
       <Header />
       <main>
         <Hero
-          title={heroContent?.title ?? undefined}
-          subtitle={heroContent?.subtitle ?? undefined}
-          description={heroContent?.description ?? undefined}
-          ctaText={heroContent?.ctaText ?? undefined}
+          title={l(heroContent?.title)}
+          subtitle={l(heroContent?.subtitle)}
+          description={l(heroContent?.description)}
+          ctaText={l(heroContent?.ctaText)}
           ctaLink={heroContent?.ctaLink ?? undefined}
           backgroundImage={heroContent?.backgroundImage ?? undefined}
         />

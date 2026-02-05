@@ -3,6 +3,10 @@ import { Suspense } from 'react'
 import { Header, Footer } from '@/components/layout'
 import DonateContent from './DonateContent'
 
+// Force dynamic to prevent prerender errors during build
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export const metadata: Metadata = {
   title: 'Donate',
   description: 'Support Yayasan Insan Prihatin\'s mission to empower communities. Every donation makes a difference in education, healthcare, and community development.',

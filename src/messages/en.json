@@ -1,0 +1,253 @@
+{
+  "navigation": {
+    "home": "Home",
+    "about": "About",
+    "projects": "Projects",
+    "blog": "Blog",
+    "contact": "Contact",
+    "donate": "Donate Now"
+  },
+  "hero": {
+    "defaultTitle": "Restoring Dignity, Rebuilding Lives",
+    "defaultSubtitle": "Yayasan Insan Prihatin",
+    "defaultDescription": "Direct, sustainable intervention for Malaysia's underserved. Join a movement that turns compassion into tangible change.",
+    "defaultCta": "Start Your Impact",
+    "donationCta": "Make a Donation",
+    "scrollToExplore": "Scroll to Explore",
+    "donationTransparency": "Donation Transparency",
+    "livesImpacted": "Lives Impacted"
+  },
+  "about": {
+    "pageTitle": "About Us",
+    "whoWeAre": "Who We Are",
+    "heroTitle": "Architects of",
+    "heroTitleHighlight": "Sustainable Hope",
+    "heroDescription": "We are a newly established foundation with a bold vision. We are a movement of dedicated professionals, partners, and volunteers committed to engineering long-term solutions for Malaysia's most pressing social challenges.",
+    "ourVision": "Our Vision",
+    "ourMission": "Our Mission",
+    "ourCompass": "Our Compass",
+    "coreValues": "Core Values",
+    "timeline": {
+      "title": "Our Founding Roadmap",
+      "q1": {
+        "title": "The Foundation",
+        "description": "Officially established Yayasan Insan Prihatin to address systemic community needs."
+      },
+      "q2": {
+        "title": "First Initiative",
+        "description": "Launched our pilot education support program for underprivileged students."
+      },
+      "q3": {
+        "title": "Community Outreach",
+        "description": "Expanded operations to include healthcare access in rural areas."
+      },
+      "q4": {
+        "title": "Looking Ahead",
+        "description": "Planning nationwide expansion of our digital literacy programs."
+      }
+    },
+    "leadership": {
+      "title": "Leadership & Governance",
+      "subtitle": "The Stewards",
+      "description": "Guided by principles of integrity and excellence, our leadership ensures every resource is maximized for community benefit."
+    },
+    "reports": {
+      "title": "Accountability in Action",
+      "subtitle": "Radical Transparency",
+      "description": "Trust is our most valuable currency. We commit to publishing annual audits and impact reports to ensure every stakeholder knows exactly how their contributions are transforming lives.",
+      "annualReport": "Annual Report",
+      "comingSoon": "Coming Early 2026",
+      "transparency": "Transparency",
+      "auditedAnnually": "Audited Annually",
+      "isoPending": "ISO Pending",
+      "ssmRegistered": "SSM Registered"
+    },
+    "cta": {
+      "title": "Ready to Make a Difference?",
+      "description": "Join us in our mission to create lasting positive change for communities across Malaysia.",
+      "donateNow": "Donate Now",
+      "contactUs": "Contact Us"
+    }
+  },
+  "projects": {
+    "pageTitle": "Our Projects",
+    "heroTitle": "Projects That",
+    "heroTitleHighlight": "Transform Lives",
+    "heroDescription": "Discover our initiatives making a real difference in communities across Malaysia.",
+    "viewProject": "View Project",
+    "donateToProject": "Support This Project",
+    "ongoing": "Ongoing",
+    "completed": "Completed",
+    "upcoming": "Upcoming",
+    "goal": "Goal",
+    "raised": "Raised",
+    "beneficiaries": "Beneficiaries",
+    "location": "Location",
+    "noProjects": "No projects found",
+    "filterAll": "All Projects",
+    "categories": {
+      "education": "Education",
+      "healthcare": "Healthcare",
+      "community": "Community",
+      "environment": "Environment"
+    }
+  },
+  "blog": {
+    "pageTitle": "Blog & News",
+    "heroTitle": "Stories of",
+    "heroTitleHighlight": "Impact & Hope",
+    "heroDescription": "Read about our journey, success stories, and the latest updates from our community.",
+    "readMore": "Read More",
+    "publishedOn": "Published on",
+    "byAuthor": "By",
+    "noPosts": "No blog posts found",
+    "filterAll": "All Posts",
+    "categories": {
+      "news": "News",
+      "updates": "Updates",
+      "stories": "Impact Stories",
+      "events": "Events",
+      "announcements": "Announcements"
+    }
+  },
+  "contact": {
+    "pageTitle": "Contact Us",
+    "heroTitle": "Get in",
+    "heroTitleHighlight": "Touch",
+    "heroDescription": "Have questions or want to get involved? We'd love to hear from you.",
+    "form": {
+      "name": "Your Name",
+      "email": "Email Address",
+      "phone": "Phone Number",
+      "subject": "Subject",
+      "message": "Your Message",
+      "submit": "Send Message",
+      "sending": "Sending...",
+      "success": "Message sent successfully! We'll get back to you soon.",
+      "error": "Failed to send message. Please try again."
+    },
+    "info": {
+      "title": "Contact Information",
+      "address": "Address",
+      "phone": "Phone",
+      "email": "Email",
+      "hours": "Office Hours",
+      "hoursValue": "Monday - Friday: 9:00 AM - 5:00 PM"
+    },
+    "faq": {
+      "title": "Frequently Asked Questions"
+    }
+  },
+  "donate": {
+    "pageTitle": "Make a Donation",
+    "heroTitle": "Your Generosity",
+    "heroTitleHighlight": "Creates Change",
+    "heroDescription": "Every contribution, no matter the size, makes a meaningful difference in someone's life.",
+    "form": {
+      "amount": "Donation Amount",
+      "customAmount": "Custom Amount",
+      "name": "Full Name",
+      "email": "Email Address",
+      "phone": "Phone Number",
+      "message": "Message (Optional)",
+      "anonymous": "Make this donation anonymous",
+      "project": "Support a Specific Project",
+      "generalFund": "General Fund",
+      "submit": "Complete Donation",
+      "processing": "Processing..."
+    },
+    "success": {
+      "title": "Thank You!",
+      "description": "Your donation has been received successfully. You will receive a confirmation email shortly.",
+      "receiptSent": "Receipt sent to your email",
+      "returnHome": "Return to Home"
+    },
+    "failed": {
+      "title": "Donation Failed",
+      "description": "We're sorry, but your donation could not be processed. Please try again.",
+      "tryAgain": "Try Again",
+      "contactSupport": "Contact Support"
+    },
+    "impact": {
+      "title": "Your Impact",
+      "meals": "meals provided",
+      "students": "students supported",
+      "families": "families helped"
+    }
+  },
+  "footer": {
+    "about": "About",
+    "programs": "Programs",
+    "getInvolved": "Get Involved",
+    "stayUpdated": "Stay Updated",
+    "subscribe": "Subscribe",
+    "emailPlaceholder": "Your email address",
+    "subscribing": "Subscribing...",
+    "subscribeSuccess": "Thank you for subscribing!",
+    "copyright": "All rights reserved.",
+    "tagline": "Empowering communities through compassion and sustainable development.",
+    "links": {
+      "ourStory": "Our Story",
+      "leadership": "Leadership",
+      "annualReports": "Annual Reports",
+      "careers": "Careers",
+      "education": "Education",
+      "healthcare": "Healthcare",
+      "environment": "Environment",
+      "community": "Community",
+      "volunteer": "Volunteer",
+      "partnerWithUs": "Partner With Us",
+      "events": "Events",
+      "privacyPolicy": "Privacy Policy",
+      "termsOfService": "Terms of Service",
+      "cookiePolicy": "Cookie Policy"
+    }
+  },
+  "common": {
+    "readMore": "Read More",
+    "learnMore": "Learn More",
+    "viewAll": "View All",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "close": "Close",
+    "search": "Search",
+    "noResults": "No results found",
+    "share": "Share",
+    "download": "Download"
+  },
+  "cta": {
+    "title": "Ready to Make a Difference?",
+    "description": "Join our community of changemakers and help create lasting impact for those who need it most.",
+    "primaryButton": "Start Giving",
+    "secondaryButton": "Learn How"
+  },
+  "solution": {
+    "title": "Our Approach",
+    "description": "We believe in sustainable solutions that address root causes, not just symptoms.",
+    "pillars": {
+      "education": {
+        "title": "Education",
+        "description": "Empowering through knowledge and skills development"
+      },
+      "healthcare": {
+        "title": "Healthcare",
+        "description": "Ensuring access to essential medical services"
+      },
+      "community": {
+        "title": "Community",
+        "description": "Building stronger, more resilient communities"
+      }
+    }
+  },
+  "metadata": {
+    "siteName": "Yayasan Insan Prihatin",
+    "siteDescription": "A prestigious Malaysian foundation dedicated to community service, education, and sustainable development.",
+    "keywords": "charity, foundation, Malaysia, community service, education, sustainable development"
+  }
+}

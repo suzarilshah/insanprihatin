@@ -1,6 +1,14 @@
 import Link from 'next/link'
 import { db, heroContent, aboutContent, impactStats, faqs, pages } from '@/db'
 import { eq, desc } from 'drizzle-orm'
+import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
+
+// Helper to get string value from LocalizedString (default to English for admin display)
+const getTextValue = (value: LocalizedString | string | null | undefined): string => {
+  if (!value) return ''
+  if (typeof value === 'string') return value
+  return getLocalizedValue(value, 'en')
+}
 
 async function getContentStatus() {
   const hero = await db.query.heroContent.findFirst({
@@ -178,11 +186,11 @@ export default async function ContentManagement() {
                 {pagesList.map((page) => (
                   <tr key={page.id} className="border-b border-gray-50 last:border-0">
                     <td className="py-3">
-                      <span className="font-medium text-foundation-charcoal">{page.title}</span>
+                      <span className="font-medium text-foundation-charcoal">{getTextValue(page.title)}</span>
                       <span className="text-gray-400 text-sm ml-2">/{page.slug}</span>
                     </td>
                     <td className="py-3 text-gray-600 text-sm">
-                      {page.metaTitle || <span className="text-gray-400">Not set</span>}
+                      {getTextValue(page.metaTitle) || <span className="text-gray-400">Not set</span>}
                     </td>
                     <td className="py-3">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${

@@ -4,6 +4,16 @@ import { revalidatePath } from 'next/cache'
 import { db, contentForms, formSubmissions, blogPosts, projects } from '@/db'
 import { eq, desc, and, count, sql, like } from 'drizzle-orm'
 import { requireAuth } from '@/lib/auth-server'
+import { type LocalizedString } from '@/i18n/config'
+
+type LocalizedField = LocalizedString | string
+
+// Helper to convert string to LocalizedString (for database insertion)
+const toLocalized = (value: LocalizedField | null | undefined): LocalizedString | undefined => {
+  if (!value) return undefined
+  if (typeof value === 'string') return { en: value, ms: value }
+  return value
+}
 
 export interface FormField {
   id: string
@@ -68,10 +78,10 @@ export async function getFormsBySlugs(slugs: string[]) {
 export async function createForm(data: {
   name: string
   slug: string
-  title?: string
-  description?: string
-  submitButtonText?: string
-  successMessage?: string
+  title?: LocalizedField
+  description?: LocalizedField
+  submitButtonText?: LocalizedField
+  successMessage?: LocalizedField
   fields: FormField[]
   sendEmailNotification?: boolean
   notificationEmail?: string
@@ -83,10 +93,10 @@ export async function createForm(data: {
   const form = await db.insert(contentForms).values({
     name: data.name,
     slug: data.slug,
-    title: data.title,
-    description: data.description,
-    submitButtonText: data.submitButtonText || 'Submit',
-    successMessage: data.successMessage || 'Thank you for your submission!',
+    title: toLocalized(data.title),
+    description: toLocalized(data.description),
+    submitButtonText: toLocalized(data.submitButtonText) || { en: 'Submit', ms: 'Hantar' },
+    successMessage: toLocalized(data.successMessage) || { en: 'Thank you for your submission!', ms: 'Terima kasih atas penyerahan anda!' },
     fields: data.fields as unknown as Record<string, unknown>,
     sendEmailNotification: data.sendEmailNotification ?? true,
     notificationEmail: data.notificationEmail,
@@ -103,10 +113,10 @@ export async function createForm(data: {
 export async function updateForm(id: string, data: {
   name?: string
   slug?: string
-  title?: string
-  description?: string
-  submitButtonText?: string
-  successMessage?: string
+  title?: LocalizedField
+  description?: LocalizedField
+  submitButtonText?: LocalizedField
+  successMessage?: LocalizedField
   fields?: FormField[]
   sendEmailNotification?: boolean
   notificationEmail?: string
@@ -124,13 +134,26 @@ export async function updateForm(id: string, data: {
     return { success: false, error: 'Form not found' }
   }
 
+  // Build update data with LocalizedString conversion
+  const updateData: Record<string, unknown> = {
+    updatedAt: new Date(),
+    ...(data.name !== undefined && { name: data.name }),
+    ...(data.slug !== undefined && { slug: data.slug }),
+    ...(data.title !== undefined && { title: toLocalized(data.title) }),
+    ...(data.description !== undefined && { description: toLocalized(data.description) }),
+    ...(data.submitButtonText !== undefined && { submitButtonText: toLocalized(data.submitButtonText) }),
+    ...(data.successMessage !== undefined && { successMessage: toLocalized(data.successMessage) }),
+    ...(data.fields !== undefined && { fields: data.fields as unknown as Record<string, unknown> }),
+    ...(data.sendEmailNotification !== undefined && { sendEmailNotification: data.sendEmailNotification }),
+    ...(data.notificationEmail !== undefined && { notificationEmail: data.notificationEmail }),
+    ...(data.linkedContentType !== undefined && { linkedContentType: data.linkedContentType }),
+    ...(data.linkedContentId !== undefined && { linkedContentId: data.linkedContentId }),
+    ...(data.isActive !== undefined && { isActive: data.isActive }),
+  }
+
   await db
     .update(contentForms)
-    .set({
-      ...data,
-      fields: data.fields ? (data.fields as unknown as Record<string, unknown>) : undefined,
-      updatedAt: new Date(),
-    })
+    .set(updateData)
     .where(eq(contentForms.id, id))
 
   revalidatePath('/admin/dashboard/forms')

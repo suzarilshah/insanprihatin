@@ -5,14 +5,22 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { formatDate } from '@/lib/utils'
 import { MarkdownRenderer } from '@/components/content'
+import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
+
+// Helper to get string from LocalizedString (default to English)
+const l = (value: LocalizedString | string | null | undefined): string => {
+  if (!value) return ''
+  if (typeof value === 'string') return value
+  return getLocalizedValue(value, 'en')
+}
 
 type Project = {
   id: string
   slug: string
-  title: string
-  subtitle: string | null
-  description: string
-  content: string | null
+  title: LocalizedString | string
+  subtitle: LocalizedString | string | null
+  description: LocalizedString | string
+  content: LocalizedString | string | null
   featuredImage: string | null
   gallery: unknown
   category: string | null
@@ -23,8 +31,8 @@ type Project = {
   beneficiaries: number | null
   location: string | null
   isPublished: boolean | null
-  metaTitle: string | null
-  metaDescription: string | null
+  metaTitle: LocalizedString | string | null
+  metaDescription: LocalizedString | string | null
   createdAt: Date
   updatedAt: Date
 }
@@ -42,10 +50,10 @@ interface ContentForm {
   id: string
   name: string
   slug: string
-  title?: string
-  description?: string
-  submitButtonText?: string
-  successMessage?: string
+  title?: LocalizedString | string
+  description?: LocalizedString | string
+  submitButtonText?: LocalizedString | string
+  successMessage?: LocalizedString | string
   fields: FormField[]
   isActive: boolean
 }
@@ -76,7 +84,7 @@ export default function ProjectDetailContent({ project, relatedProjects, forms =
         <div className="absolute inset-0">
           <Image
             src={project.featuredImage || defaultImage}
-            alt={project.title}
+            alt={l(project.title)}
             fill
             className="object-cover"
             priority
@@ -113,7 +121,7 @@ export default function ProjectDetailContent({ project, relatedProjects, forms =
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-              <span className="text-white/80">{project.title}</span>
+              <span className="text-white/80">{l(project.title)}</span>
             </motion.div>
 
             {/* Status & Category */}
@@ -140,18 +148,18 @@ export default function ProjectDetailContent({ project, relatedProjects, forms =
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
               >
-                {project.title}
+                {l(project.title)}
               </motion.span>
             </h1>
 
-            {project.subtitle && (
+            {l(project.subtitle) && (
               <motion.p
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
                 className="text-amber-400 text-xl font-medium mb-4"
               >
-                {project.subtitle}
+                {l(project.subtitle)}
               </motion.p>
             )}
 
@@ -161,7 +169,7 @@ export default function ProjectDetailContent({ project, relatedProjects, forms =
               transition={{ delay: 0.6 }}
               className="body-large text-white/80 max-w-3xl"
             >
-              {project.description}
+              {l(project.description)}
             </motion.p>
           </motion.div>
 
@@ -227,14 +235,14 @@ export default function ProjectDetailContent({ project, relatedProjects, forms =
             >
               <Image
                 src={project.featuredImage || defaultImage}
-                alt={project.title}
+                alt={l(project.title)}
                 fill
                 className="object-cover"
               />
             </motion.div>
 
             {/* Main Content */}
-            {project.content && (
+            {l(project.content) && (
               <motion.div
                 initial={{ opacity: 0, y: 40 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -242,11 +250,11 @@ export default function ProjectDetailContent({ project, relatedProjects, forms =
                 className="mb-12"
               >
                 <MarkdownRenderer
-                  content={project.content}
+                  content={l(project.content)}
                   forms={forms}
                   sourceContentType="projects"
                   sourceContentId={project.id}
-                  sourceContentTitle={project.title}
+                  sourceContentTitle={l(project.title)}
                 />
               </motion.div>
             )}
@@ -274,7 +282,7 @@ export default function ProjectDetailContent({ project, relatedProjects, forms =
                     >
                       <Image
                         src={image}
-                        alt={`${project.title} - Image ${index + 1}`}
+                        alt={`${l(project.title)} - Image ${index + 1}`}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-110"
                       />
@@ -351,7 +359,7 @@ export default function ProjectDetailContent({ project, relatedProjects, forms =
                       <div className="relative aspect-[16/10] overflow-hidden">
                         <Image
                           src={relatedProject.featuredImage || defaultImage}
-                          alt={relatedProject.title}
+                          alt={l(relatedProject.title)}
                           fill
                           className="object-cover transition-transform duration-700 group-hover:scale-110"
                         />
@@ -364,10 +372,10 @@ export default function ProjectDetailContent({ project, relatedProjects, forms =
                       </div>
                       <div className="p-6">
                         <h3 className="font-heading text-lg font-semibold text-foundation-charcoal mb-2 group-hover:text-teal-600 transition-colors">
-                          {relatedProject.title}
+                          {l(relatedProject.title)}
                         </h3>
                         <p className="text-gray-500 text-sm line-clamp-2">
-                          {relatedProject.description}
+                          {l(relatedProject.description)}
                         </p>
                       </div>
                     </Link>

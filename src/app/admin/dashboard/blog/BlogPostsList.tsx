@@ -4,16 +4,29 @@ import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { deleteBlogPost, updateBlogPost } from '@/lib/actions/blog'
+import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
 
 type BlogPost = {
   id: string
   slug: string
-  title: string
-  excerpt: string | null
+  title: LocalizedString | string
+  excerpt: LocalizedString | string | null
   category: string | null
   isPublished: boolean | null
   publishedAt: Date | null
   createdAt: Date
+}
+
+// Helper to get string value from localized field (default to English for admin)
+const getTitle = (title: LocalizedString | string): string => {
+  if (typeof title === 'string') return title
+  return getLocalizedValue(title, 'en')
+}
+
+const getExcerpt = (excerpt: LocalizedString | string | null): string | null => {
+  if (!excerpt) return null
+  if (typeof excerpt === 'string') return excerpt
+  return getLocalizedValue(excerpt, 'en')
 }
 
 export default function BlogPostsList({ initialPosts }: { initialPosts: BlogPost[] }) {
@@ -24,8 +37,8 @@ export default function BlogPostsList({ initialPosts }: { initialPosts: BlogPost
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
   const filteredPosts = posts.filter(post => {
-    const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.excerpt?.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesSearch = getTitle(post.title).toLowerCase().includes(searchQuery.toLowerCase()) ||
+      getExcerpt(post.excerpt)?.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesFilter = filter === 'all' ||
       (filter === 'published' && post.isPublished) ||
       (filter === 'draft' && !post.isPublished)
@@ -111,11 +124,11 @@ export default function BlogPostsList({ initialPosts }: { initialPosts: BlogPost
                   <td className="px-6 py-4">
                     <Link href={`/admin/dashboard/blog/${post.id}`} className="block">
                       <span className="font-medium text-foundation-charcoal hover:text-teal-600 line-clamp-1">
-                        {post.title}
+                        {getTitle(post.title)}
                       </span>
-                      {post.excerpt && (
+                      {getExcerpt(post.excerpt) && (
                         <span className="text-sm text-gray-500 line-clamp-1 mt-0.5">
-                          {post.excerpt}
+                          {getExcerpt(post.excerpt)}
                         </span>
                       )}
                     </Link>

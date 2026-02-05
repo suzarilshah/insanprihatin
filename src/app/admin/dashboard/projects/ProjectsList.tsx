@@ -4,17 +4,30 @@ import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { deleteProject, updateProject } from '@/lib/actions/projects'
+import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
 
 type Project = {
   id: string
   slug: string
-  title: string
-  subtitle: string | null
+  title: LocalizedString | string
+  subtitle: LocalizedString | string | null
   category: string | null
   status: string | null
   isPublished: boolean | null
   beneficiaries: number | null
   createdAt: Date
+}
+
+// Helper to get string value from localized field (default to English for admin)
+const getTitle = (title: LocalizedString | string): string => {
+  if (typeof title === 'string') return title
+  return getLocalizedValue(title, 'en')
+}
+
+const getSubtitle = (subtitle: LocalizedString | string | null): string | null => {
+  if (!subtitle) return null
+  if (typeof subtitle === 'string') return subtitle
+  return getLocalizedValue(subtitle, 'en')
 }
 
 const statusColors: Record<string, string> = {
@@ -31,8 +44,8 @@ export default function ProjectsList({ initialProjects }: { initialProjects: Pro
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
   const filteredProjects = projects.filter(project => {
-    const matchesSearch = project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.subtitle?.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesSearch = getTitle(project.title).toLowerCase().includes(searchQuery.toLowerCase()) ||
+      getSubtitle(project.subtitle)?.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesFilter = filter === 'all' ||
       (filter === 'published' && project.isPublished) ||
       (filter === 'draft' && !project.isPublished)
@@ -157,10 +170,10 @@ export default function ProjectsList({ initialProjects }: { initialProjects: Pro
 
               <Link href={`/admin/dashboard/projects/${project.id}`}>
                 <h3 className="font-medium text-foundation-charcoal hover:text-teal-600 transition-colors line-clamp-1">
-                  {project.title}
+                  {getTitle(project.title)}
                 </h3>
-                {project.subtitle && (
-                  <p className="text-sm text-gray-500 mt-1 line-clamp-2">{project.subtitle}</p>
+                {getSubtitle(project.subtitle) && (
+                  <p className="text-sm text-gray-500 mt-1 line-clamp-2">{getSubtitle(project.subtitle)}</p>
                 )}
               </Link>
 

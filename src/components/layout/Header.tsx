@@ -1,20 +1,15 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import Link from 'next/link'
+import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n/navigation'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
-
-const navigation = [
-  { name: 'Home', href: '/' },
-  { name: 'About', href: '/about' },
-  { name: 'Projects', href: '/projects' },
-  { name: 'Blog', href: '/blog' },
-  { name: 'Contact', href: '/contact' },
-]
+import LanguageSwitcher from './LanguageSwitcher'
 
 export default function Header() {
+  const t = useTranslations('navigation')
   const [isScrolled, setIsScrolled] = useState(false)
   const [isVisible, setIsVisible] = useState(true)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -22,6 +17,15 @@ export default function Header() {
   const mobileMenuRef = useRef<HTMLDivElement>(null)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const firstMenuItemRef = useRef<HTMLAnchorElement>(null)
+
+  // Navigation items with translations
+  const navigation = [
+    { name: t('home'), href: '/' },
+    { name: t('about'), href: '/about' },
+    { name: t('projects'), href: '/projects' },
+    { name: t('blog'), href: '/blog' },
+    { name: t('contact'), href: '/contact' },
+  ]
 
   // Handle scroll behavior: show on scroll up, hide on scroll down
   const handleScroll = useCallback(() => {
@@ -192,8 +196,14 @@ export default function Header() {
               ))}
             </div>
 
-            {/* CTA Button */}
+            {/* CTA Button and Language Switcher */}
             <div className="hidden lg:flex items-center gap-4">
+              {/* Language Switcher */}
+              <LanguageSwitcher
+                variant={isScrolled ? 'compact' : 'dropdown'}
+                className={isScrolled ? '' : ''}
+              />
+
               <Link
                 href="/donate"
                 className={cn(
@@ -202,7 +212,7 @@ export default function Header() {
                   'hover:shadow-glow-amber hover:-translate-y-0.5 active:translate-y-0'
                 )}
               >
-                Donate Now
+                {t('donate')}
               </Link>
             </div>
 
@@ -370,6 +380,17 @@ export default function Header() {
                 ))}
               </nav>
 
+              {/* Language Switcher for Mobile */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25 }}
+                className="mt-6 pt-6 border-t border-gray-100"
+              >
+                <p className="text-sm text-gray-500 mb-3">Language / Bahasa</p>
+                <LanguageSwitcher variant="buttons" />
+              </motion.div>
+
               {/* CTA Section */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -382,7 +403,7 @@ export default function Header() {
                   onClick={closeMobileMenu}
                   className="btn-secondary w-full text-center"
                 >
-                  Donate Now
+                  {t('donate')}
                 </Link>
 
                 {/* Contact Info */}

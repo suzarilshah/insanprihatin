@@ -2,6 +2,14 @@
 
 import { useState, useTransition } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
+
+// Helper to get string from LocalizedString (default to English)
+const l = (value: LocalizedString | string | null | undefined): string => {
+  if (!value) return ''
+  if (typeof value === 'string') return value
+  return getLocalizedValue(value, 'en')
+}
 
 interface FormField {
   id: string
@@ -21,10 +29,10 @@ interface ContentForm {
   id: string
   name: string
   slug: string
-  title?: string
-  description?: string
-  submitButtonText?: string
-  successMessage?: string
+  title?: LocalizedString | string
+  description?: LocalizedString | string
+  submitButtonText?: LocalizedString | string
+  successMessage?: LocalizedString | string
   fields: FormField[]
   isActive: boolean
 }
@@ -242,15 +250,15 @@ export default function EmbeddedForm({
       className="bg-gradient-to-br from-foundation-pearl to-white rounded-2xl p-6 md:p-8 border border-gray-100 shadow-sm"
     >
       {/* Form Header */}
-      {(form.title || form.description) && (
+      {(l(form.title) || l(form.description)) && (
         <div className="mb-6">
-          {form.title && (
+          {l(form.title) && (
             <h3 className="font-heading text-xl font-semibold text-foundation-charcoal mb-2">
-              {form.title}
+              {l(form.title)}
             </h3>
           )}
-          {form.description && (
-            <p className="text-gray-500">{form.description}</p>
+          {l(form.description) && (
+            <p className="text-gray-500">{l(form.description)}</p>
           )}
         </div>
       )}
@@ -272,7 +280,7 @@ export default function EmbeddedForm({
               Submitted Successfully!
             </h4>
             <p className="text-gray-500">
-              {form.successMessage || 'Thank you for your submission!'}
+              {l(form.successMessage) || 'Thank you for your submission!'}
             </p>
             <button
               onClick={() => setStatus('idle')}
@@ -328,7 +336,7 @@ export default function EmbeddedForm({
                   Submitting...
                 </span>
               ) : (
-                form.submitButtonText || 'Submit'
+                l(form.submitButtonText) || 'Submit'
               )}
             </button>
           </motion.form>

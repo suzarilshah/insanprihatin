@@ -4,6 +4,14 @@ import { Header, Footer } from '@/components/layout'
 import { getProject, getProjects } from '@/lib/actions/projects'
 import { extractFormSlugs, getFormsBySlugs } from '@/lib/actions/forms'
 import ProjectDetailContent from './ProjectDetailContent'
+import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
+
+// Helper to get string from LocalizedString (default to English)
+const l = (value: LocalizedString | string | null | undefined): string => {
+  if (!value) return ''
+  if (typeof value === 'string') return value
+  return getLocalizedValue(value, 'en')
+}
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -20,11 +28,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return {
-    title: project.metaTitle || project.title,
-    description: project.metaDescription || project.description,
+    title: l(project.metaTitle) || l(project.title),
+    description: l(project.metaDescription) || l(project.description),
     openGraph: {
-      title: project.metaTitle || `${project.title} | Yayasan Insan Prihatin`,
-      description: project.metaDescription || project.description,
+      title: l(project.metaTitle) || `${l(project.title)} | Yayasan Insan Prihatin`,
+      description: l(project.metaDescription) || l(project.description),
       images: project.featuredImage ? [project.featuredImage] : undefined,
     },
   }
@@ -55,7 +63,8 @@ export default async function ProjectDetailPage({ params }: PageProps) {
     .slice(0, 3)
 
   // Extract and fetch embedded forms from content
-  const formSlugs = project.content ? await extractFormSlugs(project.content) : []
+  const contentStr = l(project.content)
+  const formSlugs = contentStr ? await extractFormSlugs(contentStr) : []
   const forms = formSlugs.length > 0 ? await getFormsBySlugs(formSlugs) : []
 
   // Transform forms to match the expected format

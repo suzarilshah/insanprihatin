@@ -1,0 +1,253 @@
+{
+  "navigation": {
+    "home": "Laman Utama",
+    "about": "Tentang Kami",
+    "projects": "Projek",
+    "blog": "Blog",
+    "contact": "Hubungi Kami",
+    "donate": "Derma Sekarang"
+  },
+  "hero": {
+    "defaultTitle": "Memulihkan Maruah, Membina Semula Kehidupan",
+    "defaultSubtitle": "Yayasan Insan Prihatin",
+    "defaultDescription": "Intervensi langsung dan mampan untuk golongan kurang bernasib baik di Malaysia. Sertai gerakan yang mengubah belas kasihan menjadi perubahan nyata.",
+    "defaultCta": "Mulakan Impak Anda",
+    "donationCta": "Buat Sumbangan",
+    "scrollToExplore": "Tatal untuk Meneroka",
+    "donationTransparency": "Ketelusan Derma",
+    "livesImpacted": "Nyawa Terkesan"
+  },
+  "about": {
+    "pageTitle": "Tentang Kami",
+    "whoWeAre": "Siapa Kami",
+    "heroTitle": "Arkitek",
+    "heroTitleHighlight": "Harapan Mampan",
+    "heroDescription": "Kami adalah yayasan yang baru ditubuhkan dengan visi yang berani. Kami adalah gerakan profesional, rakan kongsi, dan sukarelawan yang berdedikasi untuk merekayasa penyelesaian jangka panjang bagi cabaran sosial paling mendesak di Malaysia.",
+    "ourVision": "Visi Kami",
+    "ourMission": "Misi Kami",
+    "ourCompass": "Kompas Kami",
+    "coreValues": "Nilai Teras",
+    "timeline": {
+      "title": "Peta Jalan Penubuhan Kami",
+      "q1": {
+        "title": "Penubuhan",
+        "description": "Penubuhan rasmi Yayasan Insan Prihatin untuk menangani keperluan komuniti secara sistematik."
+      },
+      "q2": {
+        "title": "Inisiatif Pertama",
+        "description": "Melancarkan program sokongan pendidikan perintis untuk pelajar kurang bernasib baik."
+      },
+      "q3": {
+        "title": "Jangkauan Komuniti",
+        "description": "Memperluaskan operasi untuk merangkumi akses penjagaan kesihatan di kawasan luar bandar."
+      },
+      "q4": {
+        "title": "Melihat ke Hadapan",
+        "description": "Merancang pengembangan program literasi digital di seluruh negara."
+      }
+    },
+    "leadership": {
+      "title": "Kepimpinan & Tadbir Urus",
+      "subtitle": "Pemegang Amanah",
+      "description": "Dipandu oleh prinsip integriti dan kecemerlangan, kepimpinan kami memastikan setiap sumber dimaksimumkan untuk manfaat komuniti."
+    },
+    "reports": {
+      "title": "Akauntabiliti dalam Tindakan",
+      "subtitle": "Ketelusan Radikal",
+      "description": "Kepercayaan adalah mata wang paling berharga kami. Kami komited untuk menerbitkan audit tahunan dan laporan impak untuk memastikan setiap pemegang kepentingan tahu dengan tepat bagaimana sumbangan mereka mengubah kehidupan.",
+      "annualReport": "Laporan Tahunan",
+      "comingSoon": "Akan Datang Awal 2026",
+      "transparency": "Ketelusan",
+      "auditedAnnually": "Diaudit Setiap Tahun",
+      "isoPending": "ISO Dalam Proses",
+      "ssmRegistered": "Berdaftar SSM"
+    },
+    "cta": {
+      "title": "Bersedia untuk Membuat Perbezaan?",
+      "description": "Sertai kami dalam misi untuk mencipta perubahan positif yang berkekalan untuk komuniti di seluruh Malaysia.",
+      "donateNow": "Derma Sekarang",
+      "contactUs": "Hubungi Kami"
+    }
+  },
+  "projects": {
+    "pageTitle": "Projek Kami",
+    "heroTitle": "Projek Yang",
+    "heroTitleHighlight": "Mengubah Kehidupan",
+    "heroDescription": "Ketahui inisiatif kami yang membuat perbezaan sebenar dalam komuniti di seluruh Malaysia.",
+    "viewProject": "Lihat Projek",
+    "donateToProject": "Sokong Projek Ini",
+    "ongoing": "Sedang Berjalan",
+    "completed": "Selesai",
+    "upcoming": "Akan Datang",
+    "goal": "Sasaran",
+    "raised": "Terkumpul",
+    "beneficiaries": "Penerima Manfaat",
+    "location": "Lokasi",
+    "noProjects": "Tiada projek dijumpai",
+    "filterAll": "Semua Projek",
+    "categories": {
+      "education": "Pendidikan",
+      "healthcare": "Kesihatan",
+      "community": "Komuniti",
+      "environment": "Alam Sekitar"
+    }
+  },
+  "blog": {
+    "pageTitle": "Blog & Berita",
+    "heroTitle": "Kisah",
+    "heroTitleHighlight": "Impak & Harapan",
+    "heroDescription": "Baca tentang perjalanan kami, kisah kejayaan, dan perkembangan terkini dari komuniti kami.",
+    "readMore": "Baca Lagi",
+    "publishedOn": "Diterbitkan pada",
+    "byAuthor": "Oleh",
+    "noPosts": "Tiada artikel dijumpai",
+    "filterAll": "Semua Artikel",
+    "categories": {
+      "news": "Berita",
+      "updates": "Kemaskini",
+      "stories": "Kisah Impak",
+      "events": "Acara",
+      "announcements": "Pengumuman"
+    }
+  },
+  "contact": {
+    "pageTitle": "Hubungi Kami",
+    "heroTitle": "Hubungi",
+    "heroTitleHighlight": "Kami",
+    "heroDescription": "Ada soalan atau ingin melibatkan diri? Kami ingin mendengar daripada anda.",
+    "form": {
+      "name": "Nama Anda",
+      "email": "Alamat E-mel",
+      "phone": "Nombor Telefon",
+      "subject": "Subjek",
+      "message": "Mesej Anda",
+      "submit": "Hantar Mesej",
+      "sending": "Menghantar...",
+      "success": "Mesej berjaya dihantar! Kami akan menghubungi anda tidak lama lagi.",
+      "error": "Gagal menghantar mesej. Sila cuba lagi."
+    },
+    "info": {
+      "title": "Maklumat Hubungan",
+      "address": "Alamat",
+      "phone": "Telefon",
+      "email": "E-mel",
+      "hours": "Waktu Pejabat",
+      "hoursValue": "Isnin - Jumaat: 9:00 AM - 5:00 PM"
+    },
+    "faq": {
+      "title": "Soalan Lazim"
+    }
+  },
+  "donate": {
+    "pageTitle": "Buat Sumbangan",
+    "heroTitle": "Kemurahan Hati Anda",
+    "heroTitleHighlight": "Mencipta Perubahan",
+    "heroDescription": "Setiap sumbangan, tidak kira saiznya, membuat perbezaan bermakna dalam kehidupan seseorang.",
+    "form": {
+      "amount": "Jumlah Derma",
+      "customAmount": "Jumlah Lain",
+      "name": "Nama Penuh",
+      "email": "Alamat E-mel",
+      "phone": "Nombor Telefon",
+      "message": "Mesej (Pilihan)",
+      "anonymous": "Jadikan derma ini tanpa nama",
+      "project": "Sokong Projek Tertentu",
+      "generalFund": "Dana Am",
+      "submit": "Selesaikan Derma",
+      "processing": "Memproses..."
+    },
+    "success": {
+      "title": "Terima Kasih!",
+      "description": "Derma anda telah diterima dengan jayanya. Anda akan menerima e-mel pengesahan tidak lama lagi.",
+      "receiptSent": "Resit dihantar ke e-mel anda",
+      "returnHome": "Kembali ke Laman Utama"
+    },
+    "failed": {
+      "title": "Derma Gagal",
+      "description": "Maaf, derma anda tidak dapat diproses. Sila cuba lagi.",
+      "tryAgain": "Cuba Lagi",
+      "contactSupport": "Hubungi Sokongan"
+    },
+    "impact": {
+      "title": "Impak Anda",
+      "meals": "hidangan disediakan",
+      "students": "pelajar disokong",
+      "families": "keluarga dibantu"
+    }
+  },
+  "footer": {
+    "about": "Tentang",
+    "programs": "Program",
+    "getInvolved": "Libatkan Diri",
+    "stayUpdated": "Ikuti Perkembangan",
+    "subscribe": "Langgan",
+    "emailPlaceholder": "Alamat e-mel anda",
+    "subscribing": "Melanggan...",
+    "subscribeSuccess": "Terima kasih kerana melanggan!",
+    "copyright": "Hak cipta terpelihara.",
+    "tagline": "Memperkasa komuniti melalui belas kasihan dan pembangunan mampan.",
+    "links": {
+      "ourStory": "Kisah Kami",
+      "leadership": "Kepimpinan",
+      "annualReports": "Laporan Tahunan",
+      "careers": "Kerjaya",
+      "education": "Pendidikan",
+      "healthcare": "Kesihatan",
+      "environment": "Alam Sekitar",
+      "community": "Komuniti",
+      "volunteer": "Sukarelawan",
+      "partnerWithUs": "Berkongsi Dengan Kami",
+      "events": "Acara",
+      "privacyPolicy": "Dasar Privasi",
+      "termsOfService": "Terma Perkhidmatan",
+      "cookiePolicy": "Dasar Kuki"
+    }
+  },
+  "common": {
+    "readMore": "Baca Lagi",
+    "learnMore": "Ketahui Lebih",
+    "viewAll": "Lihat Semua",
+    "loading": "Memuatkan...",
+    "error": "Sesuatu tidak kena",
+    "submit": "Hantar",
+    "cancel": "Batal",
+    "save": "Simpan",
+    "back": "Kembali",
+    "next": "Seterusnya",
+    "previous": "Sebelumnya",
+    "close": "Tutup",
+    "search": "Cari",
+    "noResults": "Tiada hasil dijumpai",
+    "share": "Kongsi",
+    "download": "Muat Turun"
+  },
+  "cta": {
+    "title": "Bersedia untuk Membuat Perbezaan?",
+    "description": "Sertai komuniti pembuat perubahan kami dan bantu mencipta impak yang berkekalan untuk mereka yang paling memerlukan.",
+    "primaryButton": "Mula Memberi",
+    "secondaryButton": "Ketahui Cara"
+  },
+  "solution": {
+    "title": "Pendekatan Kami",
+    "description": "Kami percaya kepada penyelesaian mampan yang menangani punca masalah, bukan hanya gejala.",
+    "pillars": {
+      "education": {
+        "title": "Pendidikan",
+        "description": "Memperkasa melalui pengetahuan dan pembangunan kemahiran"
+      },
+      "healthcare": {
+        "title": "Kesihatan",
+        "description": "Memastikan akses kepada perkhidmatan perubatan penting"
+      },
+      "community": {
+        "title": "Komuniti",
+        "description": "Membina komuniti yang lebih kuat dan lebih berdaya tahan"
+      }
+    }
+  },
+  "metadata": {
+    "siteName": "Yayasan Insan Prihatin",
+    "siteDescription": "Sebuah yayasan Malaysia yang berprestij yang berdedikasi untuk perkhidmatan komuniti, pendidikan, dan pembangunan mampan.",
+    "keywords": "amal, yayasan, Malaysia, perkhidmatan komuniti, pendidikan, pembangunan mampan"
+  }
+}

@@ -6,6 +6,29 @@ import { eq, desc, and } from 'drizzle-orm'
 import { requireAuth } from '@/lib/auth-server'
 import { createVersion, logActivity } from '@/lib/versioning'
 import { notifyBlogPublished } from '@/lib/actions/notifications'
+import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
+
+type LocalizedField = LocalizedString | string
+
+// Helper to get string value from LocalizedString (for logging/notifications)
+const l = (value: LocalizedString | string | null | undefined): string => {
+  if (!value) return ''
+  if (typeof value === 'string') return value
+  return getLocalizedValue(value, 'en')
+}
+
+// Helper to convert string to LocalizedString (for database insertion)
+const toLocalized = (value: LocalizedField | null | undefined): LocalizedString | undefined => {
+  if (!value) return undefined
+  if (typeof value === 'string') return { en: value, ms: value }
+  return value
+}
+
+// Helper to ensure required fields have LocalizedString
+const toLocalizedRequired = (value: LocalizedField): LocalizedString => {
+  if (typeof value === 'string') return { en: value, ms: value }
+  return value
+}
 
 export async function getBlogPosts(options?: { published?: boolean; limit?: number }) {
   const conditions = []
@@ -32,21 +55,29 @@ export async function getBlogPost(slug: string) {
 
 export async function createBlogPost(data: {
   slug: string
-  title: string
-  excerpt?: string
-  content: string
+  title: LocalizedField
+  excerpt?: LocalizedField
+  content: LocalizedField
   featuredImage?: string
   category?: string
   tags?: string[]
-  metaTitle?: string
-  metaDescription?: string
+  metaTitle?: LocalizedField
+  metaDescription?: LocalizedField
   isPublished?: boolean
 }) {
   const user = await requireAuth()
 
   const post = await db.insert(blogPosts).values({
-    ...data,
+    slug: data.slug,
+    title: toLocalizedRequired(data.title),
+    excerpt: toLocalized(data.excerpt),
+    content: toLocalizedRequired(data.content),
+    featuredImage: data.featuredImage,
+    category: data.category,
     tags: data.tags,
+    metaTitle: toLocalized(data.metaTitle),
+    metaDescription: toLocalized(data.metaDescription),
+    isPublished: data.isPublished,
     publishedAt: data.isPublished ? new Date() : null,
   }).returning()
 
@@ -60,10 +91,10 @@ export async function createBlogPost(data: {
   )
 
   // Log activity
-  await logActivity('content_create', `Created blog post: ${data.title}`, {
+  await logActivity('content_create', `Created blog post: ${l(data.title)}`, {
     contentType: 'blog_posts',
     contentId: post[0].id,
-    contentTitle: data.title,
+    contentTitle: l(data.title),
     user: { id: user.id, email: user.email, name: user.name },
   })
 
@@ -71,7 +102,7 @@ export async function createBlogPost(data: {
   if (data.isPublished) {
     await notifyBlogPublished({
       postId: post[0].id,
-      title: data.title,
+      title: l(data.title),
       authorName: user.name,
     })
   }
@@ -82,14 +113,14 @@ export async function createBlogPost(data: {
 
 export async function updateBlogPost(id: string, data: {
   slug?: string
-  title?: string
-  excerpt?: string
-  content?: string
+  title?: LocalizedField
+  excerpt?: LocalizedField
+  content?: LocalizedField
   featuredImage?: string
   category?: string
   tags?: string[]
-  metaTitle?: string
-  metaDescription?: string
+  metaTitle?: LocalizedField
+  metaDescription?: LocalizedField
   isPublished?: boolean
 }) {
   const user = await requireAuth()
@@ -103,8 +134,20 @@ export async function updateBlogPost(id: string, data: {
     return { success: false, error: 'Post not found' }
   }
 
-  // Handle publishing logic
-  const updateData: Record<string, unknown> = { ...data, updatedAt: new Date() }
+  // Handle publishing logic - convert LocalizedField to LocalizedString for database
+  const updateData: Record<string, unknown> = {
+    updatedAt: new Date(),
+    ...(data.slug !== undefined && { slug: data.slug }),
+    ...(data.title !== undefined && { title: toLocalizedRequired(data.title) }),
+    ...(data.excerpt !== undefined && { excerpt: toLocalized(data.excerpt) }),
+    ...(data.content !== undefined && { content: toLocalizedRequired(data.content) }),
+    ...(data.featuredImage !== undefined && { featuredImage: data.featuredImage }),
+    ...(data.category !== undefined && { category: data.category }),
+    ...(data.tags !== undefined && { tags: data.tags }),
+    ...(data.metaTitle !== undefined && { metaTitle: toLocalized(data.metaTitle) }),
+    ...(data.metaDescription !== undefined && { metaDescription: toLocalized(data.metaDescription) }),
+    ...(data.isPublished !== undefined && { isPublished: data.isPublished }),
+  }
 
   // Determine change type (publish/unpublish/update)
   let changeType: 'update' | 'publish' | 'unpublish' = 'update'
@@ -138,10 +181,10 @@ export async function updateBlogPost(id: string, data: {
 
   // Log activity
   const actionText = changeType === 'publish' ? 'Published' : changeType === 'unpublish' ? 'Unpublished' : 'Updated'
-  await logActivity(`content_${changeType}`, `${actionText} blog post: ${existing.title}`, {
+  await logActivity(`content_${changeType}`, `${actionText} blog post: ${l(existing.title)}`, {
     contentType: 'blog_posts',
     contentId: id,
-    contentTitle: existing.title,
+    contentTitle: l(existing.title),
     user: { id: user.id, email: user.email, name: user.name },
   })
 
@@ -149,7 +192,7 @@ export async function updateBlogPost(id: string, data: {
   if (changeType === 'publish') {
     await notifyBlogPublished({
       postId: id,
-      title: data.title || existing.title,
+      title: l(data.title) || l(existing.title),
       authorName: user.name,
     })
   }
@@ -181,14 +224,14 @@ export async function deleteBlogPost(id: string) {
     existing as Record<string, unknown>,
     'delete',
     { id: user.id, email: user.email, name: user.name },
-    { customSummary: `Deleted blog post: ${existing.title}` }
+    { customSummary: `Deleted blog post: ${l(existing.title)}` }
   )
 
   // Log activity
-  await logActivity('content_delete', `Deleted blog post: ${existing.title}`, {
+  await logActivity('content_delete', `Deleted blog post: ${l(existing.title)}`, {
     contentType: 'blog_posts',
     contentId: id,
-    contentTitle: existing.title,
+    contentTitle: l(existing.title),
     user: { id: user.id, email: user.email, name: user.name },
     metadata: { deletedData: existing },
   })

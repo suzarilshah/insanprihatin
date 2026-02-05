@@ -4,6 +4,14 @@ import { Header, Footer } from '@/components/layout'
 import { getBlogPost, getBlogPosts } from '@/lib/actions/blog'
 import { extractFormSlugs, getFormsBySlugs } from '@/lib/actions/forms'
 import BlogPostContent from './BlogPostContent'
+import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
+
+// Helper to get string from LocalizedString (default to English)
+const l = (value: LocalizedString | string | null | undefined): string => {
+  if (!value) return ''
+  if (typeof value === 'string') return value
+  return getLocalizedValue(value, 'en')
+}
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -20,11 +28,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return {
-    title: post.metaTitle || post.title,
-    description: post.metaDescription || post.excerpt || post.content.substring(0, 160),
+    title: l(post.metaTitle) || l(post.title),
+    description: l(post.metaDescription) || l(post.excerpt) || l(post.content).substring(0, 160),
     openGraph: {
-      title: post.metaTitle || `${post.title} | Yayasan Insan Prihatin`,
-      description: post.metaDescription || post.excerpt || post.content.substring(0, 160),
+      title: l(post.metaTitle) || `${l(post.title)} | Yayasan Insan Prihatin`,
+      description: l(post.metaDescription) || l(post.excerpt) || l(post.content).substring(0, 160),
       images: post.featuredImage ? [post.featuredImage] : undefined,
       type: 'article',
       publishedTime: post.publishedAt?.toISOString(),
@@ -57,7 +65,7 @@ export default async function BlogPostPage({ params }: PageProps) {
     .slice(0, 3)
 
   // Extract and fetch embedded forms from content
-  const formSlugs = await extractFormSlugs(post.content)
+  const formSlugs = await extractFormSlugs(l(post.content))
   const forms = formSlugs.length > 0 ? await getFormsBySlugs(formSlugs) : []
 
   // Transform forms to match the expected format

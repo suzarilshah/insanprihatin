@@ -5,14 +5,22 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
 import Methodology from '@/components/sections/Methodology'
+import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
+
+// Helper to get string from LocalizedString (default to English)
+const l = (value: LocalizedString | string | null | undefined): string => {
+  if (!value) return ''
+  if (typeof value === 'string') return value
+  return getLocalizedValue(value, 'en')
+}
 
 type Project = {
   id: string
   slug: string
-  title: string
-  subtitle: string | null
-  description: string
-  content: string | null
+  title: LocalizedString | string
+  subtitle: LocalizedString | string | null
+  description: LocalizedString | string
+  content: LocalizedString | string | null
   featuredImage: string | null
   gallery: unknown
   category: string | null
@@ -23,8 +31,8 @@ type Project = {
   beneficiaries: number | null
   location: string | null
   isPublished: boolean | null
-  metaTitle: string | null
-  metaDescription: string | null
+  metaTitle: LocalizedString | string | null
+  metaDescription: LocalizedString | string | null
   createdAt: Date
   updatedAt: Date
 }
@@ -264,7 +272,7 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
                         <div className="relative aspect-[16/10] overflow-hidden">
                           <Image
                             src={project.featuredImage || defaultImage}
-                            alt={project.title}
+                            alt={l(project.title)}
                             fill
                             className="object-cover transition-transform duration-700 group-hover:scale-110"
                           />
@@ -303,15 +311,15 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
                           </div>
 
                           <h3 className="font-heading text-xl font-bold text-foundation-charcoal mb-2 group-hover:text-teal-600 transition-colors">
-                            {project.title}
+                            {l(project.title)}
                           </h3>
 
-                          {project.subtitle && (
-                            <p className="text-teal-600 text-sm font-medium mb-3">{project.subtitle}</p>
+                          {l(project.subtitle) && (
+                            <p className="text-teal-600 text-sm font-medium mb-3">{l(project.subtitle)}</p>
                           )}
 
                           <p className="text-gray-500 text-sm mb-6 line-clamp-2 flex-grow leading-relaxed">
-                            {project.description}
+                            {l(project.description)}
                           </p>
 
                           {/* Meta */}

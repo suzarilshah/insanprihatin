@@ -5,23 +5,31 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
 import { formatDate } from '@/lib/utils'
+import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
 
 type BlogPost = {
   id: string
   slug: string
-  title: string
-  excerpt: string | null
-  content: string
+  title: LocalizedString | string
+  excerpt: LocalizedString | string | null
+  content: LocalizedString | string
   featuredImage: string | null
   authorId: string | null
   category: string | null
   tags: unknown
   isPublished: boolean | null
   publishedAt: Date | null
-  metaTitle: string | null
-  metaDescription: string | null
+  metaTitle: LocalizedString | string | null
+  metaDescription: LocalizedString | string | null
   createdAt: Date
   updatedAt: Date
+}
+
+// Helper to get string from LocalizedString (default to English)
+const l = (value: LocalizedString | string | null | undefined): string => {
+  if (!value) return ''
+  if (typeof value === 'string') return value
+  return getLocalizedValue(value, 'en')
 }
 
 interface BlogContentProps {
@@ -177,7 +185,7 @@ export default function BlogContent({ posts }: BlogContentProps) {
                   <div className="relative overflow-hidden h-[300px] lg:h-auto">
                     <Image
                       src={featuredPost.featuredImage || defaultImage}
-                      alt={featuredPost.title}
+                      alt={l(featuredPost.title)}
                       fill
                       className="object-cover transition-transform duration-1000 group-hover:scale-105"
                     />
@@ -207,15 +215,15 @@ export default function BlogContent({ posts }: BlogContentProps) {
                           </span>
                         )}
                         <span className="text-gray-300">|</span>
-                        <span className="text-gray-500 text-sm font-medium">{getReadTime(featuredPost.content)} read</span>
+                        <span className="text-gray-500 text-sm font-medium">{getReadTime(l(featuredPost.content))} read</span>
                       </div>
 
                       <h2 className="font-display text-3xl lg:text-5xl font-bold text-foundation-charcoal mb-6 group-hover:text-teal-600 transition-colors leading-tight">
-                        {featuredPost.title}
+                        {l(featuredPost.title)}
                       </h2>
 
                       <p className="text-gray-600 text-lg mb-8 line-clamp-3 leading-relaxed">
-                        {featuredPost.excerpt || featuredPost.content.substring(0, 250) + '...'}
+                        {l(featuredPost.excerpt) || l(featuredPost.content).substring(0, 250) + '...'}
                       </p>
 
                       <div className="flex items-center justify-between pt-8 border-t border-gray-100">
@@ -328,7 +336,7 @@ export default function BlogContent({ posts }: BlogContentProps) {
                       <div className="relative aspect-[16/10] overflow-hidden">
                         <Image
                           src={post.featuredImage || defaultImage}
-                          alt={post.title}
+                          alt={l(post.title)}
                           fill
                           className="object-cover transition-transform duration-700 group-hover:scale-110"
                         />
@@ -346,7 +354,7 @@ export default function BlogContent({ posts }: BlogContentProps) {
                         {/* Read time */}
                         <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
                           <span className="px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-sm text-xs font-medium text-gray-700">
-                            {getReadTime(post.content)} read
+                            {getReadTime(l(post.content))} read
                           </span>
                         </div>
                       </div>
@@ -354,11 +362,11 @@ export default function BlogContent({ posts }: BlogContentProps) {
                       {/* Content */}
                       <div className="p-8 flex flex-col flex-grow">
                         <h3 className="font-heading text-xl font-bold text-foundation-charcoal mb-3 group-hover:text-teal-600 transition-colors line-clamp-2 leading-tight">
-                          {post.title}
+                          {l(post.title)}
                         </h3>
 
                         <p className="text-gray-500 text-sm mb-5 line-clamp-3 flex-grow leading-relaxed">
-                          {post.excerpt || post.content.substring(0, 150) + '...'}
+                          {l(post.excerpt) || l(post.content).substring(0, 150) + '...'}
                         </p>
 
                         {/* Author & Date */}

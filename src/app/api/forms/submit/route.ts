@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createFormSubmission, getFormBySlug, FormField } from '@/lib/actions/forms'
 import { sendFormNotificationEmail } from '@/lib/email'
 import { notifyFormSubmission } from '@/lib/actions/notifications'
+import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
+
+// Helper to get string from LocalizedString
+const getTitle = (title: LocalizedString | string | null | undefined): string => {
+  if (!title) return ''
+  if (typeof title === 'string') return title
+  return getLocalizedValue(title, 'en')
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -95,7 +103,7 @@ export async function POST(request: NextRequest) {
       try {
         await sendFormNotificationEmail({
           formName: form.name,
-          formTitle: form.title || form.name,
+          formTitle: getTitle(form.title) || form.name,
           fields: fields,
           data,
           sourceUrl,

@@ -7,6 +7,29 @@ import { requireAuth } from '@/lib/auth-server'
 import { createVersion, logActivity } from '@/lib/versioning'
 import { notifyProjectPublished } from '@/lib/actions/notifications'
 import { ToyyibPayService, ToyyibPayError } from '@/lib/toyyibpay'
+import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
+
+type LocalizedField = LocalizedString | string
+
+// Helper to get string value from LocalizedString (for logging/API calls)
+const l = (value: LocalizedString | string | null | undefined): string => {
+  if (!value) return ''
+  if (typeof value === 'string') return value
+  return getLocalizedValue(value, 'en')
+}
+
+// Helper to convert string to LocalizedString (for database insertion)
+const toLocalized = (value: LocalizedField | null | undefined): LocalizedString | undefined => {
+  if (!value) return undefined
+  if (typeof value === 'string') return { en: value, ms: value }
+  return value
+}
+
+// Helper for required LocalizedString fields
+const toLocalizedRequired = (value: LocalizedField): LocalizedString => {
+  if (typeof value === 'string') return { en: value, ms: value }
+  return value
+}
 
 export async function getProjects(options?: {
   published?: boolean
@@ -51,10 +74,10 @@ export async function getProject(slug: string) {
 
 export async function createProject(data: {
   slug: string
-  title: string
-  subtitle?: string
-  description: string
-  content?: string
+  title: LocalizedField
+  subtitle?: LocalizedField
+  description: LocalizedField
+  content?: LocalizedField
   featuredImage?: string
   gallery?: string[]
   category?: string
@@ -64,8 +87,8 @@ export async function createProject(data: {
   budget?: string
   beneficiaries?: number
   location?: string
-  metaTitle?: string
-  metaDescription?: string
+  metaTitle?: LocalizedField
+  metaDescription?: LocalizedField
   isPublished?: boolean
   // Donation fields
   donationEnabled?: boolean
@@ -75,11 +98,12 @@ export async function createProject(data: {
 
   // If donation is enabled, create ToyyibPay category
   let toyyibpayCategoryCode: string | undefined
+  const titleStr = l(data.title)
   if (data.donationEnabled && ToyyibPayService.isConfigured()) {
     try {
       toyyibpayCategoryCode = await ToyyibPayService.createCategory({
-        catname: data.title.substring(0, 30), // Max 30 chars
-        catdescription: `Donations for ${data.title}`.substring(0, 100), // Max 100 chars
+        catname: titleStr.substring(0, 30), // Max 30 chars
+        catdescription: `Donations for ${titleStr}`.substring(0, 100), // Max 100 chars
       })
       console.log(`Created ToyyibPay category for project: ${toyyibpayCategoryCode}`)
     } catch (error) {
@@ -90,8 +114,23 @@ export async function createProject(data: {
   }
 
   const project = await db.insert(projects).values({
-    ...data,
+    slug: data.slug,
+    title: toLocalizedRequired(data.title),
+    subtitle: toLocalized(data.subtitle),
+    description: toLocalizedRequired(data.description),
+    content: toLocalized(data.content),
+    featuredImage: data.featuredImage,
     gallery: data.gallery,
+    category: data.category,
+    status: data.status,
+    startDate: data.startDate,
+    endDate: data.endDate,
+    budget: data.budget,
+    beneficiaries: data.beneficiaries,
+    location: data.location,
+    metaTitle: toLocalized(data.metaTitle),
+    metaDescription: toLocalized(data.metaDescription),
+    isPublished: data.isPublished,
     donationEnabled: data.donationEnabled,
     donationGoal: data.donationGoal,
     donationRaised: 0,
@@ -108,10 +147,10 @@ export async function createProject(data: {
   )
 
   // Log activity
-  await logActivity('content_create', `Created project: ${data.title}`, {
+  await logActivity('content_create', `Created project: ${titleStr}`, {
     contentType: 'projects',
     contentId: project[0].id,
-    contentTitle: data.title,
+    contentTitle: titleStr,
     user: { id: user.id, email: user.email, name: user.name },
   })
 
@@ -119,7 +158,7 @@ export async function createProject(data: {
   if (data.isPublished) {
     await notifyProjectPublished({
       projectId: project[0].id,
-      title: data.title,
+      title: titleStr,
       authorName: user.name,
     })
   }
@@ -131,10 +170,10 @@ export async function createProject(data: {
 
 export async function updateProject(id: string, data: {
   slug?: string
-  title?: string
-  subtitle?: string
-  description?: string
-  content?: string
+  title?: LocalizedField
+  subtitle?: LocalizedField
+  description?: LocalizedField
+  content?: LocalizedField
   featuredImage?: string
   gallery?: string[]
   category?: string
@@ -144,8 +183,8 @@ export async function updateProject(id: string, data: {
   budget?: string
   beneficiaries?: number
   location?: string
-  metaTitle?: string
-  metaDescription?: string
+  metaTitle?: LocalizedField
+  metaDescription?: LocalizedField
   isPublished?: boolean
   // Donation fields
   donationEnabled?: boolean
@@ -176,7 +215,7 @@ export async function updateProject(id: string, data: {
     ToyyibPayService.isConfigured()
   ) {
     try {
-      const projectTitle = data.title || existing.title
+      const projectTitle = l(data.title) || l(existing.title)
       toyyibpayCategoryCode = await ToyyibPayService.createCategory({
         catname: projectTitle.substring(0, 30),
         catdescription: `Donations for ${projectTitle}`.substring(0, 100),
@@ -188,10 +227,28 @@ export async function updateProject(id: string, data: {
     }
   }
 
-  // Prepare update data
+  // Prepare update data with LocalizedString conversion
   const updateData: Record<string, unknown> = {
-    ...data,
     updatedAt: new Date(),
+    ...(data.slug !== undefined && { slug: data.slug }),
+    ...(data.title !== undefined && { title: toLocalizedRequired(data.title) }),
+    ...(data.subtitle !== undefined && { subtitle: toLocalized(data.subtitle) }),
+    ...(data.description !== undefined && { description: toLocalizedRequired(data.description) }),
+    ...(data.content !== undefined && { content: toLocalized(data.content) }),
+    ...(data.featuredImage !== undefined && { featuredImage: data.featuredImage }),
+    ...(data.gallery !== undefined && { gallery: data.gallery }),
+    ...(data.category !== undefined && { category: data.category }),
+    ...(data.status !== undefined && { status: data.status }),
+    ...(data.startDate !== undefined && { startDate: data.startDate }),
+    ...(data.endDate !== undefined && { endDate: data.endDate }),
+    ...(data.budget !== undefined && { budget: data.budget }),
+    ...(data.beneficiaries !== undefined && { beneficiaries: data.beneficiaries }),
+    ...(data.location !== undefined && { location: data.location }),
+    ...(data.metaTitle !== undefined && { metaTitle: toLocalized(data.metaTitle) }),
+    ...(data.metaDescription !== undefined && { metaDescription: toLocalized(data.metaDescription) }),
+    ...(data.isPublished !== undefined && { isPublished: data.isPublished }),
+    ...(data.donationEnabled !== undefined && { donationEnabled: data.donationEnabled }),
+    ...(data.donationGoal !== undefined && { donationGoal: data.donationGoal }),
   }
 
   // Only update category code if we created a new one
@@ -221,10 +278,10 @@ export async function updateProject(id: string, data: {
 
   // Log activity
   const actionText = changeType === 'publish' ? 'Published' : changeType === 'unpublish' ? 'Unpublished' : 'Updated'
-  await logActivity(`content_${changeType}`, `${actionText} project: ${existing.title}`, {
+  await logActivity(`content_${changeType}`, `${actionText} project: ${l(existing.title)}`, {
     contentType: 'projects',
     contentId: id,
-    contentTitle: existing.title,
+    contentTitle: l(existing.title),
     user: { id: user.id, email: user.email, name: user.name },
   })
 
@@ -232,7 +289,7 @@ export async function updateProject(id: string, data: {
   if (changeType === 'publish') {
     await notifyProjectPublished({
       projectId: id,
-      title: data.title || existing.title,
+      title: l(data.title) || l(existing.title),
       authorName: user.name,
     })
   }
@@ -265,14 +322,14 @@ export async function deleteProject(id: string) {
     existing as Record<string, unknown>,
     'delete',
     { id: user.id, email: user.email, name: user.name },
-    { customSummary: `Deleted project: ${existing.title}` }
+    { customSummary: `Deleted project: ${l(existing.title)}` }
   )
 
   // Log activity
-  await logActivity('content_delete', `Deleted project: ${existing.title}`, {
+  await logActivity('content_delete', `Deleted project: ${l(existing.title)}`, {
     contentType: 'projects',
     contentId: id,
-    contentTitle: existing.title,
+    contentTitle: l(existing.title),
     user: { id: user.id, email: user.email, name: user.name },
     metadata: { deletedData: existing },
   })

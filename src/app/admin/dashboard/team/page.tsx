@@ -7,13 +7,14 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { getTeamMembers, createTeamMember, updateTeamMember, deleteTeamMember, getDepartments, getPotentialParents } from '@/lib/actions/team'
 import ImageUpload from '@/components/admin/ImageUpload'
 import { OrgChart } from '@/components/org-chart'
+import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
 
 type TeamMember = {
   id: string
   name: string
-  position: string
+  position: LocalizedString | string
   department: string | null
-  bio: string | null
+  bio: LocalizedString | string | null
   image: string | null
   email: string | null
   phone: string | null
@@ -21,6 +22,18 @@ type TeamMember = {
   sortOrder: number | null
   parentId: string | null
   isActive: boolean
+}
+
+// Helper to get string value from localized field (default to English for admin)
+const getPosition = (position: LocalizedString | string): string => {
+  if (typeof position === 'string') return position
+  return getLocalizedValue(position, 'en')
+}
+
+const getBio = (bio: LocalizedString | string | null): string | null => {
+  if (!bio) return null
+  if (typeof bio === 'string') return bio
+  return getLocalizedValue(bio, 'en')
 }
 
 const departmentColors: Record<string, { gradient: string; bg: string; text: string }> = {
@@ -112,7 +125,7 @@ export default function TeamManagement() {
       const query = searchQuery.toLowerCase()
       result = result.filter(m =>
         m.name.toLowerCase().includes(query) ||
-        m.position.toLowerCase().includes(query) ||
+        getPosition(m.position).toLowerCase().includes(query) ||
         m.email?.toLowerCase().includes(query) ||
         m.department?.toLowerCase().includes(query)
       )
@@ -148,9 +161,9 @@ export default function TeamManagement() {
     setEditingMember(member)
     setFormData({
       name: member.name,
-      position: member.position,
+      position: getPosition(member.position),
       department: member.department || '',
-      bio: member.bio || '',
+      bio: getBio(member.bio) || '',
       image: member.image || '',
       email: member.email || '',
       phone: member.phone || '',
@@ -443,7 +456,7 @@ export default function TeamManagement() {
                     </div>
 
                     <h3 className="font-semibold text-foundation-charcoal">{member.name}</h3>
-                    <p className="text-sm text-teal-600 font-medium">{member.position}</p>
+                    <p className="text-sm text-teal-600 font-medium">{getPosition(member.position)}</p>
 
                     {member.department && (
                       <span className={`inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 ${styles.bg} rounded-full text-xs ${styles.text} font-medium`}>
@@ -551,7 +564,7 @@ export default function TeamManagement() {
                           </div>
                           <div>
                             <p className="font-medium text-foundation-charcoal">{member.name}</p>
-                            <p className="text-sm text-gray-500">{member.position}</p>
+                            <p className="text-sm text-gray-500">{getPosition(member.position)}</p>
                           </div>
                         </div>
                       </td>
@@ -762,7 +775,7 @@ export default function TeamManagement() {
                       <option value="">No one (Top Level)</option>
                       {potentialParents.map(p => (
                         <option key={p.id} value={p.id}>
-                          {p.name} - {p.position}
+                          {p.name} - {getPosition(p.position)}
                         </option>
                       ))}
                     </select>

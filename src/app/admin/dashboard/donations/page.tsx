@@ -4,6 +4,7 @@ import { desc, sql, eq, and, gte, lte } from 'drizzle-orm'
 import DonationsTable from './DonationsTable'
 import DonationFilters from './DonationFilters'
 import EnvironmentBanner from './EnvironmentBanner'
+import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
 
 interface SearchParams {
   status?: string
@@ -171,7 +172,11 @@ async function getProjectsForFilter() {
     },
     orderBy: [desc(projects.createdAt)],
   })
-  return projectsList
+  // Convert LocalizedString titles to string (default to English for admin)
+  return projectsList.map(p => ({
+    id: p.id,
+    title: typeof p.title === 'string' ? p.title : getLocalizedValue(p.title as LocalizedString, 'en')
+  }))
 }
 
 export default async function DonationsManagement({

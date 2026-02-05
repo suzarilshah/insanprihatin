@@ -3,6 +3,7 @@ import { db, donations, donationLogs, projects } from '@/db'
 import { eq, sql } from 'drizzle-orm'
 import { ToyyibPayService } from '@/lib/toyyibpay'
 import { generateReceiptNumber } from '@/lib/receipt'
+import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
 
 /**
  * Payment Verification API
@@ -22,7 +23,9 @@ async function getProjectTitle(projectId: string | null): Promise<string | null>
     where: eq(projects.id, projectId),
     columns: { title: true },
   })
-  return project?.title || null
+  if (!project?.title) return null
+  if (typeof project.title === 'string') return project.title
+  return getLocalizedValue(project.title as LocalizedString, 'en')
 }
 
 // Helper to build full donation response

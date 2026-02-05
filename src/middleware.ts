@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import createIntlMiddleware from 'next-intl/middleware'
+import { routing } from '@/i18n/navigation'
 
 // Security headers for all responses
 const securityHeaders = {
@@ -10,16 +12,22 @@ const securityHeaders = {
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
 }
 
+// Create the internationalization middleware
+const intlMiddleware = createIntlMiddleware(routing)
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-  const response = NextResponse.next()
 
-  // Add security headers to all responses
-  Object.entries(securityHeaders).forEach(([key, value]) => {
-    response.headers.set(key, value)
-  })
+  // Check if the path should skip i18n (admin, api routes)
+  const shouldSkipI18n =
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/images') ||
+    pathname.startsWith('/favicon') ||
+    pathname.includes('.')
 
-  // Check if accessing protected admin routes (except login page)
+  // For admin routes, apply auth logic
   if (pathname.startsWith('/admin/dashboard') || pathname.startsWith('/admin/api')) {
     const authToken = request.cookies.get('admin_session')?.value
 
@@ -29,7 +37,6 @@ export function middleware(request: NextRequest) {
       loginUrl.searchParams.set('redirect', pathname)
       const redirectResponse = NextResponse.redirect(loginUrl)
 
-      // Add security headers to redirect response
       Object.entries(securityHeaders).forEach(([key, value]) => {
         redirectResponse.headers.set(key, value)
       })
@@ -37,15 +44,11 @@ export function middleware(request: NextRequest) {
       return redirectResponse
     }
 
-    // Basic token validation (format check)
-    // Full JWT verification happens in API routes/server components
-    // Edge runtime has limited crypto capabilities
+    // Basic token validation
     if (authToken.length < 10) {
-      // Token is too short to be valid
       const loginUrl = new URL('/admin?error=invalid_session', request.url)
       const redirectResponse = NextResponse.redirect(loginUrl)
 
-      // Clear invalid cookies
       redirectResponse.cookies.delete('admin_session')
       redirectResponse.cookies.delete('user_info')
 
@@ -56,12 +59,10 @@ export function middleware(request: NextRequest) {
       return redirectResponse
     }
 
-    // Development token validation
+    // Dev token check
     if (authToken === 'dev-token') {
-      // Only allow dev token in development environment
       const isDev = process.env.NODE_ENV === 'development'
       if (!isDev) {
-        // Dev token not allowed in production
         const loginUrl = new URL('/admin?error=invalid_session', request.url)
         const redirectResponse = NextResponse.redirect(loginUrl)
 
@@ -76,23 +77,20 @@ export function middleware(request: NextRequest) {
       }
     }
 
-    // Token exists and passes basic validation
+    // Token exists and passes validation - continue with security headers
+    const response = NextResponse.next()
+    Object.entries(securityHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value)
+    })
     return response
   }
 
-  // API routes - add CORS headers for auth endpoints
-  if (pathname.startsWith('/api/auth')) {
-    response.headers.set('Cache-Control', 'no-store, max-age=0')
-  }
-
-  // If on login page but already authenticated, redirect to dashboard
+  // Admin login page - redirect to dashboard if already authenticated
   if (pathname === '/admin') {
     const authToken = request.cookies.get('admin_session')?.value
     const redirect = request.nextUrl.searchParams.get('redirect')
 
     if (authToken && authToken.length > 10) {
-      // User appears to be authenticated, redirect to dashboard
-      // Full verification will happen on the dashboard page
       const redirectUrl = new URL(redirect || '/admin/dashboard', request.url)
       const redirectResponse = NextResponse.redirect(redirectUrl)
 
@@ -102,14 +100,56 @@ export function middleware(request: NextRequest) {
 
       return redirectResponse
     }
+
+    // Not authenticated - show login page with security headers
+    const response = NextResponse.next()
+    Object.entries(securityHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value)
+    })
+    return response
   }
+
+  // API routes - skip i18n, add headers
+  if (pathname.startsWith('/api')) {
+    const response = NextResponse.next()
+    if (pathname.startsWith('/api/auth')) {
+      response.headers.set('Cache-Control', 'no-store, max-age=0')
+    }
+    Object.entries(securityHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value)
+    })
+    return response
+  }
+
+  // Skip i18n for static files and assets
+  if (shouldSkipI18n) {
+    const response = NextResponse.next()
+    Object.entries(securityHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value)
+    })
+    return response
+  }
+
+  // Apply i18n middleware for all other routes
+  const response = intlMiddleware(request)
+
+  // Add security headers to i18n response
+  Object.entries(securityHeaders).forEach(([key, value]) => {
+    response.headers.set(key, value)
+  })
 
   return response
 }
 
 export const config = {
+  // Match all paths except static files
   matcher: [
+    // Match all pathnames except for
+    // - ... if they start with /api, /_next, /images, or /favicon
+    // - ... if they contain a dot (static files)
+    '/((?!api|_next|images|favicon|.*\\..*).*)',
+    // Match admin routes specifically
     '/admin/:path*',
-    '/api/auth/:path*',
+    '/api/:path*',
   ],
 }

@@ -4,14 +4,30 @@ import { useState, useEffect, useTransition } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { getFAQs, createFAQ, updateFAQ, deleteFAQ } from '@/lib/actions/content'
+import BilingualInput, { type LocalizedValue } from '@/components/admin/BilingualInput'
+import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
 
 interface FAQ {
   id: string
-  question: string
-  answer: string
+  question: LocalizedString | string
+  answer: LocalizedString | string
   category?: string | null
   sortOrder?: number | null
   isActive?: boolean | null
+}
+
+// Helper to convert LocalizedString to LocalizedValue for the component
+const toLocalizedValue = (value: LocalizedString | string | null | undefined): LocalizedValue => {
+  if (!value) return { en: '', ms: '' }
+  if (typeof value === 'string') return { en: value, ms: value }
+  return { en: value.en || '', ms: value.ms || '' }
+}
+
+// Helper to get string value from LocalizedString (default to English for admin display)
+const getTextValue = (value: LocalizedString | string | null | undefined): string => {
+  if (!value) return ''
+  if (typeof value === 'string') return value
+  return getLocalizedValue(value, 'en')
 }
 
 export default function EditFAQs() {
@@ -23,8 +39,8 @@ export default function EditFAQs() {
   const [isLoading, setIsLoading] = useState(true)
 
   const [formData, setFormData] = useState({
-    question: '',
-    answer: '',
+    question: { en: '', ms: '' } as LocalizedValue,
+    answer: { en: '', ms: '' } as LocalizedValue,
     category: '',
     sortOrder: 0,
   })
@@ -36,7 +52,7 @@ export default function EditFAQs() {
   async function loadFAQs() {
     try {
       const data = await getFAQs()
-      setFaqs(data)
+      setFaqs(data as FAQ[])
     } catch (error) {
       console.error('Failed to load FAQs:', error)
     } finally {
@@ -49,19 +65,29 @@ export default function EditFAQs() {
     startTransition(async () => {
       try {
         if (editingFaq) {
-          const result = await updateFAQ(editingFaq.id, formData)
+          const result = await updateFAQ(editingFaq.id, {
+            question: formData.question,
+            answer: formData.answer,
+            category: formData.category,
+            sortOrder: formData.sortOrder,
+          })
           if (result.success) {
             setMessage({ type: 'success', text: 'FAQ updated successfully!' })
           }
         } else {
-          const result = await createFAQ(formData)
+          const result = await createFAQ({
+            question: formData.question,
+            answer: formData.answer,
+            category: formData.category,
+            sortOrder: formData.sortOrder,
+          })
           if (result.success) {
             setMessage({ type: 'success', text: 'FAQ created successfully!' })
           }
         }
         setShowForm(false)
         setEditingFaq(null)
-        setFormData({ question: '', answer: '', category: '', sortOrder: 0 })
+        setFormData({ question: { en: '', ms: '' }, answer: { en: '', ms: '' }, category: '', sortOrder: 0 })
         loadFAQs()
       } catch (error) {
         console.error('Failed to save:', error)
@@ -73,8 +99,8 @@ export default function EditFAQs() {
   const handleEdit = (faq: FAQ) => {
     setEditingFaq(faq)
     setFormData({
-      question: faq.question,
-      answer: faq.answer,
+      question: toLocalizedValue(faq.question),
+      answer: toLocalizedValue(faq.answer),
       category: faq.category || '',
       sortOrder: faq.sortOrder || 0,
     })
@@ -100,7 +126,7 @@ export default function EditFAQs() {
 
   const handleAddNew = () => {
     setEditingFaq(null)
-    setFormData({ question: '', answer: '', category: '', sortOrder: faqs.length })
+    setFormData({ question: { en: '', ms: '' }, answer: { en: '', ms: '' }, category: '', sortOrder: faqs.length })
     setShowForm(true)
   }
 
@@ -127,6 +153,9 @@ export default function EditFAQs() {
           <h1 className="font-heading text-2xl font-semibold text-foundation-charcoal">
             Manage FAQs
           </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Create FAQs in both English and Bahasa Melayu
+          </p>
         </div>
         <button onClick={handleAddNew} className="btn-primary">
           <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -162,35 +191,31 @@ export default function EditFAQs() {
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-2xl p-6 lg:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-2xl p-6 lg:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="font-heading text-xl font-semibold text-foundation-charcoal mb-6">
               {editingFaq ? 'Edit FAQ' : 'Add New FAQ'}
             </h2>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Question</label>
-                <input
-                  type="text"
-                  value={formData.question}
-                  onChange={(e) => setFormData({ ...formData, question: e.target.value })}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
-                  placeholder="e.g., How can I donate?"
-                />
-              </div>
+            <div className="space-y-6">
+              <BilingualInput
+                label="Question"
+                value={formData.question}
+                onChange={(value) => setFormData({ ...formData, question: value })}
+                placeholder={{ en: 'e.g., How can I donate?', ms: 'cth., Bagaimana saya boleh menderma?' }}
+                required
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Answer</label>
-                <textarea
-                  value={formData.answer}
-                  onChange={(e) => setFormData({ ...formData, answer: e.target.value })}
-                  rows={5}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 resize-none"
-                  placeholder="Provide a detailed answer..."
-                />
-              </div>
+              <BilingualInput
+                label="Answer"
+                value={formData.answer}
+                onChange={(value) => setFormData({ ...formData, answer: value })}
+                type="textarea"
+                rows={5}
+                placeholder={{ en: 'Provide a detailed answer...', ms: 'Berikan jawapan terperinci...' }}
+                required
+              />
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -224,7 +249,7 @@ export default function EditFAQs() {
               </button>
               <button
                 onClick={handleSave}
-                disabled={isPending || !formData.question || !formData.answer}
+                disabled={isPending || !formData.question.en || !formData.answer.en}
                 className="flex-1 btn-primary disabled:opacity-50"
               >
                 {isPending ? 'Saving...' : 'Save'}
@@ -255,9 +280,9 @@ export default function EditFAQs() {
                   <span className="text-gray-400 text-xs">#{(faq.sortOrder || 0) + 1}</span>
                 </div>
                 <h3 className="font-heading text-lg font-semibold text-foundation-charcoal mb-2">
-                  {faq.question}
+                  {getTextValue(faq.question)}
                 </h3>
-                <p className="text-gray-600 text-sm line-clamp-2">{faq.answer}</p>
+                <p className="text-gray-600 text-sm line-clamp-2">{getTextValue(faq.answer)}</p>
               </div>
               <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button

@@ -5,6 +5,30 @@ import { db, heroContent, aboutContent, impactStats, siteSettings, faqs, pages }
 import { eq } from 'drizzle-orm'
 import { requireAuth } from '@/lib/auth-server'
 import { createVersion, logActivity } from '@/lib/versioning'
+import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
+
+// Type that accepts both string and LocalizedString for backward compatibility
+type LocalizedField = LocalizedString | string
+
+// Helper to get string value from LocalizedString (for logging)
+const l = (value: LocalizedString | string | null | undefined): string => {
+  if (!value) return ''
+  if (typeof value === 'string') return value
+  return getLocalizedValue(value, 'en')
+}
+
+// Helper to convert string to LocalizedString (for database insertion)
+const toLocalized = (value: LocalizedField | null | undefined): LocalizedString | undefined => {
+  if (!value) return undefined
+  if (typeof value === 'string') return { en: value, ms: value }
+  return value
+}
+
+// Helper for required LocalizedString fields
+const toLocalizedRequired = (value: LocalizedField): LocalizedString => {
+  if (typeof value === 'string') return { en: value, ms: value }
+  return value
+}
 
 // Hero Content Actions
 export async function getHeroContent() {
@@ -15,10 +39,10 @@ export async function getHeroContent() {
 }
 
 export async function updateHeroContent(data: {
-  title: string
-  subtitle: string
-  description?: string
-  ctaText?: string
+  title: LocalizedField
+  subtitle: LocalizedField
+  description?: LocalizedField
+  ctaText?: LocalizedField
   ctaLink?: string
   backgroundImage?: string
 }) {
@@ -31,15 +55,25 @@ export async function updateHeroContent(data: {
   let contentId: string
   const changeType = existing ? 'update' : 'create'
 
+  // Convert LocalizedField to LocalizedString for database
+  const dbData = {
+    title: toLocalizedRequired(data.title),
+    subtitle: toLocalizedRequired(data.subtitle),
+    description: toLocalized(data.description),
+    ctaText: toLocalized(data.ctaText),
+    ctaLink: data.ctaLink,
+    backgroundImage: data.backgroundImage,
+  }
+
   if (existing) {
     await db
       .update(heroContent)
-      .set({ ...data, updatedAt: new Date() })
+      .set({ ...dbData, updatedAt: new Date() })
       .where(eq(heroContent.id, existing.id))
     contentId = existing.id
   } else {
     const [newContent] = await db.insert(heroContent).values({
-      ...data,
+      ...dbData,
       isActive: true,
     }).returning()
     contentId = newContent.id
@@ -64,7 +98,7 @@ export async function updateHeroContent(data: {
   await logActivity(`content_${changeType}`, `${changeType === 'create' ? 'Created' : 'Updated'} hero content`, {
     contentType: 'hero_content',
     contentId,
-    contentTitle: data.title,
+    contentTitle: l(data.title),
     user: { id: user.id, email: user.email, name: user.name },
   })
 
@@ -79,10 +113,10 @@ export async function getAboutContent() {
 }
 
 export async function updateAboutContent(data: {
-  title: string
-  content: string
-  mission?: string
-  vision?: string
+  title: LocalizedField
+  content: LocalizedField
+  mission?: LocalizedField
+  vision?: LocalizedField
   values?: string[]
   image?: string
 }) {
@@ -92,21 +126,27 @@ export async function updateAboutContent(data: {
   let contentId: string
   const changeType = existing ? 'update' : 'create'
 
+  // Convert LocalizedField to LocalizedString for database
+  const dbData = {
+    title: toLocalizedRequired(data.title),
+    content: toLocalizedRequired(data.content),
+    mission: toLocalized(data.mission),
+    vision: toLocalized(data.vision),
+    values: data.values,
+    image: data.image,
+  }
+
   if (existing) {
     await db
       .update(aboutContent)
       .set({
-        ...data,
-        values: data.values,
+        ...dbData,
         updatedAt: new Date(),
       })
       .where(eq(aboutContent.id, existing.id))
     contentId = existing.id
   } else {
-    const [newContent] = await db.insert(aboutContent).values({
-      ...data,
-      values: data.values,
-    }).returning()
+    const [newContent] = await db.insert(aboutContent).values(dbData).returning()
     contentId = newContent.id
   }
 
@@ -129,7 +169,7 @@ export async function updateAboutContent(data: {
   await logActivity(`content_${changeType}`, `${changeType === 'create' ? 'Created' : 'Updated'} about content`, {
     contentType: 'about_content',
     contentId,
-    contentTitle: data.title,
+    contentTitle: l(data.title),
     user: { id: user.id, email: user.email, name: user.name },
   })
 
@@ -147,18 +187,25 @@ export async function getImpactStats() {
 }
 
 export async function createImpactStat(data: {
-  label: string
+  label: LocalizedField
   value: string
-  suffix?: string
+  suffix?: LocalizedField
   icon?: string
   sortOrder?: number
 }) {
   const user = await requireAuth()
 
-  const [stat] = await db.insert(impactStats).values({
-    ...data,
+  // Convert LocalizedField to LocalizedString for database
+  const dbData = {
+    label: toLocalizedRequired(data.label),
+    value: data.value,
+    suffix: toLocalized(data.suffix),
+    icon: data.icon,
+    sortOrder: data.sortOrder,
     isActive: true,
-  }).returning()
+  }
+
+  const [stat] = await db.insert(impactStats).values(dbData).returning()
 
   // Create version record
   await createVersion(
@@ -170,10 +217,10 @@ export async function createImpactStat(data: {
   )
 
   // Log activity
-  await logActivity('content_create', `Created impact stat: ${data.label}`, {
+  await logActivity('content_create', `Created impact stat: ${l(data.label)}`, {
     contentType: 'impact_stats',
     contentId: stat.id,
-    contentTitle: data.label,
+    contentTitle: l(data.label),
     user: { id: user.id, email: user.email, name: user.name },
   })
 
@@ -182,9 +229,9 @@ export async function createImpactStat(data: {
 }
 
 export async function updateImpactStat(id: string, data: {
-  label?: string
+  label?: LocalizedField
   value?: string
-  suffix?: string
+  suffix?: LocalizedField
   icon?: string
   sortOrder?: number
   isActive?: boolean
@@ -200,9 +247,20 @@ export async function updateImpactStat(id: string, data: {
     return { success: false, error: 'Impact stat not found' }
   }
 
+  // Convert LocalizedField to LocalizedString for database
+  const dbData: Record<string, unknown> = {
+    updatedAt: new Date(),
+    ...(data.label !== undefined && { label: toLocalizedRequired(data.label) }),
+    ...(data.value !== undefined && { value: data.value }),
+    ...(data.suffix !== undefined && { suffix: toLocalized(data.suffix) }),
+    ...(data.icon !== undefined && { icon: data.icon }),
+    ...(data.sortOrder !== undefined && { sortOrder: data.sortOrder }),
+    ...(data.isActive !== undefined && { isActive: data.isActive }),
+  }
+
   await db
     .update(impactStats)
-    .set({ ...data, updatedAt: new Date() })
+    .set(dbData)
     .where(eq(impactStats.id, id))
 
   // Get updated data
@@ -221,10 +279,10 @@ export async function updateImpactStat(id: string, data: {
   )
 
   // Log activity
-  await logActivity('content_update', `Updated impact stat: ${existing.label}`, {
+  await logActivity('content_update', `Updated impact stat: ${l(existing.label)}`, {
     contentType: 'impact_stats',
     contentId: id,
-    contentTitle: existing.label,
+    contentTitle: l(existing.label),
     user: { id: user.id, email: user.email, name: user.name },
   })
 
@@ -251,14 +309,14 @@ export async function deleteImpactStat(id: string) {
     existing as Record<string, unknown>,
     'delete',
     { id: user.id, email: user.email, name: user.name },
-    { customSummary: `Deleted impact stat: ${existing.label}` }
+    { customSummary: `Deleted impact stat: ${l(existing.label)}` }
   )
 
   // Log activity
-  await logActivity('content_delete', `Deleted impact stat: ${existing.label}`, {
+  await logActivity('content_delete', `Deleted impact stat: ${l(existing.label)}`, {
     contentType: 'impact_stats',
     contentId: id,
-    contentTitle: existing.label,
+    contentTitle: l(existing.label),
     user: { id: user.id, email: user.email, name: user.name },
     metadata: { deletedData: existing },
   })
@@ -279,17 +337,23 @@ export async function getFAQs() {
 }
 
 export async function createFAQ(data: {
-  question: string
-  answer: string
+  question: LocalizedField
+  answer: LocalizedField
   category?: string
   sortOrder?: number
 }) {
   const user = await requireAuth()
 
-  const [faq] = await db.insert(faqs).values({
-    ...data,
+  // Convert LocalizedField to LocalizedString for database
+  const dbData = {
+    question: toLocalizedRequired(data.question),
+    answer: toLocalizedRequired(data.answer),
+    category: data.category,
+    sortOrder: data.sortOrder,
     isActive: true,
-  }).returning()
+  }
+
+  const [faq] = await db.insert(faqs).values(dbData).returning()
 
   // Create version record
   await createVersion(
@@ -301,10 +365,11 @@ export async function createFAQ(data: {
   )
 
   // Log activity
-  await logActivity('content_create', `Created FAQ: ${data.question.substring(0, 50)}...`, {
+  const questionStr = l(data.question)
+  await logActivity('content_create', `Created FAQ: ${questionStr.substring(0, 50)}...`, {
     contentType: 'faqs',
     contentId: faq.id,
-    contentTitle: data.question,
+    contentTitle: questionStr,
     user: { id: user.id, email: user.email, name: user.name },
   })
 
@@ -313,8 +378,8 @@ export async function createFAQ(data: {
 }
 
 export async function updateFAQ(id: string, data: {
-  question?: string
-  answer?: string
+  question?: LocalizedField
+  answer?: LocalizedField
   category?: string
   sortOrder?: number
   isActive?: boolean
@@ -330,7 +395,16 @@ export async function updateFAQ(id: string, data: {
     return { success: false, error: 'FAQ not found' }
   }
 
-  await db.update(faqs).set(data).where(eq(faqs.id, id))
+  // Convert LocalizedField to LocalizedString for database
+  const dbData: Record<string, unknown> = {
+    ...(data.question !== undefined && { question: toLocalizedRequired(data.question) }),
+    ...(data.answer !== undefined && { answer: toLocalizedRequired(data.answer) }),
+    ...(data.category !== undefined && { category: data.category }),
+    ...(data.sortOrder !== undefined && { sortOrder: data.sortOrder }),
+    ...(data.isActive !== undefined && { isActive: data.isActive }),
+  }
+
+  await db.update(faqs).set(dbData).where(eq(faqs.id, id))
 
   // Get updated data
   const updated = await db.query.faqs.findFirst({
@@ -348,10 +422,11 @@ export async function updateFAQ(id: string, data: {
   )
 
   // Log activity
-  await logActivity('content_update', `Updated FAQ: ${existing.question.substring(0, 50)}...`, {
+  const questionStr = l(existing.question)
+  await logActivity('content_update', `Updated FAQ: ${questionStr.substring(0, 50)}...`, {
     contentType: 'faqs',
     contentId: id,
-    contentTitle: existing.question,
+    contentTitle: questionStr,
     user: { id: user.id, email: user.email, name: user.name },
   })
 
@@ -372,20 +447,21 @@ export async function deleteFAQ(id: string) {
   }
 
   // Create version record BEFORE deletion
+  const questionStr = l(existing.question)
   await createVersion(
     'faqs',
     id,
     existing as Record<string, unknown>,
     'delete',
     { id: user.id, email: user.email, name: user.name },
-    { customSummary: `Deleted FAQ: ${existing.question.substring(0, 50)}...` }
+    { customSummary: `Deleted FAQ: ${questionStr.substring(0, 50)}...` }
   )
 
   // Log activity
-  await logActivity('content_delete', `Deleted FAQ: ${existing.question.substring(0, 50)}...`, {
+  await logActivity('content_delete', `Deleted FAQ: ${questionStr.substring(0, 50)}...`, {
     contentType: 'faqs',
     contentId: id,
-    contentTitle: existing.question,
+    contentTitle: questionStr,
     user: { id: user.id, email: user.email, name: user.name },
     metadata: { deletedData: existing },
   })
@@ -460,9 +536,9 @@ export async function getPageSEO(slug: string) {
 }
 
 export async function updatePageSEO(slug: string, data: {
-  title?: string
-  metaTitle?: string
-  metaDescription?: string
+  title?: LocalizedField
+  metaTitle?: LocalizedField
+  metaDescription?: LocalizedField
   ogImage?: string
 }) {
   const user = await requireAuth()
@@ -474,17 +550,28 @@ export async function updatePageSEO(slug: string, data: {
   let contentId: string
   const changeType = existing ? 'update' : 'create'
 
+  // Convert LocalizedField to LocalizedString for database
+  const dbData: Record<string, unknown> = {
+    updatedAt: new Date(),
+    ...(data.title !== undefined && { title: toLocalizedRequired(data.title) }),
+    ...(data.metaTitle !== undefined && { metaTitle: toLocalized(data.metaTitle) }),
+    ...(data.metaDescription !== undefined && { metaDescription: toLocalized(data.metaDescription) }),
+    ...(data.ogImage !== undefined && { ogImage: data.ogImage }),
+  }
+
   if (existing) {
     await db
       .update(pages)
-      .set({ ...data, updatedAt: new Date() })
+      .set(dbData)
       .where(eq(pages.id, existing.id))
     contentId = existing.id
   } else {
     const [newPage] = await db.insert(pages).values({
       slug,
-      title: data.title || slug,
-      ...data,
+      title: data.title ? toLocalizedRequired(data.title) : { en: slug, ms: slug },
+      metaTitle: toLocalized(data.metaTitle),
+      metaDescription: toLocalized(data.metaDescription),
+      ogImage: data.ogImage,
     }).returning()
     contentId = newPage.id
   }
@@ -508,7 +595,7 @@ export async function updatePageSEO(slug: string, data: {
   await logActivity(`content_${changeType}`, `${changeType === 'create' ? 'Created' : 'Updated'} page SEO: ${slug}`, {
     contentType: 'pages',
     contentId,
-    contentTitle: data.title || slug,
+    contentTitle: l(data.title) || slug,
     user: { id: user.id, email: user.email, name: user.name },
   })
 

@@ -5,23 +5,31 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { formatDate } from '@/lib/utils'
 import { MarkdownRenderer } from '@/components/content'
+import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
 
 type BlogPost = {
   id: string
   slug: string
-  title: string
-  excerpt: string | null
-  content: string
+  title: LocalizedString | string
+  excerpt: LocalizedString | string | null
+  content: LocalizedString | string
   featuredImage: string | null
   authorId: string | null
   category: string | null
   tags: unknown
   isPublished: boolean | null
   publishedAt: Date | null
-  metaTitle: string | null
-  metaDescription: string | null
+  metaTitle: LocalizedString | string | null
+  metaDescription: LocalizedString | string | null
   createdAt: Date
   updatedAt: Date
+}
+
+// Helper to get string from LocalizedString (default to English)
+const l = (value: LocalizedString | string | null | undefined): string => {
+  if (!value) return ''
+  if (typeof value === 'string') return value
+  return getLocalizedValue(value, 'en')
 }
 
 interface FormField {
@@ -37,10 +45,10 @@ interface ContentForm {
   id: string
   name: string
   slug: string
-  title?: string
-  description?: string
-  submitButtonText?: string
-  successMessage?: string
+  title?: LocalizedString | string
+  description?: LocalizedString | string
+  submitButtonText?: LocalizedString | string
+  successMessage?: LocalizedString | string
   fields: FormField[]
   isActive: boolean
 }
@@ -79,7 +87,7 @@ export default function BlogPostContent({ post, relatedPosts, forms = [] }: Blog
         <div className="absolute inset-0">
           <Image
             src={post.featuredImage || defaultImage}
-            alt={post.title}
+            alt={l(post.title)}
             fill
             className="object-cover"
             priority
@@ -116,7 +124,7 @@ export default function BlogPostContent({ post, relatedPosts, forms = [] }: Blog
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-              <span className="text-white/80 truncate max-w-[200px]">{post.title}</span>
+              <span className="text-white/80 truncate max-w-[200px]">{l(post.title)}</span>
             </motion.div>
 
             {/* Category & Read Time */}
@@ -132,7 +140,7 @@ export default function BlogPostContent({ post, relatedPosts, forms = [] }: Blog
                 </span>
               )}
               <span className="px-4 py-1.5 rounded-full bg-white/10 text-white text-sm font-medium">
-                {getReadTime(post.content)}
+                {getReadTime(l(post.content))}
               </span>
             </motion.div>
 
@@ -142,17 +150,17 @@ export default function BlogPostContent({ post, relatedPosts, forms = [] }: Blog
               transition={{ delay: 0.4 }}
               className="heading-display text-white mb-6"
             >
-              {post.title}
+              {l(post.title)}
             </motion.h1>
 
-            {post.excerpt && (
+            {l(post.excerpt) && (
               <motion.p
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
                 className="body-large text-white/80 max-w-2xl mx-auto"
               >
-                {post.excerpt}
+                {l(post.excerpt)}
               </motion.p>
             )}
 
@@ -195,7 +203,7 @@ export default function BlogPostContent({ post, relatedPosts, forms = [] }: Blog
             >
               <Image
                 src={post.featuredImage || defaultImage}
-                alt={post.title}
+                alt={l(post.title)}
                 fill
                 className="object-cover"
               />
@@ -209,11 +217,11 @@ export default function BlogPostContent({ post, relatedPosts, forms = [] }: Blog
               className="mb-12"
             >
               <MarkdownRenderer
-                content={post.content}
+                content={l(post.content)}
                 forms={forms}
                 sourceContentType="blog_posts"
                 sourceContentId={post.id}
-                sourceContentTitle={post.title}
+                sourceContentTitle={l(post.title)}
               />
             </motion.article>
 
@@ -256,7 +264,7 @@ export default function BlogPostContent({ post, relatedPosts, forms = [] }: Blog
                 <button
                   onClick={() => {
                     if (typeof window !== 'undefined') {
-                      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(window.location.href)}`, '_blank')
+                      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(l(post.title))}&url=${encodeURIComponent(window.location.href)}`, '_blank')
                     }
                   }}
                   className="p-3 bg-white rounded-full text-gray-600 hover:bg-teal-500 hover:text-white transition-colors shadow-sm"
@@ -282,7 +290,7 @@ export default function BlogPostContent({ post, relatedPosts, forms = [] }: Blog
                 <button
                   onClick={() => {
                     if (typeof window !== 'undefined') {
-                      window.open(`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(window.location.href)}&title=${encodeURIComponent(post.title)}`, '_blank')
+                      window.open(`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(window.location.href)}&title=${encodeURIComponent(l(post.title))}`, '_blank')
                     }
                   }}
                   className="p-3 bg-white rounded-full text-gray-600 hover:bg-blue-700 hover:text-white transition-colors shadow-sm"
@@ -361,7 +369,7 @@ export default function BlogPostContent({ post, relatedPosts, forms = [] }: Blog
                     <div className="relative aspect-[16/10] overflow-hidden">
                       <Image
                         src={relatedPost.featuredImage || defaultImage}
-                        alt={relatedPost.title}
+                        alt={l(relatedPost.title)}
                         fill
                         className="object-cover transition-transform duration-700 group-hover:scale-110"
                       />
@@ -375,10 +383,10 @@ export default function BlogPostContent({ post, relatedPosts, forms = [] }: Blog
                     </div>
                     <div className="p-6">
                       <h3 className="font-heading text-lg font-semibold text-foundation-charcoal mb-2 group-hover:text-teal-600 transition-colors line-clamp-2">
-                        {relatedPost.title}
+                        {l(relatedPost.title)}
                       </h3>
                       <p className="text-gray-500 text-sm line-clamp-2 mb-4">
-                        {relatedPost.excerpt || relatedPost.content.substring(0, 100) + '...'}
+                        {l(relatedPost.excerpt) || l(relatedPost.content).substring(0, 100) + '...'}
                       </p>
                       <div className="text-gray-400 text-xs">
                         {relatedPost.publishedAt ? formatDate(relatedPost.publishedAt) : formatDate(relatedPost.createdAt)}

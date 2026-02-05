@@ -5,14 +5,23 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { getAboutContent, updateAboutContent } from '@/lib/actions/content'
 import ImageUpload from '@/components/admin/ImageUpload'
+import BilingualInput, { type LocalizedValue } from '@/components/admin/BilingualInput'
+import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
+
+// Helper to convert LocalizedString to LocalizedValue for the component
+const toLocalizedValue = (value: LocalizedString | string | null | undefined): LocalizedValue => {
+  if (!value) return { en: '', ms: '' }
+  if (typeof value === 'string') return { en: value, ms: value }
+  return { en: value.en || '', ms: value.ms || '' }
+}
 
 export default function EditAboutContent() {
   const [isPending, startTransition] = useTransition()
   const [formData, setFormData] = useState({
-    title: '',
-    content: '',
-    mission: '',
-    vision: '',
+    title: { en: '', ms: '' } as LocalizedValue,
+    content: { en: '', ms: '' } as LocalizedValue,
+    mission: { en: '', ms: '' } as LocalizedValue,
+    vision: { en: '', ms: '' } as LocalizedValue,
     values: [] as string[],
     image: '',
   })
@@ -26,10 +35,10 @@ export default function EditAboutContent() {
         const about = await getAboutContent()
         if (about) {
           setFormData({
-            title: about.title || '',
-            content: about.content || '',
-            mission: about.mission || '',
-            vision: about.vision || '',
+            title: toLocalizedValue(about.title),
+            content: toLocalizedValue(about.content),
+            mission: toLocalizedValue(about.mission),
+            vision: toLocalizedValue(about.vision),
             values: (about.values as string[]) || [],
             image: about.image || '',
           })
@@ -47,7 +56,14 @@ export default function EditAboutContent() {
     setMessage(null)
     startTransition(async () => {
       try {
-        const result = await updateAboutContent(formData)
+        const result = await updateAboutContent({
+          title: formData.title,
+          content: formData.content,
+          mission: formData.mission,
+          vision: formData.vision,
+          values: formData.values,
+          image: formData.image,
+        })
         if (result.success) {
           setMessage({ type: 'success', text: 'About section updated successfully!' })
         }
@@ -98,6 +114,9 @@ export default function EditAboutContent() {
           <h1 className="font-heading text-2xl font-semibold text-foundation-charcoal">
             Edit About Section
           </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Edit content in both English and Bahasa Melayu
+          </p>
         </div>
         <button
           onClick={handleSave}
@@ -141,31 +160,20 @@ export default function EditAboutContent() {
           </h2>
 
           <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Section Title
-              </label>
-              <input
-                type="text"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
-                placeholder="e.g., Caring for Humanity"
-              />
-            </div>
+            <BilingualInput
+              label="Section Title"
+              value={formData.title}
+              onChange={(value) => setFormData({ ...formData, title: value })}
+              placeholder={{ en: 'e.g., Caring for Humanity', ms: 'cth., Menyayangi Kemanusiaan' }}
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
-              </label>
-              <textarea
-                value={formData.content}
-                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                rows={5}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all resize-none"
-                placeholder="Tell your organization's story..."
-              />
-            </div>
+            <BilingualInput
+              label="Description"
+              value={formData.content}
+              onChange={(value) => setFormData({ ...formData, content: value })}
+              type="textarea"
+              placeholder={{ en: "Tell your organization's story...", ms: 'Ceritakan kisah organisasi anda...' }}
+            />
 
             <ImageUpload
               value={formData.image}
@@ -185,31 +193,21 @@ export default function EditAboutContent() {
             </h2>
 
             <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Our Mission
-                </label>
-                <textarea
-                  value={formData.mission}
-                  onChange={(e) => setFormData({ ...formData, mission: e.target.value })}
-                  rows={3}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all resize-none"
-                  placeholder="What is your organization's mission?"
-                />
-              </div>
+              <BilingualInput
+                label="Our Mission"
+                value={formData.mission}
+                onChange={(value) => setFormData({ ...formData, mission: value })}
+                type="textarea"
+                placeholder={{ en: "What is your organization's mission?", ms: 'Apakah misi organisasi anda?' }}
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Our Vision
-                </label>
-                <textarea
-                  value={formData.vision}
-                  onChange={(e) => setFormData({ ...formData, vision: e.target.value })}
-                  rows={3}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all resize-none"
-                  placeholder="What future do you envision?"
-                />
-              </div>
+              <BilingualInput
+                label="Our Vision"
+                value={formData.vision}
+                onChange={(value) => setFormData({ ...formData, vision: value })}
+                type="textarea"
+                placeholder={{ en: 'What future do you envision?', ms: 'Apakah masa depan yang anda bayangkan?' }}
+              />
             </div>
           </div>
 

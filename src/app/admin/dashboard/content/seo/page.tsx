@@ -5,13 +5,22 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { getPageSEO, updatePageSEO } from '@/lib/actions/content'
 import ImageUpload from '@/components/admin/ImageUpload'
+import BilingualInput, { type LocalizedValue } from '@/components/admin/BilingualInput'
+import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
 
 interface PageSEO {
   slug: string
-  title: string
-  metaTitle: string
-  metaDescription: string
+  title: LocalizedValue
+  metaTitle: LocalizedValue
+  metaDescription: LocalizedValue
   ogImage: string
+}
+
+// Helper to convert LocalizedString to LocalizedValue for the component
+const toLocalizedValue = (value: LocalizedString | string | null | undefined): LocalizedValue => {
+  if (!value) return { en: '', ms: '' }
+  if (typeof value === 'string') return { en: value, ms: value }
+  return { en: value.en || '', ms: value.ms || '' }
 }
 
 const pages = [
@@ -26,11 +35,12 @@ const pages = [
 export default function EditSEOSettings() {
   const [isPending, startTransition] = useTransition()
   const [selectedPage, setSelectedPage] = useState(pages[0])
+  const [previewLang, setPreviewLang] = useState<'en' | 'ms'>('en')
   const [formData, setFormData] = useState<PageSEO>({
     slug: '',
-    title: '',
-    metaTitle: '',
-    metaDescription: '',
+    title: { en: '', ms: '' },
+    metaTitle: { en: '', ms: '' },
+    metaDescription: { en: '', ms: '' },
     ogImage: '',
   })
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
@@ -47,17 +57,17 @@ export default function EditSEOSettings() {
       if (data) {
         setFormData({
           slug: data.slug,
-          title: data.title || '',
-          metaTitle: data.metaTitle || '',
-          metaDescription: data.metaDescription || '',
+          title: toLocalizedValue(data.title),
+          metaTitle: toLocalizedValue(data.metaTitle),
+          metaDescription: toLocalizedValue(data.metaDescription),
           ogImage: data.ogImage || '',
         })
       } else {
         setFormData({
           slug: slug || 'home',
-          title: selectedPage.name,
-          metaTitle: '',
-          metaDescription: '',
+          title: { en: selectedPage.name, ms: selectedPage.name },
+          metaTitle: { en: '', ms: '' },
+          metaDescription: { en: '', ms: '' },
           ogImage: '',
         })
       }
@@ -103,6 +113,9 @@ export default function EditSEOSettings() {
           <h1 className="font-heading text-2xl font-semibold text-foundation-charcoal">
             SEO Settings
           </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Configure SEO for both English and Bahasa Melayu
+          </p>
         </div>
         <button
           onClick={handleSave}
@@ -180,58 +193,30 @@ export default function EditSEOSettings() {
                 </h2>
 
                 <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Page Title
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
-                      placeholder="Page title"
-                    />
-                  </div>
+                  <BilingualInput
+                    label="Page Title"
+                    value={formData.title}
+                    onChange={(value) => setFormData({ ...formData, title: value })}
+                    placeholder={{ en: 'Page title in English', ms: 'Tajuk halaman dalam Bahasa Melayu' }}
+                  />
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Meta Title
-                      <span className="text-gray-400 font-normal ml-2">
-                        ({formData.metaTitle.length}/60 characters)
-                      </span>
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.metaTitle}
-                      onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
-                      placeholder="SEO title for search engines"
-                      maxLength={60}
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Appears in search results. Recommended: 50-60 characters.
-                    </p>
-                  </div>
+                  <BilingualInput
+                    label="Meta Title"
+                    value={formData.metaTitle}
+                    onChange={(value) => setFormData({ ...formData, metaTitle: value })}
+                    placeholder={{ en: 'SEO title for search engines', ms: 'Tajuk SEO untuk enjin carian' }}
+                    helperText="Appears in search results. Recommended: 50-60 characters."
+                  />
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Meta Description
-                      <span className="text-gray-400 font-normal ml-2">
-                        ({formData.metaDescription.length}/160 characters)
-                      </span>
-                    </label>
-                    <textarea
-                      value={formData.metaDescription}
-                      onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
-                      rows={3}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all resize-none"
-                      placeholder="Brief description for search engines"
-                      maxLength={160}
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Appears below the title in search results. Recommended: 150-160 characters.
-                    </p>
-                  </div>
+                  <BilingualInput
+                    label="Meta Description"
+                    value={formData.metaDescription}
+                    onChange={(value) => setFormData({ ...formData, metaDescription: value })}
+                    type="textarea"
+                    rows={3}
+                    placeholder={{ en: 'Brief description for search engines', ms: 'Penerangan ringkas untuk enjin carian' }}
+                    helperText="Appears below the title in search results. Recommended: 150-160 characters."
+                  />
 
                   <ImageUpload
                     value={formData.ogImage}
@@ -248,18 +233,42 @@ export default function EditSEOSettings() {
 
               {/* Preview */}
               <div className="bg-white rounded-2xl p-6 lg:p-8 border border-gray-100">
-                <h2 className="font-heading text-lg font-semibold text-foundation-charcoal mb-6">
-                  Search Result Preview
-                </h2>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="font-heading text-lg font-semibold text-foundation-charcoal">
+                    Search Result Preview
+                  </h2>
+                  <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+                    <button
+                      onClick={() => setPreviewLang('en')}
+                      className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
+                        previewLang === 'en'
+                          ? 'bg-white text-teal-700 shadow-sm'
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      English
+                    </button>
+                    <button
+                      onClick={() => setPreviewLang('ms')}
+                      className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
+                        previewLang === 'ms'
+                          ? 'bg-white text-teal-700 shadow-sm'
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      Bahasa Melayu
+                    </button>
+                  </div>
+                </div>
                 <div className="max-w-xl">
                   <div className="mb-1 text-sm text-green-700 truncate">
-                    yayasaninsanprihatin.org{selectedPage.path}
+                    insanprihatin.org/{previewLang}{selectedPage.path}
                   </div>
                   <div className="text-xl text-blue-700 hover:underline cursor-pointer mb-1 line-clamp-1">
-                    {formData.metaTitle || formData.title || selectedPage.name} - Yayasan Insan Prihatin
+                    {formData.metaTitle[previewLang] || formData.title[previewLang] || selectedPage.name} - Yayasan Insan Prihatin
                   </div>
                   <div className="text-sm text-gray-600 line-clamp-2">
-                    {formData.metaDescription || 'No description set. Add a meta description to improve your search visibility.'}
+                    {formData.metaDescription[previewLang] || 'No description set. Add a meta description to improve your search visibility.'}
                   </div>
                 </div>
               </div>

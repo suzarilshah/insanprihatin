@@ -4,15 +4,31 @@ import { useState, useEffect, useTransition } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { getImpactStats, createImpactStat, updateImpactStat, deleteImpactStat } from '@/lib/actions/content'
+import BilingualInput, { type LocalizedValue } from '@/components/admin/BilingualInput'
+import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
 
 interface ImpactStat {
   id: string
-  label: string
+  label: LocalizedString | string
   value: string
-  suffix?: string | null
+  suffix?: LocalizedString | string | null
   icon?: string | null
   sortOrder?: number | null
   isActive?: boolean | null
+}
+
+// Helper to convert LocalizedString to LocalizedValue for the component
+const toLocalizedValue = (value: LocalizedString | string | null | undefined): LocalizedValue => {
+  if (!value) return { en: '', ms: '' }
+  if (typeof value === 'string') return { en: value, ms: value }
+  return { en: value.en || '', ms: value.ms || '' }
+}
+
+// Helper to get string value from LocalizedString (default to English for admin display)
+const getTextValue = (value: LocalizedString | string | null | undefined): string => {
+  if (!value) return ''
+  if (typeof value === 'string') return value
+  return getLocalizedValue(value, 'en')
 }
 
 const iconOptions = [
@@ -32,9 +48,9 @@ export default function EditImpactStats() {
   const [isLoading, setIsLoading] = useState(true)
 
   const [formData, setFormData] = useState({
-    label: '',
+    label: { en: '', ms: '' } as LocalizedValue,
     value: '',
-    suffix: '',
+    suffix: { en: '', ms: '' } as LocalizedValue,
     icon: 'users',
     sortOrder: 0,
   })
@@ -46,7 +62,7 @@ export default function EditImpactStats() {
   async function loadStats() {
     try {
       const data = await getImpactStats()
-      setStats(data)
+      setStats(data as ImpactStat[])
     } catch (error) {
       console.error('Failed to load stats:', error)
     } finally {
@@ -59,19 +75,31 @@ export default function EditImpactStats() {
     startTransition(async () => {
       try {
         if (editingStat) {
-          const result = await updateImpactStat(editingStat.id, formData)
+          const result = await updateImpactStat(editingStat.id, {
+            label: formData.label,
+            value: formData.value,
+            suffix: formData.suffix,
+            icon: formData.icon,
+            sortOrder: formData.sortOrder,
+          })
           if (result.success) {
             setMessage({ type: 'success', text: 'Stat updated successfully!' })
           }
         } else {
-          const result = await createImpactStat(formData)
+          const result = await createImpactStat({
+            label: formData.label,
+            value: formData.value,
+            suffix: formData.suffix,
+            icon: formData.icon,
+            sortOrder: formData.sortOrder,
+          })
           if (result.success) {
             setMessage({ type: 'success', text: 'Stat created successfully!' })
           }
         }
         setShowForm(false)
         setEditingStat(null)
-        setFormData({ label: '', value: '', suffix: '', icon: 'users', sortOrder: 0 })
+        setFormData({ label: { en: '', ms: '' }, value: '', suffix: { en: '', ms: '' }, icon: 'users', sortOrder: 0 })
         loadStats()
       } catch (error) {
         console.error('Failed to save:', error)
@@ -83,9 +111,9 @@ export default function EditImpactStats() {
   const handleEdit = (stat: ImpactStat) => {
     setEditingStat(stat)
     setFormData({
-      label: stat.label,
+      label: toLocalizedValue(stat.label),
       value: stat.value,
-      suffix: stat.suffix || '',
+      suffix: toLocalizedValue(stat.suffix),
       icon: stat.icon || 'users',
       sortOrder: stat.sortOrder || 0,
     })
@@ -111,7 +139,7 @@ export default function EditImpactStats() {
 
   const handleAddNew = () => {
     setEditingStat(null)
-    setFormData({ label: '', value: '', suffix: '', icon: 'users', sortOrder: stats.length })
+    setFormData({ label: { en: '', ms: '' }, value: '', suffix: { en: '', ms: '' }, icon: 'users', sortOrder: stats.length })
     setShowForm(true)
   }
 
@@ -138,6 +166,9 @@ export default function EditImpactStats() {
           <h1 className="font-heading text-2xl font-semibold text-foundation-charcoal">
             Manage Impact Statistics
           </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Add stats in both English and Bahasa Melayu
+          </p>
         </div>
         <button
           onClick={handleAddNew}
@@ -176,24 +207,21 @@ export default function EditImpactStats() {
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-2xl p-6 lg:p-8 max-w-md w-full"
+            className="bg-white rounded-2xl p-6 lg:p-8 max-w-xl w-full max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="font-heading text-xl font-semibold text-foundation-charcoal mb-6">
               {editingStat ? 'Edit Statistic' : 'Add New Statistic'}
             </h2>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Label</label>
-                <input
-                  type="text"
-                  value={formData.label}
-                  onChange={(e) => setFormData({ ...formData, label: e.target.value })}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
-                  placeholder="e.g., Lives Impacted"
-                />
-              </div>
+            <div className="space-y-5">
+              <BilingualInput
+                label="Label"
+                value={formData.label}
+                onChange={(value) => setFormData({ ...formData, label: value })}
+                placeholder={{ en: 'e.g., Lives Impacted', ms: 'cth., Nyawa Terkesan' }}
+                required
+              />
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -207,29 +235,26 @@ export default function EditImpactStats() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Suffix</label>
-                  <input
-                    type="text"
-                    value={formData.suffix}
-                    onChange={(e) => setFormData({ ...formData, suffix: e.target.value })}
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Icon</label>
+                  <select
+                    value={formData.icon}
+                    onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
-                    placeholder="e.g., +"
-                  />
+                  >
+                    {iconOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Icon</label>
-                <select
-                  value={formData.icon}
-                  onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
-                >
-                  {iconOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              </div>
+              <BilingualInput
+                label="Suffix"
+                value={formData.suffix}
+                onChange={(value) => setFormData({ ...formData, suffix: value })}
+                placeholder={{ en: 'e.g., +', ms: 'cth., +' }}
+                helperText="Optional suffix shown after the value (e.g., '+' for '15K+')"
+              />
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Sort Order</label>
@@ -251,7 +276,7 @@ export default function EditImpactStats() {
               </button>
               <button
                 onClick={handleSave}
-                disabled={isPending || !formData.label || !formData.value}
+                disabled={isPending || !formData.label.en || !formData.value}
                 className="flex-1 btn-primary disabled:opacity-50"
               >
                 {isPending ? 'Saving...' : 'Save'}
@@ -294,9 +319,9 @@ export default function EditImpactStats() {
               </div>
             </div>
             <div className="font-display text-3xl font-bold text-foundation-charcoal mb-1">
-              {stat.value}{stat.suffix}
+              {stat.value}{getTextValue(stat.suffix)}
             </div>
-            <div className="text-gray-500 text-sm">{stat.label}</div>
+            <div className="text-gray-500 text-sm">{getTextValue(stat.label)}</div>
           </motion.div>
         ))}
 

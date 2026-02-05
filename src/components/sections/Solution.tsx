@@ -2,37 +2,43 @@
 
 import { motion } from 'framer-motion'
 import Image from 'next/image'
-import Link from 'next/link'
+import { Link } from '@/i18n/navigation'
+import { type LocalizedString, type Locale, getLocalizedValue } from '@/i18n/config'
 
 interface Project {
   id: string
   slug: string
-  title: string
-  description: string
+  title: LocalizedString | string
+  description: LocalizedString | string
   featuredImage?: string | null
   category?: string | null
 }
 
 interface ImpactStat {
   id: string
-  label: string
+  label: LocalizedString | string
   value: string
   icon?: string | null
-  suffix?: string | null
+  suffix?: LocalizedString | string | null
 }
 
 interface AboutContent {
-  mission?: string | null
-  vision?: string | null
+  mission?: LocalizedString | string | null
+  vision?: LocalizedString | string | null
 }
 
 interface SolutionProps {
   projects?: Project[]
   impactStats?: ImpactStat[]
   aboutContent?: AboutContent | null
+  locale?: Locale
 }
 
-export default function Solution({ projects = [], impactStats = [], aboutContent }: SolutionProps) {
+export default function Solution({ projects = [], impactStats = [], aboutContent, locale = 'en' }: SolutionProps) {
+  // Helper to get localized value
+  const l = (value: LocalizedString | string | null | undefined): string => {
+    return getLocalizedValue(value as LocalizedString, locale)
+  }
   return (
     <section className="section-padding bg-foundation-charcoal relative overflow-hidden text-white">
       {/* Dark Aesthetic Background */}
@@ -89,21 +95,21 @@ export default function Solution({ projects = [], impactStats = [], aboutContent
               <Link href={`/projects/${projects[0].slug}`} className="block h-full">
                 <Image
                   src={projects[0].featuredImage || "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=2000"}
-                  alt={projects[0].title}
+                  alt={l(projects[0].title)}
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-teal-950 via-teal-900/60 to-transparent opacity-90 group-hover:opacity-80 transition-opacity" />
-                
+
                 <div className="absolute bottom-0 left-0 p-10 max-w-2xl">
                   <div className="inline-block px-3 py-1 bg-amber-400 text-foundation-charcoal text-xs font-bold uppercase tracking-wider rounded-full mb-4">
                     {projects[0].category || 'Featured'}
                   </div>
                   <h3 className="text-4xl md:text-5xl font-heading text-white mb-4 leading-tight">
-                    {projects[0].title}
+                    {l(projects[0].title)}
                   </h3>
                   <p className="text-lg text-gray-200 line-clamp-2 mb-6 font-light">
-                    {projects[0].description}
+                    {l(projects[0].description)}
                   </p>
                   <span className="inline-flex items-center text-amber-300 font-medium group-hover:translate-x-2 transition-transform">
                     Read Story <svg className="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
@@ -124,9 +130,9 @@ export default function Solution({ projects = [], impactStats = [], aboutContent
             <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/20 rounded-full blur-[50px]" />
             <h4 className="text-teal-200 uppercase tracking-widest text-xs font-medium mb-2">Total Impact</h4>
             <div className="text-5xl font-display font-bold text-white mb-2">
-              {impactStats[0]?.value || '15K'}{impactStats[0]?.suffix || '+'}
+              {impactStats[0]?.value || '15K'}{l(impactStats[0]?.suffix) || '+'}
             </div>
-            <p className="text-teal-100">{impactStats[0]?.label || 'Lives Changed'}</p>
+            <p className="text-teal-100">{l(impactStats[0]?.label) || 'Lives Changed'}</p>
           </motion.div>
 
           {/* Secondary Project 1 */}
@@ -141,14 +147,14 @@ export default function Solution({ projects = [], impactStats = [], aboutContent
               <Link href={`/projects/${projects[1].slug}`} className="block h-full">
                 <Image
                   src={projects[1].featuredImage || "https://images.unsplash.com/photo-1532629345422-7515f3d16520?q=80&w=1000"}
-                  alt={projects[1].title}
+                  alt={l(projects[1].title)}
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-teal-950/70 group-hover:bg-teal-900/60 transition-colors" />
                 <div className="absolute bottom-0 left-0 p-8">
-                  <h3 className="text-2xl font-heading text-white mb-2">{projects[1].title}</h3>
-                  <p className="text-sm text-gray-200 line-clamp-2">{projects[1].description}</p>
+                  <h3 className="text-2xl font-heading text-white mb-2">{l(projects[1].title)}</h3>
+                  <p className="text-sm text-gray-200 line-clamp-2">{l(projects[1].description)}</p>
                 </div>
               </Link>
             </motion.div>
@@ -166,14 +172,14 @@ export default function Solution({ projects = [], impactStats = [], aboutContent
               <Link href={`/projects/${projects[2].slug}`} className="block h-full">
                 <Image
                   src={projects[2].featuredImage || "https://images.unsplash.com/photo-1596422846543-75c6fc197f07?q=80&w=1000"}
-                  alt={projects[2].title}
+                  alt={l(projects[2].title)}
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-teal-950/70 group-hover:bg-teal-900/60 transition-colors" />
                 <div className="absolute bottom-0 left-0 p-8">
-                  <h3 className="text-2xl font-heading text-white mb-2">{projects[2].title}</h3>
-                  <p className="text-sm text-gray-200 line-clamp-2">{projects[2].description}</p>
+                  <h3 className="text-2xl font-heading text-white mb-2">{l(projects[2].title)}</h3>
+                  <p className="text-sm text-gray-200 line-clamp-2">{l(projects[2].description)}</p>
                 </div>
               </Link>
             </motion.div>
@@ -193,7 +199,7 @@ export default function Solution({ projects = [], impactStats = [], aboutContent
             <div>
               <h4 className="text-white font-heading text-xl mb-2">Our Mission</h4>
               <p className="text-white/90 text-sm leading-relaxed mb-4 line-clamp-3">
-                {aboutContent?.mission || "Empowering communities through sustainable development and direct aid intervention."}
+                {l(aboutContent?.mission) || "Empowering communities through sustainable development and direct aid intervention."}
               </p>
               <Link href="/about" className="text-white text-xs font-bold uppercase tracking-wider hover:underline">Read More →</Link>
             </div>

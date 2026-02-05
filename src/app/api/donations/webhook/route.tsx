@@ -9,6 +9,7 @@ import { getReceiptData } from '@/lib/receipt'
 import { ReceiptPDF } from '@/lib/receipt-pdf'
 import { renderToBuffer } from '@react-pdf/renderer'
 import React from 'react'
+import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
 
 /**
  * ToyyibPay Webhook Handler
@@ -241,7 +242,11 @@ export async function POST(request: NextRequest) {
         const project = await db.query.projects.findFirst({
           where: eq(projects.id, donation.projectId),
         })
-        projectTitle = project?.title
+        if (project?.title) {
+          projectTitle = typeof project.title === 'string'
+            ? project.title
+            : getLocalizedValue(project.title as LocalizedString, 'en')
+        }
       }
 
       // Create admin notification

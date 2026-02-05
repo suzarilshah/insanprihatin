@@ -2,6 +2,10 @@ import { Suspense } from 'react'
 import { Header, Footer } from '@/components/layout'
 import DonationSuccessContent from './DonationSuccessContent'
 
+// Force dynamic to prevent prerender errors during build
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export const metadata = {
   title: 'Thank You for Your Donation | Yayasan Insan Prihatin',
   description: 'Thank you for your generous donation to Yayasan Insan Prihatin.',
