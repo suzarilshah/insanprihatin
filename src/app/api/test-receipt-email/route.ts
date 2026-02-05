@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendDonationReceiptEmail } from '@/lib/email'
-import { ReceiptPDF } from '@/lib/receipt-pdf'
-import { renderToBuffer } from '@react-pdf/renderer'
-import React from 'react'
 import { getDefaultOrganizationConfig } from '@/lib/organization-config'
 
 /**
@@ -46,13 +43,17 @@ export async function POST(request: NextRequest) {
       organization: org,
     }
 
-    // Generate PDF
+    // Generate PDF using dynamic import to avoid type issues
     console.log('Generating PDF...')
     let pdfBuffer: Buffer | undefined
     try {
-      pdfBuffer = await renderToBuffer(
-        React.createElement(ReceiptPDF, { data: testReceiptData })
-      )
+      const { renderToBuffer } = await import('@react-pdf/renderer')
+      const { ReceiptPDF } = await import('@/lib/receipt-pdf')
+      const React = await import('react')
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const element = React.createElement(ReceiptPDF as any, { data: testReceiptData })
+      pdfBuffer = await renderToBuffer(element)
       console.log('PDF generated successfully, size:', Math.round(pdfBuffer.length / 1024), 'KB')
     } catch (pdfError) {
       console.error('PDF generation failed:', pdfError)
