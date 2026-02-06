@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
+import { usePathname } from 'next/navigation'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
@@ -10,7 +11,17 @@ import LanguageSwitcher from './LanguageSwitcher'
 
 export default function Header() {
   const t = useTranslations('navigation')
+  const pathname = usePathname()
   const [isScrolled, setIsScrolled] = useState(false)
+
+  // Pages that have light backgrounds and need dark navbar text
+  const lightBackgroundPages = ['/donate', '/donate/success', '/donate/failed']
+  const isLightBackgroundPage = lightBackgroundPages.some(page =>
+    pathname === page ||
+    pathname?.startsWith('/donate/') ||
+    pathname?.endsWith('/donate') ||
+    pathname?.includes('/donate/')
+  )
   const [isVisible, setIsVisible] = useState(true)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const lastScrollY = useRef(0)
@@ -108,8 +119,8 @@ export default function Header() {
       <header
         className={cn(
           'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
-          // Show white background when scrolled OR when mobile menu is open
-          (isScrolled || isMobileMenuOpen)
+          // Show white background when scrolled, mobile menu open, OR on light background pages
+          (isScrolled || isMobileMenuOpen || isLightBackgroundPage)
             ? 'bg-white/98 backdrop-blur-xl shadow-elegant'
             : 'bg-transparent',
           isVisible ? 'translate-y-0' : '-translate-y-full'
@@ -120,8 +131,8 @@ export default function Header() {
           <nav
             className={cn(
               'flex items-center justify-between transition-all duration-300',
-              // Compact padding when scrolled or mobile menu open
-              (isScrolled || isMobileMenuOpen) ? 'py-2' : 'py-4 md:py-6'
+              // Compact padding when scrolled, mobile menu open, or on light background pages
+              (isScrolled || isMobileMenuOpen || isLightBackgroundPage) ? 'py-2' : 'py-4 md:py-6'
             )}
             role="navigation"
             aria-label="Main navigation"
@@ -135,8 +146,8 @@ export default function Header() {
               <div
                 className={cn(
                   'relative transition-all duration-300 group-hover:scale-105',
-                  // Smaller logo when scrolled or mobile menu open
-                  (isScrolled || isMobileMenuOpen) ? 'w-10 h-10' : 'w-12 h-12'
+                  // Smaller logo when scrolled, mobile menu open, or on light background pages
+                  (isScrolled || isMobileMenuOpen || isLightBackgroundPage) ? 'w-10 h-10' : 'w-12 h-12'
                 )}
               >
                 <Image
@@ -152,13 +163,13 @@ export default function Header() {
                 <span
                   className={cn(
                     'font-display font-bold tracking-tight transition-all duration-300 block',
-                    (isScrolled || isMobileMenuOpen)
+                    (isScrolled || isMobileMenuOpen || isLightBackgroundPage)
                       ? 'text-lg text-foundation-charcoal'
                       : 'text-xl text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]'
                   )}
                   style={{
                     // Ensure text is always visible with text shadow on dark backgrounds
-                    textShadow: (isScrolled || isMobileMenuOpen)
+                    textShadow: (isScrolled || isMobileMenuOpen || isLightBackgroundPage)
                       ? 'none'
                       : '0 1px 3px rgba(0,0,0,0.4)',
                   }}
@@ -168,7 +179,7 @@ export default function Header() {
                 <span
                   className={cn(
                     'block font-heading font-medium -mt-1 transition-all duration-300',
-                    (isScrolled || isMobileMenuOpen) ? 'text-xs text-amber-600' : 'text-sm text-amber-400'
+                    (isScrolled || isMobileMenuOpen || isLightBackgroundPage) ? 'text-xs text-amber-600' : 'text-sm text-amber-400'
                   )}
                 >
                   Insan Prihatin
@@ -185,7 +196,7 @@ export default function Header() {
                   className={cn(
                     'relative font-medium text-sm tracking-wide transition-all duration-300',
                     'hover:text-teal-500 group py-2',
-                    (isScrolled || isMobileMenuOpen)
+                    (isScrolled || isMobileMenuOpen || isLightBackgroundPage)
                       ? 'text-foundation-charcoal'
                       : 'text-white drop-shadow-sm'
                   )}
@@ -223,7 +234,7 @@ export default function Header() {
               className={cn(
                 'lg:hidden relative z-10 p-2 -mr-2 rounded-lg transition-colors duration-300',
                 'focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2',
-                isScrolled || isMobileMenuOpen
+                (isScrolled || isMobileMenuOpen || isLightBackgroundPage)
                   ? 'text-foundation-charcoal hover:bg-gray-100'
                   : 'text-white hover:bg-white/10'
               )}

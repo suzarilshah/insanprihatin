@@ -37,6 +37,8 @@ export default function DonationSuccessContent() {
   const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>('loading')
   const [isDownloading, setIsDownloading] = useState(false)
   const [downloadError, setDownloadError] = useState<string | null>(null)
+  const [isSendingEmail, setIsSendingEmail] = useState(false)
+  const [emailStatus, setEmailStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
   const verifyPayment = useCallback(async () => {
     if (!reference) {
@@ -116,6 +118,38 @@ export default function DonationSuccessContent() {
       setDownloadError(error instanceof Error ? error.message : 'Failed to download receipt')
     } finally {
       setIsDownloading(false)
+    }
+  }
+
+  const handleSendReceipt = async () => {
+    if (!reference || !donation?.receiptNumber) return
+
+    setIsSendingEmail(true)
+    setEmailStatus(null)
+
+    try {
+      const response = await fetch(`/api/donations/receipt/${reference}/resend`, {
+        method: 'POST',
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send receipt email')
+      }
+
+      setEmailStatus({
+        type: 'success',
+        message: `Receipt sent successfully to ${donation.donorEmail}`,
+      })
+    } catch (error) {
+      console.error('Send receipt error:', error)
+      setEmailStatus({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Failed to send receipt email. Please try again.',
+      })
+    } finally {
+      setIsSendingEmail(false)
     }
   }
 
@@ -373,7 +407,7 @@ export default function DonationSuccessContent() {
               </div>
             </motion.div>
 
-            {/* Email Confirmation */}
+            {/* Email Receipt Section */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -386,10 +420,59 @@ export default function DonationSuccessContent() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                 </div>
-                <div>
-                  <h3 className="font-medium text-teal-900 mb-1">Confirmation Email Sent</h3>
-                  <p className="text-sm text-teal-800">
-                    A confirmation email with your receipt has been sent to <strong>{donation?.donorEmail || 'your email'}</strong>. Please check your spam folder if you don&apos;t see it.
+                <div className="flex-1">
+                  <h3 className="font-medium text-teal-900 mb-1">Email Receipt</h3>
+                  <p className="text-sm text-teal-800 mb-4">
+                    Get your official receipt sent to <strong>{donation?.donorEmail || 'your email'}</strong>.
+                  </p>
+
+                  {/* Email Status Messages */}
+                  {emailStatus && (
+                    <div className={`mb-3 p-3 rounded-lg text-sm ${
+                      emailStatus.type === 'success'
+                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                        : 'bg-red-100 text-red-800 border border-red-200'
+                    }`}>
+                      <div className="flex items-center gap-2">
+                        {emailStatus.type === 'success' ? (
+                          <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : (
+                          <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        )}
+                        {emailStatus.message}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Send Receipt Button */}
+                  {donation?.receiptNumber && donation?.donorEmail && (
+                    <button
+                      onClick={handleSendReceipt}
+                      disabled={isSendingEmail}
+                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-teal-600 text-white rounded-lg font-medium text-sm hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSendingEmail ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                          Send Receipt to Email
+                        </>
+                      )}
+                    </button>
+                  )}
+
+                  <p className="text-xs text-teal-700 mt-3">
+                    Don&apos;t see it? Check your spam folder or click above to resend.
                   </p>
                 </div>
               </div>

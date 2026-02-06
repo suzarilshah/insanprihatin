@@ -53,7 +53,8 @@ export async function POST(request: NextRequest) {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const element = React.createElement(ReceiptPDF as any, { data: testReceiptData })
-      pdfBuffer = await renderToBuffer(element)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      pdfBuffer = await renderToBuffer(element as any)
       console.log('PDF generated successfully, size:', Math.round(pdfBuffer.length / 1024), 'KB')
     } catch (pdfError) {
       console.error('PDF generation failed:', pdfError)
