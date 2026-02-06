@@ -620,9 +620,7 @@ function generateDonationReceiptEmailHtml(
     <!-- Logo & Header -->
     <div style="background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); padding: 40px 30px; border-radius: 16px 16px 0 0; text-align: center;">
       <div style="margin-bottom: 20px;">
-        <div style="width: 70px; height: 70px; background: rgba(255,255,255,0.2); border-radius: 16px; display: inline-flex; align-items: center; justify-content: center;">
-          <span style="font-size: 32px;">🤲</span>
-        </div>
+        <img src="${websiteUrl}/images/logo.png" alt="${escapeHtml(org.name)}" style="width: 70px; height: 70px; object-fit: contain;" />
       </div>
       <h1 style="color: white; margin: 0; font-size: 32px; font-weight: 700;">
         Thank You!

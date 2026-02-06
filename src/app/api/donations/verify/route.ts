@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db, donations, donationLogs, projects } from '@/db'
 import { eq, sql } from 'drizzle-orm'
 import { ToyyibPayService } from '@/lib/toyyibpay'
-import { generateReceiptNumber } from '@/lib/receipt'
+import { generateReceiptNumber, getReceiptData } from '@/lib/receipt'
 import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
+import { sendDonationReceiptEmail } from '@/lib/email'
 
 /**
  * Payment Verification API
@@ -157,6 +158,86 @@ export async function GET(request: NextRequest) {
             })
 
             console.log(`[Verify] Auto-recovery successful for ${reference}, receipt: ${receiptNumber}`)
+
+            // Send receipt email (same logic as webhook handler)
+            if (donation.donorEmail) {
+              try {
+                console.log(`[Verify] Sending receipt email to ${donation.donorEmail}`)
+                const receiptData = await getReceiptData(reference)
+
+                if (receiptData) {
+                  // Generate PDF
+                  let pdfBuffer: Buffer | undefined
+                  try {
+                    const { renderToBuffer } = await import('@react-pdf/renderer')
+                    const { ReceiptPDF } = await import('@/lib/receipt-pdf')
+                    const React = await import('react')
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const element = React.createElement(ReceiptPDF as any, { data: receiptData })
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    pdfBuffer = await renderToBuffer(element as any)
+                    console.log(`[Verify] PDF generated, size: ${Math.round(pdfBuffer.length / 1024)}KB`)
+                  } catch (pdfError) {
+                    console.error('[Verify] Failed to generate PDF:', pdfError)
+                  }
+
+                  // Send email
+                  const emailResult = await sendDonationReceiptEmail({
+                    receiptNumber: receiptData.receiptNumber,
+                    donorName: receiptData.donorName,
+                    donorEmail: receiptData.donorEmail,
+                    amount: receiptData.amount,
+                    currency: receiptData.currency,
+                    projectTitle: receiptData.projectTitle,
+                    paymentReference: receiptData.paymentReference,
+                    completedAt: receiptData.completedAt,
+                    pdfBuffer,
+                    organization: receiptData.organization,
+                  })
+
+                  if (emailResult.success) {
+                    // Update receipt sent timestamp
+                    await db
+                      .update(donations)
+                      .set({ receiptSentAt: new Date() })
+                      .where(eq(donations.id, donation.id))
+
+                    // Log email sent
+                    await db.insert(donationLogs).values({
+                      donationId: donation.id,
+                      eventType: 'receipt_email_sent',
+                      eventData: {
+                        messageId: emailResult.messageId,
+                        email: receiptData.donorEmail,
+                        source: 'auto_recovery',
+                      },
+                    })
+
+                    console.log(`[Verify] Receipt email sent successfully for ${reference}`)
+                  } else {
+                    console.error(`[Verify] Failed to send receipt email: ${emailResult.error || emailResult.reason}`)
+                    await db.insert(donationLogs).values({
+                      donationId: donation.id,
+                      eventType: 'receipt_email_failed',
+                      eventData: {
+                        error: emailResult.error || emailResult.reason,
+                        source: 'auto_recovery',
+                      },
+                    })
+                  }
+                }
+              } catch (emailError) {
+                console.error('[Verify] Receipt email error:', emailError)
+                await db.insert(donationLogs).values({
+                  donationId: donation.id,
+                  eventType: 'receipt_email_error',
+                  eventData: {
+                    error: emailError instanceof Error ? emailError.message : 'Unknown error',
+                    source: 'auto_recovery',
+                  },
+                })
+              }
+            }
 
             // Return the updated status with full donation data
             const donationData = await buildDonationResponse(donation, {
