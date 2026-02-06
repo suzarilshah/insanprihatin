@@ -7,6 +7,7 @@ import { requireAuth } from '@/lib/auth-server'
 import { createVersion, logActivity } from '@/lib/versioning'
 import { notifyBlogPublished } from '@/lib/actions/notifications'
 import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
+import { autoTranslateFields } from '@/lib/auto-translate'
 
 type LocalizedField = LocalizedString | string
 
@@ -67,16 +68,27 @@ export async function createBlogPost(data: {
 }) {
   const user = await requireAuth()
 
-  const post = await db.insert(blogPosts).values({
-    slug: data.slug,
+  // Auto-translate any fields that are missing one language
+  console.log('[Blog] Auto-translating content...')
+  const translated = await autoTranslateFields({
     title: toLocalizedRequired(data.title),
     excerpt: toLocalized(data.excerpt),
     content: toLocalizedRequired(data.content),
+    metaTitle: toLocalized(data.metaTitle),
+    metaDescription: toLocalized(data.metaDescription),
+  })
+  console.log('[Blog] Auto-translation complete')
+
+  const post = await db.insert(blogPosts).values({
+    slug: data.slug,
+    title: translated.title || toLocalizedRequired(data.title),
+    excerpt: translated.excerpt,
+    content: translated.content || toLocalizedRequired(data.content),
     featuredImage: data.featuredImage,
     category: data.category,
     tags: data.tags,
-    metaTitle: toLocalized(data.metaTitle),
-    metaDescription: toLocalized(data.metaDescription),
+    metaTitle: translated.metaTitle,
+    metaDescription: translated.metaDescription,
     isPublished: data.isPublished,
     publishedAt: data.isPublished ? new Date() : null,
   }).returning()
@@ -134,18 +146,33 @@ export async function updateBlogPost(id: string, data: {
     return { success: false, error: 'Post not found' }
   }
 
+  // Auto-translate any fields that are missing one language
+  const fieldsToTranslate: Record<string, LocalizedString | string | null | undefined> = {}
+  if (data.title !== undefined) fieldsToTranslate.title = toLocalizedRequired(data.title)
+  if (data.excerpt !== undefined) fieldsToTranslate.excerpt = toLocalized(data.excerpt)
+  if (data.content !== undefined) fieldsToTranslate.content = toLocalizedRequired(data.content)
+  if (data.metaTitle !== undefined) fieldsToTranslate.metaTitle = toLocalized(data.metaTitle)
+  if (data.metaDescription !== undefined) fieldsToTranslate.metaDescription = toLocalized(data.metaDescription)
+
+  let translated: Record<string, LocalizedString | undefined> = {}
+  if (Object.keys(fieldsToTranslate).length > 0) {
+    console.log('[Blog] Auto-translating updated content...')
+    translated = await autoTranslateFields(fieldsToTranslate)
+    console.log('[Blog] Auto-translation complete')
+  }
+
   // Handle publishing logic - convert LocalizedField to LocalizedString for database
   const updateData: Record<string, unknown> = {
     updatedAt: new Date(),
     ...(data.slug !== undefined && { slug: data.slug }),
-    ...(data.title !== undefined && { title: toLocalizedRequired(data.title) }),
-    ...(data.excerpt !== undefined && { excerpt: toLocalized(data.excerpt) }),
-    ...(data.content !== undefined && { content: toLocalizedRequired(data.content) }),
+    ...(data.title !== undefined && { title: translated.title || toLocalizedRequired(data.title) }),
+    ...(data.excerpt !== undefined && { excerpt: translated.excerpt }),
+    ...(data.content !== undefined && { content: translated.content || toLocalizedRequired(data.content) }),
     ...(data.featuredImage !== undefined && { featuredImage: data.featuredImage }),
     ...(data.category !== undefined && { category: data.category }),
     ...(data.tags !== undefined && { tags: data.tags }),
-    ...(data.metaTitle !== undefined && { metaTitle: toLocalized(data.metaTitle) }),
-    ...(data.metaDescription !== undefined && { metaDescription: toLocalized(data.metaDescription) }),
+    ...(data.metaTitle !== undefined && { metaTitle: translated.metaTitle }),
+    ...(data.metaDescription !== undefined && { metaDescription: translated.metaDescription }),
     ...(data.isPublished !== undefined && { isPublished: data.isPublished }),
   }
 

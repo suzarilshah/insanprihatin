@@ -46,11 +46,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if API key is configured
-    if (!process.env.GOOGLE_TRANSLATE_API_KEY) {
+    if (!process.env.AZURE_TRANSLATOR_KEY) {
       return NextResponse.json(
         {
           error: 'Translation service not configured',
-          details: 'GOOGLE_TRANSLATE_API_KEY environment variable is not set',
+          details: 'AZURE_TRANSLATOR_KEY environment variable is not set',
         },
         { status: 503 }
       )
@@ -89,12 +89,13 @@ export async function POST(request: NextRequest) {
  * Check if the translation service is configured
  */
 export async function GET() {
-  const isConfigured = Boolean(process.env.GOOGLE_TRANSLATE_API_KEY)
+  const isConfigured = Boolean(process.env.AZURE_TRANSLATOR_KEY)
 
   return NextResponse.json({
     configured: isConfigured,
+    provider: 'Azure AI Translator',
     message: isConfigured
-      ? 'Translation service is available'
-      : 'Translation service not configured. Add GOOGLE_TRANSLATE_API_KEY to your environment.',
+      ? 'Translation service is available (Azure AI Translator)'
+      : 'Translation service not configured. Add AZURE_TRANSLATOR_KEY to your environment.',
   })
 }

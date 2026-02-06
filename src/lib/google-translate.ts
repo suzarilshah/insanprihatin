@@ -1,42 +1,52 @@
 /**
- * Google Cloud Translation API Service
+ * Azure AI Translator Service
  *
  * This service provides auto-translation functionality for the admin panel.
- * It uses Google Cloud Translation API v2 (Basic).
+ * It uses Azure Cognitive Services Translator API.
  *
  * Setup:
- * 1. Enable Cloud Translation API in Google Cloud Console
- * 2. Create an API key
- * 3. Add GOOGLE_TRANSLATE_API_KEY to your .env.local file
+ * 1. Create an Azure Translator resource in Azure Portal
+ * 2. Get the API key and region
+ * 3. Add AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION to your .env.local file
  *
  * Pricing:
- * - 500,000 characters FREE per month (never expires)
- * - $20 per million characters after free tier
+ * - Free tier: 2 million characters FREE per month
+ * - S1: $10 per million characters
  */
 
-const TRANSLATE_API_URL = 'https://translation.googleapis.com/language/translate/v2'
+const AZURE_TRANSLATOR_ENDPOINT =
+  process.env.AZURE_TRANSLATOR_ENDPOINT || 'https://api.cognitive.microsofttranslator.com/'
 
 export type TranslateLanguage = 'en' | 'ms'
 
-interface TranslateResponse {
-  data: {
-    translations: Array<{
-      translatedText: string
-      detectedSourceLanguage?: string
-    }>
+// Azure language codes mapping
+const LANGUAGE_CODES: Record<TranslateLanguage, string> = {
+  en: 'en',
+  ms: 'ms', // Malay
+}
+
+interface AzureTranslation {
+  text: string
+  to: string
+}
+
+interface AzureTranslateResponse {
+  translations: AzureTranslation[]
+  detectedLanguage?: {
+    language: string
+    score: number
   }
 }
 
-interface TranslateError {
+interface AzureErrorResponse {
   error: {
-    code: number
+    code: string
     message: string
-    status: string
   }
 }
 
 /**
- * Translates text using Google Cloud Translation API
+ * Translates text using Azure Translator API
  *
  * @param text - The text to translate
  * @param targetLang - Target language code ('en' or 'ms')
@@ -48,11 +58,12 @@ export async function translateText(
   targetLang: TranslateLanguage,
   sourceLang?: TranslateLanguage
 ): Promise<string> {
-  const apiKey = process.env.GOOGLE_TRANSLATE_API_KEY
+  const apiKey = process.env.AZURE_TRANSLATOR_KEY
+  const region = process.env.AZURE_TRANSLATOR_REGION || 'eastus'
 
   if (!apiKey) {
     throw new Error(
-      'Google Translate API key not configured. Add GOOGLE_TRANSLATE_API_KEY to your .env.local file.'
+      'Azure Translator API key not configured. Add AZURE_TRANSLATOR_KEY to your .env.local file.'
     )
   }
 
@@ -61,33 +72,33 @@ export async function translateText(
   }
 
   try {
-    const params = new URLSearchParams({
-      key: apiKey,
-      q: text,
-      target: targetLang,
-      format: 'text', // Use 'text' for plain text, 'html' for HTML content
-    })
+    const url = new URL('/translate', AZURE_TRANSLATOR_ENDPOINT)
+    url.searchParams.append('api-version', '3.0')
+    url.searchParams.append('to', LANGUAGE_CODES[targetLang])
 
     if (sourceLang) {
-      params.append('source', sourceLang)
+      url.searchParams.append('from', LANGUAGE_CODES[sourceLang])
     }
 
-    const response = await fetch(`${TRANSLATE_API_URL}?${params.toString()}`, {
+    const response = await fetch(url.toString(), {
       method: 'POST',
       headers: {
+        'Ocp-Apim-Subscription-Key': apiKey,
+        'Ocp-Apim-Subscription-Region': region,
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify([{ text }]),
     })
 
     if (!response.ok) {
-      const errorData = (await response.json()) as TranslateError
+      const errorData = (await response.json()) as AzureErrorResponse
       throw new Error(
         errorData.error?.message || `Translation failed with status ${response.status}`
       )
     }
 
-    const data = (await response.json()) as TranslateResponse
-    return data.data.translations[0].translatedText
+    const data = (await response.json()) as AzureTranslateResponse[]
+    return data[0].translations[0].text
   } catch (error) {
     console.error('Translation error:', error)
     throw error
@@ -107,39 +118,45 @@ export async function translateBatch(
   targetLang: TranslateLanguage,
   sourceLang?: TranslateLanguage
 ): Promise<string[]> {
-  const apiKey = process.env.GOOGLE_TRANSLATE_API_KEY
+  const apiKey = process.env.AZURE_TRANSLATOR_KEY
+  const region = process.env.AZURE_TRANSLATOR_REGION || 'eastus'
 
   if (!apiKey) {
-    throw new Error('Google Translate API key not configured')
+    throw new Error('Azure Translator API key not configured')
   }
 
-  // Filter out empty strings
+  // Filter out empty strings and track their positions
   const validTexts = texts.filter((t) => t && t.trim().length > 0)
   if (validTexts.length === 0) {
     return texts.map(() => '')
   }
 
   try {
-    const response = await fetch(`${TRANSLATE_API_URL}?key=${apiKey}`, {
+    const url = new URL('/translate', AZURE_TRANSLATOR_ENDPOINT)
+    url.searchParams.append('api-version', '3.0')
+    url.searchParams.append('to', LANGUAGE_CODES[targetLang])
+
+    if (sourceLang) {
+      url.searchParams.append('from', LANGUAGE_CODES[sourceLang])
+    }
+
+    const response = await fetch(url.toString(), {
       method: 'POST',
       headers: {
+        'Ocp-Apim-Subscription-Key': apiKey,
+        'Ocp-Apim-Subscription-Region': region,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        q: validTexts,
-        target: targetLang,
-        source: sourceLang,
-        format: 'text',
-      }),
+      body: JSON.stringify(validTexts.map((text) => ({ text }))),
     })
 
     if (!response.ok) {
-      const errorData = (await response.json()) as TranslateError
+      const errorData = (await response.json()) as AzureErrorResponse
       throw new Error(errorData.error?.message || 'Batch translation failed')
     }
 
-    const data = (await response.json()) as TranslateResponse
-    return data.data.translations.map((t) => t.translatedText)
+    const data = (await response.json()) as AzureTranslateResponse[]
+    return data.map((item) => item.translations[0].text)
   } catch (error) {
     console.error('Batch translation error:', error)
     throw error
@@ -153,21 +170,24 @@ export async function translateBatch(
  * @returns Detected language code
  */
 export async function detectLanguage(text: string): Promise<string> {
-  const apiKey = process.env.GOOGLE_TRANSLATE_API_KEY
+  const apiKey = process.env.AZURE_TRANSLATOR_KEY
+  const region = process.env.AZURE_TRANSLATOR_REGION || 'eastus'
 
   if (!apiKey) {
-    throw new Error('Google Translate API key not configured')
+    throw new Error('Azure Translator API key not configured')
   }
 
-  const detectUrl = 'https://translation.googleapis.com/language/translate/v2/detect'
+  const detectUrl = `${AZURE_TRANSLATOR_ENDPOINT}detect?api-version=3.0`
 
   try {
-    const response = await fetch(`${detectUrl}?key=${apiKey}`, {
+    const response = await fetch(detectUrl, {
       method: 'POST',
       headers: {
+        'Ocp-Apim-Subscription-Key': apiKey,
+        'Ocp-Apim-Subscription-Region': region,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ q: text }),
+      body: JSON.stringify([{ text }]),
     })
 
     if (!response.ok) {
@@ -175,7 +195,7 @@ export async function detectLanguage(text: string): Promise<string> {
     }
 
     const data = await response.json()
-    return data.data.detections[0][0].language
+    return data[0].language
   } catch (error) {
     console.error('Language detection error:', error)
     throw error
@@ -183,9 +203,9 @@ export async function detectLanguage(text: string): Promise<string> {
 }
 
 /**
- * Check if the Google Translate API is configured and working
+ * Check if the Azure Translator API is configured and working
  */
 export async function isTranslateConfigured(): Promise<boolean> {
-  const apiKey = process.env.GOOGLE_TRANSLATE_API_KEY
+  const apiKey = process.env.AZURE_TRANSLATOR_KEY
   return Boolean(apiKey && apiKey.length > 0)
 }

@@ -8,6 +8,7 @@ import { createVersion, logActivity } from '@/lib/versioning'
 import { notifyProjectPublished } from '@/lib/actions/notifications'
 import { ToyyibPayService, ToyyibPayError } from '@/lib/toyyibpay'
 import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
+import { autoTranslateFields } from '@/lib/auto-translate'
 
 type LocalizedField = LocalizedString | string
 
@@ -113,12 +114,24 @@ export async function createProject(data: {
     }
   }
 
-  const project = await db.insert(projects).values({
-    slug: data.slug,
+  // Auto-translate any fields that are missing one language
+  console.log('[Project] Auto-translating content...')
+  const translated = await autoTranslateFields({
     title: toLocalizedRequired(data.title),
     subtitle: toLocalized(data.subtitle),
     description: toLocalizedRequired(data.description),
     content: toLocalized(data.content),
+    metaTitle: toLocalized(data.metaTitle),
+    metaDescription: toLocalized(data.metaDescription),
+  })
+  console.log('[Project] Auto-translation complete')
+
+  const project = await db.insert(projects).values({
+    slug: data.slug,
+    title: translated.title || toLocalizedRequired(data.title),
+    subtitle: translated.subtitle,
+    description: translated.description || toLocalizedRequired(data.description),
+    content: translated.content,
     featuredImage: data.featuredImage,
     gallery: data.gallery,
     category: data.category,
@@ -128,8 +141,8 @@ export async function createProject(data: {
     budget: data.budget,
     beneficiaries: data.beneficiaries,
     location: data.location,
-    metaTitle: toLocalized(data.metaTitle),
-    metaDescription: toLocalized(data.metaDescription),
+    metaTitle: translated.metaTitle,
+    metaDescription: translated.metaDescription,
     isPublished: data.isPublished,
     donationEnabled: data.donationEnabled,
     donationGoal: data.donationGoal,
@@ -227,14 +240,30 @@ export async function updateProject(id: string, data: {
     }
   }
 
+  // Auto-translate any fields that are missing one language
+  const fieldsToTranslate: Record<string, LocalizedString | string | null | undefined> = {}
+  if (data.title !== undefined) fieldsToTranslate.title = toLocalizedRequired(data.title)
+  if (data.subtitle !== undefined) fieldsToTranslate.subtitle = toLocalized(data.subtitle)
+  if (data.description !== undefined) fieldsToTranslate.description = toLocalizedRequired(data.description)
+  if (data.content !== undefined) fieldsToTranslate.content = toLocalized(data.content)
+  if (data.metaTitle !== undefined) fieldsToTranslate.metaTitle = toLocalized(data.metaTitle)
+  if (data.metaDescription !== undefined) fieldsToTranslate.metaDescription = toLocalized(data.metaDescription)
+
+  let translated: Record<string, LocalizedString | undefined> = {}
+  if (Object.keys(fieldsToTranslate).length > 0) {
+    console.log('[Project] Auto-translating updated content...')
+    translated = await autoTranslateFields(fieldsToTranslate)
+    console.log('[Project] Auto-translation complete')
+  }
+
   // Prepare update data with LocalizedString conversion
   const updateData: Record<string, unknown> = {
     updatedAt: new Date(),
     ...(data.slug !== undefined && { slug: data.slug }),
-    ...(data.title !== undefined && { title: toLocalizedRequired(data.title) }),
-    ...(data.subtitle !== undefined && { subtitle: toLocalized(data.subtitle) }),
-    ...(data.description !== undefined && { description: toLocalizedRequired(data.description) }),
-    ...(data.content !== undefined && { content: toLocalized(data.content) }),
+    ...(data.title !== undefined && { title: translated.title || toLocalizedRequired(data.title) }),
+    ...(data.subtitle !== undefined && { subtitle: translated.subtitle }),
+    ...(data.description !== undefined && { description: translated.description || toLocalizedRequired(data.description) }),
+    ...(data.content !== undefined && { content: translated.content }),
     ...(data.featuredImage !== undefined && { featuredImage: data.featuredImage }),
     ...(data.gallery !== undefined && { gallery: data.gallery }),
     ...(data.category !== undefined && { category: data.category }),
@@ -244,8 +273,8 @@ export async function updateProject(id: string, data: {
     ...(data.budget !== undefined && { budget: data.budget }),
     ...(data.beneficiaries !== undefined && { beneficiaries: data.beneficiaries }),
     ...(data.location !== undefined && { location: data.location }),
-    ...(data.metaTitle !== undefined && { metaTitle: toLocalized(data.metaTitle) }),
-    ...(data.metaDescription !== undefined && { metaDescription: toLocalized(data.metaDescription) }),
+    ...(data.metaTitle !== undefined && { metaTitle: translated.metaTitle }),
+    ...(data.metaDescription !== undefined && { metaDescription: translated.metaDescription }),
     ...(data.isPublished !== undefined && { isPublished: data.isPublished }),
     ...(data.donationEnabled !== undefined && { donationEnabled: data.donationEnabled }),
     ...(data.donationGoal !== undefined && { donationGoal: data.donationGoal }),
