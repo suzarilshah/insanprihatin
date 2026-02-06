@@ -1,9 +1,24 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
-import OrgChartNode, { type TeamMemberNode } from './OrgChartNode'
+import OrgChartNode, { type TeamMemberNode, type ReportType } from './OrgChartNode'
+
+// Dotted line colors based on report type
+const reportTypeColors: Record<ReportType, string> = {
+  direct: '#14b8a6', // teal
+  dotted: '#8b5cf6', // purple
+  functional: '#f59e0b', // amber
+  project: '#3b82f6', // blue
+}
+
+// Type for dotted line connection
+type DottedConnection = {
+  fromId: string
+  toId: string
+  reportType: ReportType
+}
 
 interface OrgChartProps {
   members: TeamMemberNode[]
@@ -128,6 +143,10 @@ export default function OrgChart({
   const [viewMode, setViewMode] = useState<'tree' | 'grid' | 'department'>(variant)
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all')
   const [selectedMember, setSelectedMember] = useState<TeamMemberNode | null>(null)
+  const [dottedLines, setDottedLines] = useState<Array<{
+    x1: number; y1: number; x2: number; y2: number; color: string; reportType: ReportType
+  }>>([])
+  const treeContainerRef = useRef<HTMLDivElement>(null)
 
   // Filter active members only
   const activeMembers = useMemo(() =>
@@ -152,6 +171,79 @@ export default function OrgChart({
     if (selectedDepartment === 'all') return activeMembers
     return activeMembers.filter(m => m.department === selectedDepartment)
   }, [activeMembers, selectedDepartment])
+
+  // Collect all dotted connections from members
+  const dottedConnections = useMemo(() => {
+    const connections: DottedConnection[] = []
+    activeMembers.forEach(member => {
+      if (member.additionalManagers && member.additionalManagers.length > 0) {
+        member.additionalManagers.forEach(am => {
+          connections.push({
+            fromId: member.id,
+            toId: am.managerId,
+            reportType: am.reportType,
+          })
+        })
+      }
+    })
+    return connections
+  }, [activeMembers])
+
+  // Calculate dotted line positions after render
+  const calculateDottedLines = useCallback(() => {
+    if (!treeContainerRef.current || dottedConnections.length === 0) {
+      setDottedLines([])
+      return
+    }
+
+    const container = treeContainerRef.current
+    const containerRect = container.getBoundingClientRect()
+    const newLines: typeof dottedLines = []
+
+    dottedConnections.forEach(conn => {
+      const fromEl = container.querySelector(`[data-member-id="${conn.fromId}"]`)
+      const toEl = container.querySelector(`[data-member-id="${conn.toId}"]`)
+
+      if (fromEl && toEl) {
+        const fromRect = fromEl.getBoundingClientRect()
+        const toRect = toEl.getBoundingClientRect()
+
+        // Calculate center points relative to container
+        const x1 = fromRect.left + fromRect.width / 2 - containerRect.left
+        const y1 = fromRect.top - containerRect.top
+        const x2 = toRect.left + toRect.width / 2 - containerRect.left
+        const y2 = toRect.bottom - containerRect.top
+
+        newLines.push({
+          x1, y1, x2, y2,
+          color: reportTypeColors[conn.reportType],
+          reportType: conn.reportType,
+        })
+      }
+    })
+
+    setDottedLines(newLines)
+  }, [dottedConnections])
+
+  // Recalculate lines when tree view is active and data changes
+  useEffect(() => {
+    if (viewMode === 'tree') {
+      // Small delay to ensure DOM is rendered
+      const timer = setTimeout(calculateDottedLines, 500)
+      return () => clearTimeout(timer)
+    } else {
+      setDottedLines([])
+    }
+  }, [viewMode, calculateDottedLines, treeData])
+
+  // Also recalculate on window resize
+  useEffect(() => {
+    if (viewMode !== 'tree') return
+
+    const handleResize = () => calculateDottedLines()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [viewMode, calculateDottedLines])
 
   const handleMemberClick = (member: TeamMemberNode) => {
     setSelectedMember(member)
@@ -254,7 +346,93 @@ export default function OrgChart({
       {/* Tree View */}
       {viewMode === 'tree' && (
         <div className="overflow-x-auto pb-12 pt-4 scrollbar-hide">
-          <div className="flex items-start justify-center min-w-max px-8">
+          {/* Dotted Line Legend */}
+          {dottedConnections.length > 0 && (
+            <div className="flex flex-wrap justify-center gap-4 mb-6 px-4">
+              <span className="text-xs text-gray-500 font-medium">Reporting Lines:</span>
+              {(['dotted', 'functional', 'project'] as ReportType[]).map(type => {
+                const hasType = dottedConnections.some(c => c.reportType === type)
+                if (!hasType) return null
+                return (
+                  <div key={type} className="flex items-center gap-2">
+                    <svg width="24" height="2">
+                      <line
+                        x1="0" y1="1" x2="24" y2="1"
+                        stroke={reportTypeColors[type]}
+                        strokeWidth="2"
+                        strokeDasharray="4,2"
+                      />
+                    </svg>
+                    <span className="text-xs text-gray-600 capitalize">{type}</span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+          <div ref={treeContainerRef} className="relative flex items-start justify-center min-w-max px-8">
+            {/* SVG Overlay for Dotted Lines */}
+            {dottedLines.length > 0 && (
+              <svg
+                className="absolute inset-0 pointer-events-none z-50"
+                style={{ width: '100%', height: '100%', overflow: 'visible' }}
+              >
+                <defs>
+                  <marker
+                    id="arrowhead-dotted"
+                    markerWidth="6"
+                    markerHeight="6"
+                    refX="6"
+                    refY="3"
+                    orient="auto"
+                  >
+                    <polygon points="0 0, 6 3, 0 6" fill="#8b5cf6" />
+                  </marker>
+                  <marker
+                    id="arrowhead-functional"
+                    markerWidth="6"
+                    markerHeight="6"
+                    refX="6"
+                    refY="3"
+                    orient="auto"
+                  >
+                    <polygon points="0 0, 6 3, 0 6" fill="#f59e0b" />
+                  </marker>
+                  <marker
+                    id="arrowhead-project"
+                    markerWidth="6"
+                    markerHeight="6"
+                    refX="6"
+                    refY="3"
+                    orient="auto"
+                  >
+                    <polygon points="0 0, 6 3, 0 6" fill="#3b82f6" />
+                  </marker>
+                </defs>
+                {dottedLines.map((line, index) => {
+                  // Create a curved path from member to manager
+                  const midY = (line.y1 + line.y2) / 2
+                  const curveOffset = Math.abs(line.x2 - line.x1) * 0.3
+                  const path = `M ${line.x1} ${line.y1}
+                    C ${line.x1} ${line.y1 - curveOffset},
+                      ${line.x2} ${line.y2 + curveOffset},
+                      ${line.x2} ${line.y2}`
+
+                  return (
+                    <g key={index}>
+                      <path
+                        d={path}
+                        fill="none"
+                        stroke={line.color}
+                        strokeWidth="2"
+                        strokeDasharray="6,4"
+                        markerEnd={`url(#arrowhead-${line.reportType})`}
+                        className="transition-opacity duration-300"
+                      />
+                    </g>
+                  )
+                })}
+              </svg>
+            )}
             {treeData.map((root, index) => (
               <OrgChartNode
                 key={root.id}

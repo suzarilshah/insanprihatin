@@ -49,7 +49,7 @@ const toLocalizedRequired = (value: LocalizedField): LocalizedString => {
   return value
 }
 
-export async function getTeamMembers(options?: { department?: string; active?: boolean }) {
+export async function getTeamMembers(options?: { department?: string; active?: boolean; includeManagers?: boolean }) {
   const conditions = []
 
   if (options?.active !== undefined) {
@@ -64,6 +64,45 @@ export async function getTeamMembers(options?: { department?: string; active?: b
     where: conditions.length > 0 ? and(...conditions) : undefined,
     orderBy: [asc(teamMembers.sortOrder), asc(teamMembers.name)],
   })
+
+  // If includeManagers is true, fetch all reporting relationships
+  if (options?.includeManagers) {
+    const memberIds = members.map(m => m.id)
+    if (memberIds.length > 0) {
+      // Get all reporting relationships for these members
+      const allRelationships = await db.query.teamMemberReports.findMany({
+        where: or(...memberIds.map(id => eq(teamMemberReports.memberId, id))),
+      })
+
+      // Create a map of member ID to their additional managers (non-primary)
+      const additionalManagersMap = new Map<string, Array<{
+        id: string
+        managerId: string
+        reportType: ReportType
+        notes: string | null
+      }>>()
+
+      for (const rel of allRelationships) {
+        // Skip primary relationships (those are shown via parentId)
+        if (rel.isPrimary) continue
+
+        const existing = additionalManagersMap.get(rel.memberId) || []
+        existing.push({
+          id: rel.id,
+          managerId: rel.managerId,
+          reportType: (rel.reportType || 'direct') as ReportType,
+          notes: rel.notes,
+        })
+        additionalManagersMap.set(rel.memberId, existing)
+      }
+
+      // Add additional managers to each member
+      return members.map(member => ({
+        ...member,
+        additionalManagers: additionalManagersMap.get(member.id) || [],
+      }))
+    }
+  }
 
   return members
 }

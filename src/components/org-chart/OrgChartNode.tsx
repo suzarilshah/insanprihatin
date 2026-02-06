@@ -4,6 +4,15 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 
+export type ReportType = 'direct' | 'dotted' | 'functional' | 'project'
+
+export type AdditionalManager = {
+  id: string
+  managerId: string
+  reportType: ReportType
+  notes: string | null
+}
+
 export type TeamMemberNode = {
   id: string
   name: string
@@ -18,6 +27,7 @@ export type TeamMemberNode = {
   parentId: string | null
   isActive: boolean | null
   children?: TeamMemberNode[]
+  additionalManagers?: AdditionalManager[]
 }
 
 interface OrgChartNodeProps {
@@ -76,13 +86,15 @@ export default function OrgChartNode({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: depth * 0.1, duration: 0.4 }}
         className="relative z-10"
+        data-member-id={member.id}
       >
         <div
           onClick={() => onMemberClick?.(member)}
           className={`
             relative bg-white rounded-2xl overflow-hidden cursor-pointer
-            border border-gray-100 transition-all duration-300
+            border transition-all duration-300
             group
+            ${member.additionalManagers && member.additionalManagers.length > 0 ? 'border-purple-300 ring-2 ring-purple-100' : 'border-gray-100'}
             ${isRoot ? 'shadow-2xl scale-105' : 'shadow-elevated hover:shadow-dramatic hover:-translate-y-1'}
             ${isRoot ? 'w-[280px]' : 'w-[220px]'}
           `}
@@ -149,6 +161,22 @@ export default function OrgChartNode({
               `}>
                 {member.department}
               </span>
+            )}
+
+            {/* Additional Managers Indicator */}
+            {member.additionalManagers && member.additionalManagers.length > 0 && (
+              <div className="mt-2 flex items-center justify-center gap-1">
+                <span className={`
+                  inline-flex items-center gap-1 px-2 py-0.5
+                  bg-purple-50 rounded-full border border-purple-100
+                  ${isRoot ? 'text-[10px]' : 'text-[9px]'} text-purple-600 font-medium
+                `}>
+                  <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                  </svg>
+                  +{member.additionalManagers.length} manager{member.additionalManagers.length > 1 ? 's' : ''}
+                </span>
+              </div>
             )}
           </div>
 

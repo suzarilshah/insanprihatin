@@ -50,7 +50,7 @@ export default async function AboutPage({
 
   // Fetch data from database
   const [teamMembers, aboutData, impactStatsData] = await Promise.all([
-    getTeamMembers({ active: true }),
+    getTeamMembers({ active: true, includeManagers: true }),
     getAboutContent(),
     getImpactStats(),
   ])

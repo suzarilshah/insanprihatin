@@ -8,6 +8,15 @@ import { OrgChart } from '@/components/org-chart'
 import { type LocalizedString, type Locale, getLocalizedValue } from '@/i18n/config'
 
 // Types with LocalizedString support
+type ReportType = 'direct' | 'dotted' | 'functional' | 'project'
+
+type AdditionalManager = {
+  id: string
+  managerId: string
+  reportType: ReportType
+  notes: string | null
+}
+
 type TeamMember = {
   id: string
   name: string
@@ -26,6 +35,7 @@ type TeamMember = {
   updatedAt: Date
   microsoftId?: string | null
   microsoftSyncedAt?: Date | null
+  additionalManagers?: AdditionalManager[]
 }
 
 type AboutData = {
