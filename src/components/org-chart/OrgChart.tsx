@@ -313,12 +313,12 @@ export default function OrgChart({
         </div>
       )}
 
-      {/* Department Legend */}
-      {(viewMode === 'department' || viewMode === 'tree') && departments.length > 0 && (
+      {/* Department Legend - Compact */}
+      {viewMode === 'department' && departments.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-wrap justify-center gap-3 mb-10"
+          className="flex flex-wrap justify-center gap-2 mb-8"
         >
           {departments.map((dept, i) => {
             const styles = getDepartmentStyles(dept)
@@ -327,16 +327,12 @@ export default function OrgChart({
                 key={dept}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.05 }}
-                className={`
-                  flex items-center gap-2 px-4 py-2 rounded-full
-                  bg-white border border-gray-200 shadow-sm
-                  hover:shadow-md transition-shadow cursor-default
-                `}
+                transition={{ delay: i * 0.03 }}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white border border-gray-100 shadow-sm text-xs"
               >
-                <div className={`w-3 h-3 rounded-full bg-gradient-to-r ${styles.gradient}`} />
-                <span className="text-sm text-gray-600 font-medium">{dept}</span>
-                <span className="text-xs text-gray-400">({departmentGroups.get(dept)?.length || 0})</span>
+                <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${styles.gradient}`} />
+                <span className="text-gray-600 font-medium">{dept}</span>
+                <span className="text-gray-400">({departmentGroups.get(dept)?.length || 0})</span>
               </motion.div>
             )
           })}
@@ -345,77 +341,78 @@ export default function OrgChart({
 
       {/* Tree View */}
       {viewMode === 'tree' && (
-        <div className="overflow-x-auto pb-12 pt-4 scrollbar-hide">
+        <div className="pb-8 pt-4">
           {/* Dotted Line Legend */}
           {dottedConnections.length > 0 && (
-            <div className="flex flex-wrap justify-center gap-4 mb-6 px-4">
-              <span className="text-xs text-gray-500 font-medium">Reporting Lines:</span>
+            <div className="flex flex-wrap justify-center gap-3 mb-6 px-4">
+              <span className="text-[10px] sm:text-xs text-gray-500 font-medium">Additional Reporting:</span>
               {(['dotted', 'functional', 'project'] as ReportType[]).map(type => {
                 const hasType = dottedConnections.some(c => c.reportType === type)
                 if (!hasType) return null
                 return (
-                  <div key={type} className="flex items-center gap-2">
-                    <svg width="24" height="2">
+                  <div key={type} className="flex items-center gap-1.5">
+                    <svg width="20" height="2">
                       <line
-                        x1="0" y1="1" x2="24" y2="1"
+                        x1="0" y1="1" x2="20" y2="1"
                         stroke={reportTypeColors[type]}
                         strokeWidth="2"
-                        strokeDasharray="4,2"
+                        strokeDasharray="3,2"
                       />
                     </svg>
-                    <span className="text-xs text-gray-600 capitalize">{type}</span>
+                    <span className="text-[10px] sm:text-xs text-gray-600 capitalize">{type}</span>
                   </div>
                 )
               })}
             </div>
           )}
-          <div ref={treeContainerRef} className="relative flex items-start justify-center min-w-max px-8">
-            {/* SVG Overlay for Dotted Lines */}
+          {/* Responsive tree container - no horizontal scroll */}
+          <div ref={treeContainerRef} className="relative flex flex-wrap items-start justify-center gap-2 sm:gap-4 px-2 sm:px-4">
+            {/* SVG Overlay for Dotted Lines - arrows FROM manager TO report */}
             {dottedLines.length > 0 && (
               <svg
-                className="absolute inset-0 pointer-events-none z-50"
+                className="absolute inset-0 pointer-events-none z-40"
                 style={{ width: '100%', height: '100%', overflow: 'visible' }}
               >
                 <defs>
                   <marker
                     id="arrowhead-dotted"
-                    markerWidth="6"
-                    markerHeight="6"
-                    refX="6"
-                    refY="3"
+                    markerWidth="5"
+                    markerHeight="5"
+                    refX="5"
+                    refY="2.5"
                     orient="auto"
                   >
-                    <polygon points="0 0, 6 3, 0 6" fill="#8b5cf6" />
+                    <polygon points="0 0, 5 2.5, 0 5" fill="#8b5cf6" />
                   </marker>
                   <marker
                     id="arrowhead-functional"
-                    markerWidth="6"
-                    markerHeight="6"
-                    refX="6"
-                    refY="3"
+                    markerWidth="5"
+                    markerHeight="5"
+                    refX="5"
+                    refY="2.5"
                     orient="auto"
                   >
-                    <polygon points="0 0, 6 3, 0 6" fill="#f59e0b" />
+                    <polygon points="0 0, 5 2.5, 0 5" fill="#f59e0b" />
                   </marker>
                   <marker
                     id="arrowhead-project"
-                    markerWidth="6"
-                    markerHeight="6"
-                    refX="6"
-                    refY="3"
+                    markerWidth="5"
+                    markerHeight="5"
+                    refX="5"
+                    refY="2.5"
                     orient="auto"
                   >
-                    <polygon points="0 0, 6 3, 0 6" fill="#3b82f6" />
+                    <polygon points="0 0, 5 2.5, 0 5" fill="#3b82f6" />
                   </marker>
                 </defs>
                 {dottedLines.map((line, index) => {
-                  // Create a curved path from member to manager
-                  const midY = (line.y1 + line.y2) / 2
-                  const curveOffset = Math.abs(line.x2 - line.x1) * 0.3
-                  const path = `M ${line.x1} ${line.y1}
-                    C ${line.x1} ${line.y1 - curveOffset},
-                      ${line.x2} ${line.y2 + curveOffset},
-                      ${line.x2} ${line.y2}`
+                  // Create a curved path FROM manager (x2,y2) TO report (x1,y1)
+                  // Arrow points DOWN toward the report
+                  const curveOffset = Math.abs(line.x2 - line.x1) * 0.4 + 20
+                  const path = `M ${line.x2} ${line.y2}
+                    C ${line.x2} ${line.y2 + curveOffset},
+                      ${line.x1} ${line.y1 - curveOffset},
+                      ${line.x1} ${line.y1}`
 
                   return (
                     <g key={index}>
@@ -423,21 +420,24 @@ export default function OrgChart({
                         d={path}
                         fill="none"
                         stroke={line.color}
-                        strokeWidth="2"
-                        strokeDasharray="6,4"
+                        strokeWidth="1.5"
+                        strokeDasharray="4,3"
                         markerEnd={`url(#arrowhead-${line.reportType})`}
                         className="transition-opacity duration-300"
+                        opacity="0.7"
                       />
                     </g>
                   )
                 })}
               </svg>
             )}
+            {/* Founders side by side - using flex gap */}
             {treeData.map((root, index) => (
               <OrgChartNode
                 key={root.id}
                 member={root}
-                isRoot={index === 0}
+                isRoot={treeData.length === 1 || index === 0}
+                isFounder={true}
                 onMemberClick={handleMemberClick}
               />
             ))}

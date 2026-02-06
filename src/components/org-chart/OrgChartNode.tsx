@@ -34,8 +34,10 @@ interface OrgChartNodeProps {
   member: TeamMemberNode
   depth?: number
   isRoot?: boolean
+  isFounder?: boolean // True for top-level members (no parent)
   departmentColor?: string
   showDetails?: boolean
+  compact?: boolean // For responsive compact mode
   onMemberClick?: (member: TeamMemberNode) => void
 }
 
@@ -56,7 +58,7 @@ const departmentColors: Record<string, string> = {
 }
 
 function getDepartmentColor(department: string | null): string {
-  if (!department) return 'from-gray-500 to-gray-600'
+  if (!department) return 'from-amber-500 to-amber-600'
   return departmentColors[department] || 'from-slate-500 to-slate-600'
 }
 
@@ -64,56 +66,70 @@ export default function OrgChartNode({
   member,
   depth = 0,
   isRoot = false,
+  isFounder = false,
   departmentColor,
   showDetails = true,
+  compact = false,
   onMemberClick,
 }: OrgChartNodeProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(depth > 1) // Auto-collapse deeper levels
   const color = departmentColor || getDepartmentColor(member.department)
   const hasChildren = member.children && member.children.length > 0
-  
+
   // Toggle collapse
   const toggleCollapse = (e: React.MouseEvent) => {
     e.stopPropagation()
     setIsCollapsed(!isCollapsed)
   }
 
+  // Determine if this is a founder/top-level (should not show department)
+  const isTopLevel = isFounder || isRoot || depth === 0
+
+  // Responsive card sizing
+  const cardWidth = compact
+    ? 'w-[140px] sm:w-[160px]'
+    : isRoot
+      ? 'w-[180px] sm:w-[220px] lg:w-[260px]'
+      : 'w-[140px] sm:w-[160px] lg:w-[180px]'
+
+  const avatarSize = compact
+    ? 'w-10 h-10 sm:w-12 sm:h-12'
+    : isRoot
+      ? 'w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20'
+      : 'w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14'
+
   return (
     <div className="flex flex-col items-center">
       {/* Node Card */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: depth * 0.1, duration: 0.4 }}
-        className="relative z-10"
+        transition={{ delay: Math.min(depth * 0.05, 0.3), duration: 0.3 }}
+        className="relative z-10 pb-4" // Added pb-4 to ensure collapse button is visible
         data-member-id={member.id}
       >
         <div
           onClick={() => onMemberClick?.(member)}
           className={`
-            relative bg-white rounded-2xl overflow-hidden cursor-pointer
+            relative bg-white rounded-xl overflow-visible cursor-pointer
             border transition-all duration-300
             group
             ${member.additionalManagers && member.additionalManagers.length > 0 ? 'border-purple-300 ring-2 ring-purple-100' : 'border-gray-100'}
-            ${isRoot ? 'shadow-2xl scale-105' : 'shadow-elevated hover:shadow-dramatic hover:-translate-y-1'}
-            ${isRoot ? 'w-[280px]' : 'w-[220px]'}
+            ${isRoot ? 'shadow-xl' : 'shadow-md hover:shadow-lg hover:-translate-y-0.5'}
+            ${cardWidth}
           `}
         >
-          {/* Top color bar with shimmer effect */}
-          <div className="relative h-1.5 overflow-hidden">
+          {/* Top color bar */}
+          <div className="relative h-1 overflow-hidden rounded-t-xl">
             <div className={`absolute inset-0 bg-gradient-to-r ${color}`} />
-            <div className="absolute inset-0 bg-white/30 skew-x-12 translate-x-[-100%] group-hover:animate-shimmer" />
           </div>
 
           {/* Content */}
-          <div className={`${isRoot ? 'p-6' : 'p-5'} text-center bg-white`}>
-            {/* Avatar with Glow */}
-            <div className={`relative mx-auto mb-4 ${isRoot ? 'w-24 h-24' : 'w-16 h-16'} transition-transform duration-300 group-hover:scale-105`}>
-              <div className={`absolute -inset-1 rounded-full bg-gradient-to-br ${color} opacity-20 blur-md group-hover:opacity-40 transition-opacity`} />
-              <div className={`
-                relative w-full h-full rounded-full overflow-hidden
-                border-[3px] border-white shadow-sm
-              `}>
+          <div className={`${compact ? 'p-2 sm:p-3' : isRoot ? 'p-3 sm:p-4' : 'p-2 sm:p-3'} text-center bg-white rounded-b-xl`}>
+            {/* Avatar */}
+            <div className={`relative mx-auto mb-2 ${avatarSize} transition-transform duration-300 group-hover:scale-105`}>
+              <div className={`absolute -inset-0.5 rounded-full bg-gradient-to-br ${color} opacity-20 blur-sm group-hover:opacity-30 transition-opacity`} />
+              <div className="relative w-full h-full rounded-full overflow-hidden border-2 border-white shadow-sm">
                 {member.image ? (
                   <Image
                     src={member.image}
@@ -125,75 +141,62 @@ export default function OrgChartNode({
                   <div className={`
                     w-full h-full bg-gradient-to-br ${color}
                     flex items-center justify-center text-white
-                    ${isRoot ? 'text-2xl' : 'text-lg'} font-display font-bold
+                    ${isRoot ? 'text-base sm:text-lg' : 'text-xs sm:text-sm'} font-bold
                   `}>
                     {member.name.split(' ').map((n) => n[0]).slice(0, 2).join('')}
                   </div>
                 )}
               </div>
-
-              {/* Status indicator */}
-              {member.isActive && (
-                <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white shadow-sm" title="Active" />
-              )}
             </div>
 
             {/* Name & Position */}
             <h3 className={`
-              font-heading font-bold text-foundation-charcoal leading-tight mb-1
-              ${isRoot ? 'text-lg' : 'text-sm'}
+              font-semibold text-gray-900 leading-tight mb-0.5 truncate
+              ${compact ? 'text-[10px] sm:text-xs' : isRoot ? 'text-xs sm:text-sm' : 'text-[10px] sm:text-xs'}
             `}>
               {member.name}
             </h3>
             <p className={`
-              text-teal-600 font-medium tracking-wide
-              ${isRoot ? 'text-sm' : 'text-xs'}
+              text-teal-600 font-medium leading-tight
+              ${compact ? 'text-[8px] sm:text-[10px]' : isRoot ? 'text-[10px] sm:text-xs' : 'text-[8px] sm:text-[10px]'}
             `}>
               {member.position}
             </p>
 
-            {/* Department Badge */}
-            {showDetails && member.department && (
-              <span className={`
-                inline-flex items-center gap-1.5 mt-3 px-2.5 py-0.5
-                bg-gray-50 rounded-full border border-gray-100
-                ${isRoot ? 'text-xs' : 'text-[10px]'} text-gray-500 font-medium
-              `}>
+            {/* Department Badge - ONLY show for non-founders/non-top-level */}
+            {showDetails && member.department && !isTopLevel && !compact && (
+              <span className="inline-flex items-center gap-1 mt-1.5 px-1.5 py-0.5 bg-gray-50 rounded-full border border-gray-100 text-[8px] sm:text-[9px] text-gray-500 font-medium truncate max-w-full">
                 {member.department}
               </span>
             )}
 
             {/* Additional Managers Indicator */}
-            {member.additionalManagers && member.additionalManagers.length > 0 && (
-              <div className="mt-2 flex items-center justify-center gap-1">
-                <span className={`
-                  inline-flex items-center gap-1 px-2 py-0.5
-                  bg-purple-50 rounded-full border border-purple-100
-                  ${isRoot ? 'text-[10px]' : 'text-[9px]'} text-purple-600 font-medium
-                `}>
-                  <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            {member.additionalManagers && member.additionalManagers.length > 0 && !compact && (
+              <div className="mt-1 flex items-center justify-center">
+                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-purple-50 rounded-full border border-purple-100 text-[8px] text-purple-600 font-medium">
+                  <svg className="w-2 h-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
                   </svg>
-                  +{member.additionalManagers.length} manager{member.additionalManagers.length > 1 ? 's' : ''}
+                  +{member.additionalManagers.length}
                 </span>
               </div>
             )}
           </div>
 
-          {/* Expand/Collapse Button */}
+          {/* Expand/Collapse Button - positioned outside overflow */}
           {hasChildren && (
             <button
               onClick={toggleCollapse}
               className={`
-                absolute -bottom-3 left-1/2 -translate-x-1/2
-                w-6 h-6 rounded-full bg-white border border-gray-200 shadow-md
+                absolute -bottom-2 left-1/2 -translate-x-1/2
+                w-5 h-5 rounded-full bg-white border border-gray-200 shadow-sm
                 flex items-center justify-center
-                text-gray-400 hover:text-teal-600 hover:border-teal-200
-                transition-all z-20
+                text-gray-400 hover:text-teal-600 hover:border-teal-200 hover:bg-teal-50
+                transition-all z-30
                 ${isCollapsed ? 'rotate-0' : 'rotate-180'}
               `}
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
@@ -208,51 +211,29 @@ export default function OrgChartNode({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="flex flex-col items-center"
+            className="flex flex-col items-center w-full"
           >
-            {/* Vertical line down from parent */}
-            <div className="w-px h-8 bg-gradient-to-b from-gray-200 to-gray-300 relative">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-teal-500 shadow-sm" />
-            </div>
-
-            {/* Horizontal connector line container */}
-            <div className="relative flex justify-center px-4">
-              {/* The horizontal bar itself */}
-              {member.children && member.children.length > 1 && (
-                <div className="absolute top-0 left-0 right-0 h-px bg-gray-300 mx-[calc(50%/var(--child-count))]">
-                  {/* Dynamic width is handled by the container padding/margins naturally in flex, 
-                      but for a perfect tree line we need to span from first child center to last child center.
-                      Using a simplified approach with border-top on a wrapper div below.
-                  */}
-                </div>
-              )}
-              
-              {/* We need a specific structure for the lines. 
-                  Instead of a single div, let's use the individual child wrappers to create the lines.
-              */}
+            {/* Vertical line down from parent with arrow */}
+            <div className="w-px h-6 bg-gradient-to-b from-gray-300 to-gray-400 relative">
+              {/* Arrow pointing DOWN to children */}
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2">
+                <svg className="w-2 h-2 text-gray-400" viewBox="0 0 8 8" fill="currentColor">
+                  <polygon points="4,8 0,2 8,2" />
+                </svg>
+              </div>
             </div>
 
             {/* Children Container */}
-            <div className="flex pt-4 relative">
-              {/* Horizontal line spanning children */}
-              {member.children && member.children.length > 1 && (
-                <div className="absolute top-0 left-0 right-0 h-4 overflow-hidden">
-                   {/* This approach is tricky. Let's use the individual child method: 
-                       Each child has a top line. 
-                       The parent has a bottom line.
-                   */}
-                </div>
-              )}
-
+            <div className="flex flex-wrap justify-center gap-1 sm:gap-2 pt-2 relative">
               {member.children?.map((child, index, arr) => {
                 const isFirst = index === 0
                 const isLast = index === arr.length - 1
                 const isOnly = arr.length === 1
 
                 return (
-                  <div key={child.id} className="flex flex-col items-center px-4 relative">
+                  <div key={child.id} className="flex flex-col items-center relative">
                     {/* Horizontal connector line for this child's section */}
-                    {!isOnly && (
+                    {!isOnly && arr.length <= 4 && (
                       <>
                         {/* Line to the left (if not first) */}
                         <div className={`absolute top-0 left-0 w-1/2 h-px bg-gray-300 ${isFirst ? 'hidden' : 'block'}`} />
@@ -260,18 +241,21 @@ export default function OrgChartNode({
                         <div className={`absolute top-0 right-0 w-1/2 h-px bg-gray-300 ${isLast ? 'hidden' : 'block'}`} />
                       </>
                     )}
-                    
+
                     {/* Vertical line down to this child */}
-                    <div className="w-px h-8 bg-gradient-to-b from-gray-300 to-gray-200 -mt-px mb-2 relative">
-                       {/* Connector Dot at T-junction */}
-                       {!isOnly && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-gray-300" />}
+                    <div className="w-px h-4 bg-gray-300 mb-1 relative">
+                      {!isOnly && arr.length <= 4 && (
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-gray-300" />
+                      )}
                     </div>
 
                     <OrgChartNode
                       member={child}
                       depth={depth + 1}
+                      isFounder={false}
                       departmentColor={color}
                       showDetails={showDetails}
+                      compact={compact || depth > 0}
                       onMemberClick={onMemberClick}
                     />
                   </div>
