@@ -15,13 +15,9 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
 
   // Pages that have light backgrounds and need dark navbar text
-  const lightBackgroundPages = ['/donate', '/donate/success', '/donate/failed']
-  const isLightBackgroundPage = lightBackgroundPages.some(page =>
-    pathname === page ||
-    pathname?.startsWith('/donate/') ||
-    pathname?.endsWith('/donate') ||
-    pathname?.includes('/donate/')
-  )
+  // /donate has a dark hero, so it uses the transparent navbar.
+  const lightBackgroundPages = ['/donate/success', '/donate/failed']
+  const isLightBackgroundPage = lightBackgroundPages.includes(pathname || '')
   const [isVisible, setIsVisible] = useState(true)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const lastScrollY = useRef(0)
@@ -118,11 +114,11 @@ export default function Header() {
     <>
       <header
         className={cn(
-          'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
-          // Show white background when scrolled, mobile menu open, OR on light background pages
+          'fixed top-0 left-0 right-0 z-50 transition-all duration-500',
+          // Glassmorphism state (scrolled/mobile/light page) vs Transparent Gradient state (top of hero)
           (isScrolled || isMobileMenuOpen || isLightBackgroundPage)
-            ? 'bg-white/98 backdrop-blur-xl shadow-elegant'
-            : 'bg-transparent',
+            ? 'bg-white/80 backdrop-blur-md shadow-sm border-b border-white/20 supports-[backdrop-filter]:bg-white/60'
+            : 'bg-gradient-to-b from-black/50 via-black/20 to-transparent',
           isVisible ? 'translate-y-0' : '-translate-y-full'
         )}
         role="banner"

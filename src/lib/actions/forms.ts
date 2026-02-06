@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { db, contentForms, formSubmissions, blogPosts, projects } from '@/db'
 import { eq, desc, and, count, sql, like } from 'drizzle-orm'
-import { requireAuth } from '@/lib/auth-server'
+import { requireAuth } from '@/lib/auth/server'
 import { type LocalizedString } from '@/i18n/config'
 
 type LocalizedField = LocalizedString | string

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db, contactSubmissions } from '@/db'
 import { eq } from 'drizzle-orm'
-import { getSession } from '@/lib/auth-server'
+import { getSession } from '@/lib/auth/server'
 
 export async function PATCH(
   request: NextRequest,

@@ -202,7 +202,7 @@ export default function SettingsPage() {
             Site Settings
           </h1>
           <p className="text-gray-500 text-sm mt-1">
-            Configure your website's global settings
+            Configure your website&apos;s global settings
           </p>
         </div>
         <button

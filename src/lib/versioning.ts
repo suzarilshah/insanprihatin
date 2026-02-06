@@ -139,6 +139,15 @@ function generateChangeSummary(
 }
 
 /**
+ * Check if a string is a valid UUID
+ */
+function isValidUUID(str: string | undefined | null): boolean {
+  if (!str) return false
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  return uuidRegex.test(str)
+}
+
+/**
  * Create a version record for content
  */
 export async function createVersion(
@@ -156,6 +165,10 @@ export async function createVersion(
   const changedFields = detectChangedFields(options?.previousData || null, data)
   const changeSummary = options?.customSummary || generateChangeSummary(changeType, changedFields, contentType)
 
+  // Only use user.id if it's a valid UUID, otherwise set to null
+  // (user.id might be an email when UUID is not available from auth provider)
+  const changedByUUID = isValidUUID(user.id) ? user.id : null
+
   const [version] = await db
     .insert(contentVersions)
     .values({
@@ -166,7 +179,7 @@ export async function createVersion(
       changeType,
       changeSummary,
       changedFields,
-      changedBy: user.id || null,
+      changedBy: changedByUUID,
       changedByEmail: user.email,
       changedByName: user.name,
     })
@@ -292,6 +305,9 @@ export async function logActivity(
     metadata?: Record<string, unknown>
   }
 ): Promise<ActivityLogEntry> {
+  // Only use user.id if it's a valid UUID (see isValidUUID above)
+  const userIdUUID = isValidUUID(options?.user?.id) ? options?.user?.id : null
+
   const [entry] = await db
     .insert(activityLog)
     .values({
@@ -300,7 +316,7 @@ export async function logActivity(
       contentType: options?.contentType || null,
       contentId: options?.contentId || null,
       contentTitle: options?.contentTitle || null,
-      userId: options?.user?.id || null,
+      userId: userIdUUID,
       userEmail: options?.user?.email || null,
       userName: options?.user?.name || null,
       ipAddress: options?.ipAddress || null,

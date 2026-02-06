@@ -158,7 +158,7 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
               transition={{ delay: 0.5 }}
               className="body-large text-white/80 max-w-2xl border-l-2 border-amber-400/50 pl-6"
             >
-              We don't just provide aid; we build systems. From infrastructure to education,
+              We don&apos;t just provide aid; we build systems. From infrastructure to education,
               every project is designed for long-term community resilience and measurable outcomes.
             </motion.p>
           </motion.div>

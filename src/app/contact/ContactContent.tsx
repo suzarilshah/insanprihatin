@@ -190,7 +190,7 @@ export default function ContactContent() {
                 transition={{ delay: 0.3 }}
                 className="block"
               >
-                We'd Love to
+                We&apos;d Love to
               </motion.span>
               <motion.span
                 initial={{ opacity: 0, y: 30 }}
@@ -271,7 +271,7 @@ export default function ContactContent() {
               </div>
 
               <h2 className="heading-subsection text-foundation-charcoal mb-4">
-                Let's Start a Conversation
+                Let&apos;s Start a Conversation
               </h2>
               <p className="text-gray-600 mb-8 max-w-md">
                 Fill out the form below and our team will get back to you within

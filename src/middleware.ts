@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { auth } from '@/lib/auth'
 import createIntlMiddleware from 'next-intl/middleware'
 import { routing } from '@/i18n/navigation'
 
@@ -15,141 +16,118 @@ const securityHeaders = {
 // Create the internationalization middleware
 const intlMiddleware = createIntlMiddleware(routing)
 
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
+// Helper to add security headers to response
+function addSecurityHeaders(response: NextResponse) {
+  Object.entries(securityHeaders).forEach(([key, value]) => {
+    response.headers.set(key, value)
+  })
+  return response
+}
 
-  // Check if the path should skip i18n (admin, api routes)
+// Wrap the auth middleware with NextAuth
+export default auth((req) => {
+  const { pathname } = req.nextUrl
+
+  // Get client IP for logging
+  const forwardedFor = req.headers.get('x-forwarded-for')
+  const clientIP = forwardedFor ? forwardedFor.split(',')[0].trim() : 'unknown'
+
+  // Check if admin route (strict SSO - no dev bypass)
+  if (pathname.startsWith('/admin/dashboard') || pathname.startsWith('/admin/api')) {
+    // No session - redirect to login
+    if (!req.auth) {
+      console.log(`[AUTH:MIDDLEWARE] No session - redirecting to login`, JSON.stringify({
+        pathname,
+        clientIP,
+        timestamp: new Date().toISOString(),
+      }))
+      const loginUrl = new URL('/admin', req.url)
+      loginUrl.searchParams.set('redirect', pathname)
+      return addSecurityHeaders(NextResponse.redirect(loginUrl))
+    }
+
+    // Double-check group membership in middleware (defense in depth)
+    const groups = (req.auth as { groups?: string[] }).groups || []
+    const webadminGroupId = process.env.WEBADMIN_GROUP_ID
+
+    if (!webadminGroupId || !groups.includes(webadminGroupId)) {
+      console.warn(`[AUTH:MIDDLEWARE] UNAUTHORIZED - User not in webadmin group`, JSON.stringify({
+        email: req.auth.user?.email,
+        pathname,
+        clientIP,
+        hasGroupId: !!webadminGroupId,
+        userGroupCount: groups.length,
+        timestamp: new Date().toISOString(),
+      }))
+      return addSecurityHeaders(NextResponse.redirect(new URL('/admin?error=unauthorized', req.url)))
+    }
+
+    // Authorized - continue with security headers
+    console.log(`[AUTH:MIDDLEWARE] Access granted`, JSON.stringify({
+      email: req.auth.user?.email,
+      pathname,
+      timestamp: new Date().toISOString(),
+    }))
+    return addSecurityHeaders(NextResponse.next())
+  }
+
+  // Admin login page - redirect to dashboard if already authenticated with valid group
+  if (pathname === '/admin') {
+    if (req.auth) {
+      const groups = (req.auth as { groups?: string[] }).groups || []
+      const webadminGroupId = process.env.WEBADMIN_GROUP_ID
+
+      if (webadminGroupId && groups.includes(webadminGroupId)) {
+        const redirect = req.nextUrl.searchParams.get('redirect')
+        console.log(`[AUTH:MIDDLEWARE] Already authenticated, redirecting to dashboard`, JSON.stringify({
+          email: req.auth.user?.email,
+          redirect: redirect || '/admin/dashboard',
+        }))
+        return addSecurityHeaders(
+          NextResponse.redirect(new URL(redirect || '/admin/dashboard', req.url))
+        )
+      }
+    }
+    return addSecurityHeaders(NextResponse.next())
+  }
+
+  // API auth routes - skip i18n, add headers, no cache
+  if (pathname.startsWith('/api/auth')) {
+    const response = NextResponse.next()
+    response.headers.set('Cache-Control', 'no-store, max-age=0')
+    return addSecurityHeaders(response)
+  }
+
+  // Other API routes - skip i18n, add headers
+  if (pathname.startsWith('/api')) {
+    return addSecurityHeaders(NextResponse.next())
+  }
+
+  // Check if the path should skip i18n
   const shouldSkipI18n =
     pathname.startsWith('/admin') ||
-    pathname.startsWith('/api') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/images') ||
     pathname.startsWith('/favicon') ||
     pathname.includes('.')
 
-  // For admin routes, apply auth logic
-  if (pathname.startsWith('/admin/dashboard') || pathname.startsWith('/admin/api')) {
-    const authToken = request.cookies.get('admin_session')?.value
-
-    // No token - redirect to login
-    if (!authToken) {
-      const loginUrl = new URL('/admin', request.url)
-      loginUrl.searchParams.set('redirect', pathname)
-      const redirectResponse = NextResponse.redirect(loginUrl)
-
-      Object.entries(securityHeaders).forEach(([key, value]) => {
-        redirectResponse.headers.set(key, value)
-      })
-
-      return redirectResponse
-    }
-
-    // Basic token validation
-    if (authToken.length < 10) {
-      const loginUrl = new URL('/admin?error=invalid_session', request.url)
-      const redirectResponse = NextResponse.redirect(loginUrl)
-
-      redirectResponse.cookies.delete('admin_session')
-      redirectResponse.cookies.delete('user_info')
-
-      Object.entries(securityHeaders).forEach(([key, value]) => {
-        redirectResponse.headers.set(key, value)
-      })
-
-      return redirectResponse
-    }
-
-    // Dev token check
-    if (authToken === 'dev-token') {
-      const isDev = process.env.NODE_ENV === 'development'
-      if (!isDev) {
-        const loginUrl = new URL('/admin?error=invalid_session', request.url)
-        const redirectResponse = NextResponse.redirect(loginUrl)
-
-        redirectResponse.cookies.delete('admin_session')
-        redirectResponse.cookies.delete('user_info')
-
-        Object.entries(securityHeaders).forEach(([key, value]) => {
-          redirectResponse.headers.set(key, value)
-        })
-
-        return redirectResponse
-      }
-    }
-
-    // Token exists and passes validation - continue with security headers
-    const response = NextResponse.next()
-    Object.entries(securityHeaders).forEach(([key, value]) => {
-      response.headers.set(key, value)
-    })
-    return response
-  }
-
-  // Admin login page - redirect to dashboard if already authenticated
-  if (pathname === '/admin') {
-    const authToken = request.cookies.get('admin_session')?.value
-    const redirect = request.nextUrl.searchParams.get('redirect')
-
-    if (authToken && authToken.length > 10) {
-      const redirectUrl = new URL(redirect || '/admin/dashboard', request.url)
-      const redirectResponse = NextResponse.redirect(redirectUrl)
-
-      Object.entries(securityHeaders).forEach(([key, value]) => {
-        redirectResponse.headers.set(key, value)
-      })
-
-      return redirectResponse
-    }
-
-    // Not authenticated - show login page with security headers
-    const response = NextResponse.next()
-    Object.entries(securityHeaders).forEach(([key, value]) => {
-      response.headers.set(key, value)
-    })
-    return response
-  }
-
-  // API routes - skip i18n, add headers
-  if (pathname.startsWith('/api')) {
-    const response = NextResponse.next()
-    if (pathname.startsWith('/api/auth')) {
-      response.headers.set('Cache-Control', 'no-store, max-age=0')
-    }
-    Object.entries(securityHeaders).forEach(([key, value]) => {
-      response.headers.set(key, value)
-    })
-    return response
-  }
-
   // Skip i18n for static files and assets
   if (shouldSkipI18n) {
-    const response = NextResponse.next()
-    Object.entries(securityHeaders).forEach(([key, value]) => {
-      response.headers.set(key, value)
-    })
-    return response
+    return addSecurityHeaders(NextResponse.next())
   }
 
-  // Apply i18n middleware for all other routes
-  const response = intlMiddleware(request)
-
-  // Add security headers to i18n response
-  Object.entries(securityHeaders).forEach(([key, value]) => {
-    response.headers.set(key, value)
-  })
-
-  return response
-}
+  // Apply i18n middleware for public routes
+  const response = intlMiddleware(req as unknown as NextRequest)
+  return addSecurityHeaders(response)
+})
 
 export const config = {
-  // Match all paths except static files
   matcher: [
-    // Match all pathnames except for
-    // - ... if they start with /api, /_next, /images, or /favicon
-    // - ... if they contain a dot (static files)
-    '/((?!api|_next|images|favicon|.*\\..*).*)',
+    // Match all paths except static files
+    '/((?!_next/static|_next/image|favicon.ico).*)',
     // Match admin routes specifically
     '/admin/:path*',
+    // Match API routes
     '/api/:path*',
   ],
 }

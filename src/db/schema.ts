@@ -342,3 +342,15 @@ export const adminNotifications = pgTable('admin_notifications', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   readAt: timestamp('read_at'),
 })
+
+// Team Member Reporting Relationships (for multiple managers)
+// This table enables a team member to report to multiple managers
+export const teamMemberReports = pgTable('team_member_reports', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  memberId: uuid('member_id').notNull(), // The team member who reports
+  managerId: uuid('manager_id').notNull(), // The manager they report to
+  isPrimary: boolean('is_primary').default(false), // Is this the primary reporting relationship?
+  reportType: text('report_type').default('direct'), // 'direct', 'dotted', 'functional', 'project'
+  notes: text('notes'), // Optional notes about the relationship
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})

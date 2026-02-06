@@ -1,12 +1,31 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { db, teamMembers } from '@/db'
-import { eq, asc, and } from 'drizzle-orm'
-import { requireAuth } from '@/lib/auth-server'
+import { db, teamMembers, teamMemberReports } from '@/db'
+import { eq, asc, and, or } from 'drizzle-orm'
+import { requireAuth } from '@/lib/auth/server'
 import { createVersion, logActivity } from '@/lib/versioning'
 import { notifyTeamUpdate, notifyOrgChartUpdate } from '@/lib/actions/notifications'
 import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
+
+// Report type options for multiple reporting relationships
+export type ReportType = 'direct' | 'dotted' | 'functional' | 'project'
+
+export interface ReportingRelationship {
+  id: string
+  memberId: string
+  managerId: string
+  isPrimary: boolean | null
+  reportType: ReportType
+  notes: string | null
+  createdAt: Date
+  manager?: {
+    id: string
+    name: string
+    position: LocalizedString
+    department: string | null
+  }
+}
 
 type LocalizedField = LocalizedString | string
 
@@ -83,6 +102,16 @@ export async function createTeamMember(data: {
     parentId: data.parentId,
     isActive: true,
   }).returning()
+
+  // If there's a parentId, create the primary reporting relationship
+  if (data.parentId) {
+    await db.insert(teamMemberReports).values({
+      memberId: member[0].id,
+      managerId: data.parentId,
+      isPrimary: true,
+      reportType: 'direct',
+    })
+  }
 
   // Create version record
   await createVersion(
@@ -181,9 +210,14 @@ export async function updateTeamMember(id: string, data: {
     user: { id: user.id, email: user.email, name: user.name },
   })
 
+  // If parentId changed, sync with reporting relationships
+  const parentChanged = data.parentId !== undefined && data.parentId !== existing.parentId
+  if (parentChanged) {
+    await syncPrimaryManager(id, data.parentId || null)
+  }
+
   // Create notification for team member update
   const positionChanged = data.position && l(data.position) !== l(existing.position)
-  const parentChanged = data.parentId !== undefined && data.parentId !== existing.parentId
 
   if (positionChanged) {
     await notifyTeamUpdate({
@@ -247,6 +281,14 @@ export async function deleteTeamMember(id: string) {
     memberName: existing.name,
     action: 'removed',
   })
+
+  // Delete all reporting relationships where this member is involved
+  await db.delete(teamMemberReports).where(
+    or(
+      eq(teamMemberReports.memberId, id),
+      eq(teamMemberReports.managerId, id)
+    )
+  )
 
   await db.delete(teamMembers).where(eq(teamMembers.id, id))
 
@@ -503,4 +545,355 @@ export async function initializeOfficialTeam() {
   revalidatePath('/admin/dashboard/team')
 
   return { success: true, count: officialTeam.length }
+}
+
+// ============================================
+// MULTIPLE MANAGERS / REPORTING RELATIONSHIPS
+// ============================================
+
+/**
+ * Get all reporting relationships for a team member
+ */
+export async function getMemberReportingRelationships(memberId: string): Promise<ReportingRelationship[]> {
+  const relationships = await db.query.teamMemberReports.findMany({
+    where: eq(teamMemberReports.memberId, memberId),
+  })
+
+  // Get manager details for each relationship
+  const managerIds = relationships.map(r => r.managerId)
+  const managers = managerIds.length > 0
+    ? await db.query.teamMembers.findMany({
+        where: or(...managerIds.map(id => eq(teamMembers.id, id))),
+      })
+    : []
+
+  const managersMap = new Map(managers.map(m => [m.id, m]))
+
+  return relationships.map(r => ({
+    ...r,
+    reportType: (r.reportType || 'direct') as ReportType,
+    manager: managersMap.get(r.managerId)
+      ? {
+          id: managersMap.get(r.managerId)!.id,
+          name: managersMap.get(r.managerId)!.name,
+          position: managersMap.get(r.managerId)!.position,
+          department: managersMap.get(r.managerId)!.department,
+        }
+      : undefined,
+  }))
+}
+
+/**
+ * Get all direct reports (including multiple reporting) for a manager
+ */
+export async function getManagerDirectReports(managerId: string) {
+  const relationships = await db.query.teamMemberReports.findMany({
+    where: eq(teamMemberReports.managerId, managerId),
+  })
+
+  const memberIds = relationships.map(r => r.memberId)
+  if (memberIds.length === 0) return []
+
+  const members = await db.query.teamMembers.findMany({
+    where: and(
+      or(...memberIds.map(id => eq(teamMembers.id, id))),
+      eq(teamMembers.isActive, true)
+    ),
+    orderBy: [asc(teamMembers.sortOrder), asc(teamMembers.name)],
+  })
+
+  // Combine member data with relationship data
+  return members.map(member => {
+    const relationship = relationships.find(r => r.memberId === member.id)
+    return {
+      ...member,
+      isPrimaryReport: relationship?.isPrimary ?? false,
+      reportType: (relationship?.reportType || 'direct') as ReportType,
+    }
+  })
+}
+
+/**
+ * Add a reporting relationship
+ */
+export async function addReportingRelationship(data: {
+  memberId: string
+  managerId: string
+  isPrimary?: boolean
+  reportType?: ReportType
+  notes?: string
+}) {
+  const user = await requireAuth()
+
+  // Validate that both member and manager exist
+  const [member, manager] = await Promise.all([
+    db.query.teamMembers.findFirst({ where: eq(teamMembers.id, data.memberId) }),
+    db.query.teamMembers.findFirst({ where: eq(teamMembers.id, data.managerId) }),
+  ])
+
+  if (!member) {
+    return { success: false, error: 'Team member not found' }
+  }
+
+  if (!manager) {
+    return { success: false, error: 'Manager not found' }
+  }
+
+  // Prevent self-reporting
+  if (data.memberId === data.managerId) {
+    return { success: false, error: 'A person cannot report to themselves' }
+  }
+
+  // Check if relationship already exists
+  const existing = await db.query.teamMemberReports.findFirst({
+    where: and(
+      eq(teamMemberReports.memberId, data.memberId),
+      eq(teamMemberReports.managerId, data.managerId)
+    ),
+  })
+
+  if (existing) {
+    return { success: false, error: 'This reporting relationship already exists' }
+  }
+
+  // If this is being set as primary, unset other primary relationships
+  if (data.isPrimary) {
+    await db
+      .update(teamMemberReports)
+      .set({ isPrimary: false })
+      .where(eq(teamMemberReports.memberId, data.memberId))
+
+    // Also update the main parentId on the team member
+    await db
+      .update(teamMembers)
+      .set({ parentId: data.managerId, updatedAt: new Date() })
+      .where(eq(teamMembers.id, data.memberId))
+  }
+
+  // Create the relationship
+  const [relationship] = await db.insert(teamMemberReports).values({
+    memberId: data.memberId,
+    managerId: data.managerId,
+    isPrimary: data.isPrimary ?? false,
+    reportType: data.reportType ?? 'direct',
+    notes: data.notes,
+  }).returning()
+
+  // Log activity
+  await logActivity('org_chart_update', `Added reporting relationship: ${member.name} → ${manager.name}`, {
+    contentType: 'team_members',
+    contentId: data.memberId,
+    contentTitle: member.name,
+    user: { id: user.id, email: user.email, name: user.name },
+    metadata: {
+      managerId: data.managerId,
+      managerName: manager.name,
+      reportType: data.reportType,
+      isPrimary: data.isPrimary,
+    },
+  })
+
+  // Notify about org chart update
+  await notifyOrgChartUpdate({
+    changeType: 'hierarchy',
+    affectedCount: 1,
+    details: `${member.name} now reports to ${manager.name} (${data.reportType || 'direct'})`,
+  })
+
+  revalidatePath('/about')
+  revalidatePath('/admin/dashboard/team')
+
+  return { success: true, relationship }
+}
+
+/**
+ * Update a reporting relationship
+ */
+export async function updateReportingRelationship(
+  relationshipId: string,
+  data: {
+    isPrimary?: boolean
+    reportType?: ReportType
+    notes?: string
+  }
+) {
+  const user = await requireAuth()
+
+  const existing = await db.query.teamMemberReports.findFirst({
+    where: eq(teamMemberReports.id, relationshipId),
+  })
+
+  if (!existing) {
+    return { success: false, error: 'Relationship not found' }
+  }
+
+  // If setting as primary, unset other primary relationships
+  if (data.isPrimary) {
+    await db
+      .update(teamMemberReports)
+      .set({ isPrimary: false })
+      .where(eq(teamMemberReports.memberId, existing.memberId))
+
+    // Also update the main parentId on the team member
+    await db
+      .update(teamMembers)
+      .set({ parentId: existing.managerId, updatedAt: new Date() })
+      .where(eq(teamMembers.id, existing.memberId))
+  }
+
+  // Update the relationship
+  await db
+    .update(teamMemberReports)
+    .set({
+      isPrimary: data.isPrimary ?? existing.isPrimary,
+      reportType: data.reportType ?? existing.reportType,
+      notes: data.notes !== undefined ? data.notes : existing.notes,
+    })
+    .where(eq(teamMemberReports.id, relationshipId))
+
+  // Get member and manager names for logging
+  const [member, manager] = await Promise.all([
+    db.query.teamMembers.findFirst({ where: eq(teamMembers.id, existing.memberId) }),
+    db.query.teamMembers.findFirst({ where: eq(teamMembers.id, existing.managerId) }),
+  ])
+
+  // Log activity
+  await logActivity('org_chart_update', `Updated reporting relationship: ${member?.name} → ${manager?.name}`, {
+    contentType: 'team_members',
+    contentId: existing.memberId,
+    contentTitle: member?.name,
+    user: { id: user.id, email: user.email, name: user.name },
+    metadata: {
+      relationshipId,
+      changes: data,
+    },
+  })
+
+  revalidatePath('/about')
+  revalidatePath('/admin/dashboard/team')
+
+  return { success: true }
+}
+
+/**
+ * Remove a reporting relationship
+ */
+export async function removeReportingRelationship(relationshipId: string) {
+  const user = await requireAuth()
+
+  const existing = await db.query.teamMemberReports.findFirst({
+    where: eq(teamMemberReports.id, relationshipId),
+  })
+
+  if (!existing) {
+    return { success: false, error: 'Relationship not found' }
+  }
+
+  // Get member and manager names for logging
+  const [member, manager] = await Promise.all([
+    db.query.teamMembers.findFirst({ where: eq(teamMembers.id, existing.memberId) }),
+    db.query.teamMembers.findFirst({ where: eq(teamMembers.id, existing.managerId) }),
+  ])
+
+  // If this was the primary relationship, clear the parentId
+  if (existing.isPrimary) {
+    await db
+      .update(teamMembers)
+      .set({ parentId: null, updatedAt: new Date() })
+      .where(eq(teamMembers.id, existing.memberId))
+  }
+
+  // Delete the relationship
+  await db.delete(teamMemberReports).where(eq(teamMemberReports.id, relationshipId))
+
+  // Log activity
+  await logActivity('org_chart_update', `Removed reporting relationship: ${member?.name} → ${manager?.name}`, {
+    contentType: 'team_members',
+    contentId: existing.memberId,
+    contentTitle: member?.name,
+    user: { id: user.id, email: user.email, name: user.name },
+    metadata: {
+      managerId: existing.managerId,
+      managerName: manager?.name,
+    },
+  })
+
+  // Notify about org chart update
+  await notifyOrgChartUpdate({
+    changeType: 'hierarchy',
+    affectedCount: 1,
+    details: `${member?.name} no longer reports to ${manager?.name}`,
+  })
+
+  revalidatePath('/about')
+  revalidatePath('/admin/dashboard/team')
+
+  return { success: true }
+}
+
+/**
+ * Get team member with all their managers (for display)
+ */
+export async function getTeamMemberWithManagers(memberId: string) {
+  const member = await db.query.teamMembers.findFirst({
+    where: eq(teamMembers.id, memberId),
+  })
+
+  if (!member) {
+    return null
+  }
+
+  const relationships = await getMemberReportingRelationships(memberId)
+
+  return {
+    ...member,
+    managers: relationships,
+  }
+}
+
+/**
+ * Sync primary reporting relationship with parentId
+ * Call this when updating parentId to also create/update the primary reporting relationship
+ */
+export async function syncPrimaryManager(memberId: string, managerId: string | null) {
+  // If managerId is null, remove primary relationships
+  if (!managerId) {
+    await db
+      .update(teamMemberReports)
+      .set({ isPrimary: false })
+      .where(eq(teamMemberReports.memberId, memberId))
+    return { success: true }
+  }
+
+  // Check if a relationship already exists
+  const existing = await db.query.teamMemberReports.findFirst({
+    where: and(
+      eq(teamMemberReports.memberId, memberId),
+      eq(teamMemberReports.managerId, managerId)
+    ),
+  })
+
+  // Unset other primary relationships
+  await db
+    .update(teamMemberReports)
+    .set({ isPrimary: false })
+    .where(eq(teamMemberReports.memberId, memberId))
+
+  if (existing) {
+    // Update existing to be primary
+    await db
+      .update(teamMemberReports)
+      .set({ isPrimary: true })
+      .where(eq(teamMemberReports.id, existing.id))
+  } else {
+    // Create new primary relationship
+    await db.insert(teamMemberReports).values({
+      memberId,
+      managerId,
+      isPrimary: true,
+      reportType: 'direct',
+    })
+  }
+
+  return { success: true }
 }

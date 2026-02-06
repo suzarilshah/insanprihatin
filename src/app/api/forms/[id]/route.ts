@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getForm, updateForm, deleteForm, FormField, getFormWithDetails } from '@/lib/actions/forms'
-import { getSession } from '@/lib/auth'
+import { auth } from '@/lib/auth'
 
 interface RouteContext {
   params: Promise<{ id: string }>
@@ -50,7 +50,7 @@ export async function PUT(
   context: RouteContext
 ) {
   try {
-    const session = await getSession()
+    const session = await auth()
     if (!session) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -108,7 +108,7 @@ export async function DELETE(
   context: RouteContext
 ) {
   try {
-    const session = await getSession()
+    const session = await auth()
     if (!session) {
       return NextResponse.json(
         { error: 'Unauthorized' },

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSession } from '@/lib/auth-server'
+import { getSession } from '@/lib/auth/server'
 import { db, contentVersions } from '@/db'
 import { eq, desc } from 'drizzle-orm'
 import {

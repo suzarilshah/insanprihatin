@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useSession, signOut } from 'next-auth/react'
 import NotificationBell from '@/components/admin/NotificationBell'
 
 const sidebarLinks = [
@@ -116,23 +117,13 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
+  const router = useRouter()
+  const { data: session, status } = useSession()
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [userName, setUserName] = useState('Admin')
 
-  useEffect(() => {
-    // Get user info from cookie
-    const cookies = document.cookie.split(';')
-    const userInfoCookie = cookies.find(c => c.trim().startsWith('user_info='))
-    if (userInfoCookie) {
-      try {
-        const userInfo = JSON.parse(decodeURIComponent(userInfoCookie.split('=')[1]))
-        setUserName(userInfo.name || 'Admin')
-      } catch {
-        // ignore
-      }
-    }
-  }, [])
+  // Get user name from NextAuth session
+  const userName = session?.user?.name || 'Admin'
 
   const isActive = (href: string) => {
     if (href === '/admin/dashboard') {
@@ -142,12 +133,26 @@ export default function DashboardLayout({
   }
 
   const handleLogout = async () => {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' })
-      window.location.href = '/admin'
-    } catch {
-      window.location.href = '/admin'
-    }
+    console.log('[AUTH:DASHBOARD] User initiating sign-out')
+    await signOut({ callbackUrl: '/admin' })
+  }
+
+  // Show loading state while session is loading
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-gray-500 text-sm">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Redirect to login if not authenticated
+  if (status === 'unauthenticated') {
+    router.push('/admin')
+    return null
   }
 
   return (
@@ -292,7 +297,7 @@ export default function DashboardLayout({
                 {sidebarLinks.find(l => isActive(l.href))?.label || 'Dashboard'}
               </h1>
               <p className="text-gray-500 text-sm">
-                Manage your foundation's digital presence
+                Manage your foundation&apos;s digital presence
               </p>
             </div>
             <div className="flex items-center gap-4">

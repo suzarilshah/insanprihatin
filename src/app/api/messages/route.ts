@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { db, contactSubmissions } from '@/db'
 import { desc } from 'drizzle-orm'
-import { getSession } from '@/lib/auth-server'
+import { getSession } from '@/lib/auth/server'
 
 export async function GET() {
   try {

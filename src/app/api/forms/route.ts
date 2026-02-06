@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getForms, createForm, FormField, getFormsWithStatsAndUsage } from '@/lib/actions/forms'
-import { getSession } from '@/lib/auth'
+import { auth } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSession()
+    const session = await auth()
     if (!session) {
       return NextResponse.json(
         { error: 'Unauthorized' },

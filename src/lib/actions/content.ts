@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { db, heroContent, aboutContent, impactStats, siteSettings, faqs, pages } from '@/db'
 import { eq } from 'drizzle-orm'
-import { requireAuth } from '@/lib/auth-server'
+import { requireAuth } from '@/lib/auth/server'
 import { createVersion, logActivity } from '@/lib/versioning'
 import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
 

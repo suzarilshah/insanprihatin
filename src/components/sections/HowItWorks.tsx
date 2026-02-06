@@ -39,7 +39,7 @@ export default function HowItWorks() {
             <span className="text-teal-600 italic font-serif">Real Change</span>
           </motion.h2>
           <p className="body-large text-gray-500">
-            We've removed the bureaucracy. Your help goes directly to where it's needed, faster and more effectively.
+            We&apos;ve removed the bureaucracy. Your help goes directly to where it&apos;s needed, faster and more effectively.
           </p>
         </div>
 

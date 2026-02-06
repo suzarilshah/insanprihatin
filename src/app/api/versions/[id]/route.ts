@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSession } from '@/lib/auth-server'
+import { getSession } from '@/lib/auth/server'
 import { db, blogPosts, projects, teamMembers, heroContent, aboutContent, impactStats, partners, testimonials, faqs, pages } from '@/db'
 import { eq } from 'drizzle-orm'
 import {
@@ -125,9 +125,9 @@ export async function POST(
 
     // Create a new version for the restoration
     const user = {
-      id: session.userId,
-      email: session.email,
-      name: session.name,
+      id: session.user?.id || session.user?.email || 'unknown',
+      email: session.user?.email || '',
+      name: session.user?.name || 'Unknown',
     }
 
     await createVersion(

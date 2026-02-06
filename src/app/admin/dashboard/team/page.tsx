@@ -4,7 +4,20 @@ import { useState, useEffect, useTransition, useMemo } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
-import { getTeamMembers, createTeamMember, updateTeamMember, deleteTeamMember, getDepartments, getPotentialParents } from '@/lib/actions/team'
+import {
+  getTeamMembers,
+  createTeamMember,
+  updateTeamMember,
+  deleteTeamMember,
+  getDepartments,
+  getPotentialParents,
+  getMemberReportingRelationships,
+  addReportingRelationship,
+  removeReportingRelationship,
+  updateReportingRelationship,
+  type ReportingRelationship,
+  type ReportType
+} from '@/lib/actions/team'
 import ImageUpload from '@/components/admin/ImageUpload'
 import { OrgChart } from '@/components/org-chart'
 import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
@@ -70,6 +83,12 @@ export default function TeamManagement() {
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'chart'>('grid')
   const [searchQuery, setSearchQuery] = useState('')
 
+  // Multiple managers state
+  const [additionalManagers, setAdditionalManagers] = useState<ReportingRelationship[]>([])
+  const [isAddingManager, setIsAddingManager] = useState(false)
+  const [newManagerId, setNewManagerId] = useState('')
+  const [newReportType, setNewReportType] = useState<ReportType>('dotted')
+
   const [formData, setFormData] = useState({
     name: '',
     position: '',
@@ -111,6 +130,19 @@ export default function TeamManagement() {
       loadParents()
     }
   }, [isCreating, editingMember])
+
+  // Load additional managers when editing an existing member
+  useEffect(() => {
+    async function loadAdditionalManagers() {
+      if (editingMember) {
+        const relationships = await getMemberReportingRelationships(editingMember.id)
+        setAdditionalManagers(relationships)
+      } else {
+        setAdditionalManagers([])
+      }
+    }
+    loadAdditionalManagers()
+  }, [editingMember])
 
   const filteredMembers = useMemo(() => {
     let result = members
@@ -234,6 +266,74 @@ export default function TeamManagement() {
     if (!parentId) return null
     const parent = members.find(m => m.id === parentId)
     return parent?.name || null
+  }
+
+  // Handler for adding additional manager
+  const handleAddAdditionalManager = async () => {
+    if (!editingMember || !newManagerId) return
+
+    startTransition(async () => {
+      const result = await addReportingRelationship({
+        memberId: editingMember.id,
+        managerId: newManagerId,
+        reportType: newReportType,
+        isPrimary: false,
+      })
+      if (result.success && result.relationship) {
+        const manager = potentialParents.find(p => p.id === newManagerId)
+        const newRelationship: ReportingRelationship = {
+          id: result.relationship.id,
+          memberId: result.relationship.memberId,
+          managerId: result.relationship.managerId,
+          isPrimary: result.relationship.isPrimary,
+          reportType: (result.relationship.reportType || 'dotted') as ReportType,
+          notes: result.relationship.notes,
+          createdAt: result.relationship.createdAt,
+          manager: manager ? {
+            id: manager.id,
+            name: manager.name,
+            position: manager.position as LocalizedString,
+            department: manager.department,
+          } : undefined,
+        }
+        setAdditionalManagers([...additionalManagers, newRelationship])
+        setNewManagerId('')
+        setIsAddingManager(false)
+      }
+    })
+  }
+
+  // Handler for removing additional manager
+  const handleRemoveAdditionalManager = async (relationshipId: string) => {
+    startTransition(async () => {
+      const result = await removeReportingRelationship(relationshipId)
+      if (result.success) {
+        setAdditionalManagers(additionalManagers.filter(m => m.id !== relationshipId))
+      }
+    })
+  }
+
+  // Handler for changing report type
+  const handleChangeReportType = async (relationshipId: string, reportType: ReportType) => {
+    startTransition(async () => {
+      const result = await updateReportingRelationship(relationshipId, { reportType })
+      if (result.success) {
+        setAdditionalManagers(additionalManagers.map(m =>
+          m.id === relationshipId ? { ...m, reportType } : m
+        ))
+      }
+    })
+  }
+
+  // Get report type display info
+  const getReportTypeInfo = (type: ReportType) => {
+    const types: Record<ReportType, { label: string; color: string; description: string }> = {
+      direct: { label: 'Direct', color: 'bg-teal-100 text-teal-700', description: 'Primary reporting line' },
+      dotted: { label: 'Dotted', color: 'bg-purple-100 text-purple-700', description: 'Secondary reporting line' },
+      functional: { label: 'Functional', color: 'bg-blue-100 text-blue-700', description: 'Technical/skill reporting' },
+      project: { label: 'Project', color: 'bg-amber-100 text-amber-700', description: 'Project-based reporting' },
+    }
+    return types[type]
   }
 
   if (isLoading) {
@@ -766,7 +866,7 @@ export default function TeamManagement() {
                     </datalist>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Reports To</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Primary Manager (Reports To)</label>
                     <select
                       value={formData.parentId}
                       onChange={(e) => setFormData({ ...formData, parentId: e.target.value })}
@@ -781,6 +881,130 @@ export default function TeamManagement() {
                     </select>
                   </div>
                 </div>
+
+                {/* Additional Managers (only shown when editing existing member) */}
+                {editingMember && (
+                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-700">Additional Managers</h4>
+                        <p className="text-xs text-gray-500 mt-0.5">Add dotted-line or matrix reporting relationships</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsAddingManager(!isAddingManager)}
+                        className="text-sm text-teal-600 hover:text-teal-700 font-medium flex items-center gap-1"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add Manager
+                      </button>
+                    </div>
+
+                    {/* Add new manager form */}
+                    <AnimatePresence>
+                      {isAddingManager && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="mb-3 p-3 bg-white rounded-lg border border-gray-200"
+                        >
+                          <div className="grid sm:grid-cols-2 gap-3 mb-3">
+                            <select
+                              value={newManagerId}
+                              onChange={(e) => setNewManagerId(e.target.value)}
+                              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                            >
+                              <option value="">Select a manager...</option>
+                              {potentialParents
+                                .filter(p => p.id !== formData.parentId && !additionalManagers.some(m => m.managerId === p.id))
+                                .map(p => (
+                                  <option key={p.id} value={p.id}>
+                                    {p.name} - {getPosition(p.position)}
+                                  </option>
+                                ))}
+                            </select>
+                            <select
+                              value={newReportType}
+                              onChange={(e) => setNewReportType(e.target.value as ReportType)}
+                              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                            >
+                              <option value="dotted">Dotted Line</option>
+                              <option value="functional">Functional</option>
+                              <option value="project">Project-based</option>
+                            </select>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => { setIsAddingManager(false); setNewManagerId('') }}
+                              className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleAddAdditionalManager}
+                              disabled={!newManagerId || isPending}
+                              className="px-3 py-1.5 text-sm bg-teal-500 text-white rounded-lg hover:bg-teal-600 disabled:opacity-50"
+                            >
+                              {isPending ? 'Adding...' : 'Add'}
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {/* List of additional managers */}
+                    {additionalManagers.length > 0 ? (
+                      <div className="space-y-2">
+                        {additionalManagers.filter(m => !m.isPrimary).map((relationship) => {
+                          const typeInfo = getReportTypeInfo(relationship.reportType)
+                          return (
+                            <div
+                              key={relationship.id}
+                              className="flex items-center justify-between p-2 bg-white rounded-lg border border-gray-100"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white text-xs font-medium">
+                                  {relationship.manager?.name?.split(' ').map(n => n[0]).slice(0, 2).join('') || '?'}
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-gray-900">{relationship.manager?.name || 'Unknown'}</p>
+                                  <p className="text-xs text-gray-500">{relationship.manager?.position ? getPosition(relationship.manager.position) : ''}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <select
+                                  value={relationship.reportType}
+                                  onChange={(e) => handleChangeReportType(relationship.id, e.target.value as ReportType)}
+                                  className={`px-2 py-1 text-xs rounded-full font-medium border-0 ${typeInfo.color}`}
+                                >
+                                  <option value="dotted">Dotted</option>
+                                  <option value="functional">Functional</option>
+                                  <option value="project">Project</option>
+                                </select>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveAdditionalManager(relationship.id)}
+                                  className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                >
+                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-400 text-center py-2">No additional managers configured</p>
+                    )}
+                  </div>
+                )}
 
                 {/* Bio */}
                 <div>

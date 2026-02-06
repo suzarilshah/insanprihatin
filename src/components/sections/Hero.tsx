@@ -198,7 +198,7 @@ export default function Hero({
                 {/* Central Image/Graphic - Lazy loaded */}
                 <div className="relative w-full aspect-[4/5] rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl group">
                   <Image
-                    src="https://images.unsplash.com/photo-1576267423445-807c90da1847?q=80&w=1200"
+                    src="https://images.unsplash.com/photo-1617450365226-9bf28c5d3575?q=80&w=1200"
                     alt="Community Joy"
                     fill
                     sizes="(max-width: 1024px) 0vw, 40vw"

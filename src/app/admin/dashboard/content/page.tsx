@@ -94,7 +94,7 @@ export default async function ContentManagement() {
             Manage Site Content
           </h1>
           <p className="text-gray-500 text-sm mt-1">
-            Update and manage your website's static content
+            Update and manage your website&apos;s static content
           </p>
         </div>
       </div>

@@ -2,6 +2,7 @@
 
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 
 interface StatProps {
   value: number
@@ -262,7 +263,7 @@ export default function Impact({ stats: dbStats }: ImpactProps) {
           <p className="text-white/60 mb-6">
             Want to see how we create impact?
           </p>
-          <a
+          <Link
             href="/about#reports"
             className="inline-flex items-center gap-2 text-amber-400 font-medium hover:text-amber-300 transition-colors"
           >
@@ -270,7 +271,7 @@ export default function Impact({ stats: dbStats }: ImpactProps) {
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
-          </a>
+          </Link>
         </motion.div>
       </div>
     </section>

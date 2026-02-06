@@ -370,7 +370,7 @@ export function ReceiptPDF({ data }: ReceiptPDFProps) {
           {data.message && (
             <View style={styles.messageSection}>
               <Text style={styles.messageLabel}>Your Message</Text>
-              <Text style={styles.messageText}>"{data.message}"</Text>
+              <Text style={styles.messageText}>&quot;{data.message}&quot;</Text>
             </View>
           )}
 

@@ -338,7 +338,7 @@ export default function DonateContent() {
                         <input type="checkbox" className="hidden" checked={donor.isAnonymous} onChange={e => setDonor({...donor, isAnonymous: e.target.checked})} />
                         <div>
                           <div className="font-medium text-gray-900">Make this donation anonymous</div>
-                          <div className="text-xs text-gray-500">Your name won't appear on public lists</div>
+                          <div className="text-xs text-gray-500">Your name won&apos;t appear on public lists</div>
                         </div>
                       </label>
 
