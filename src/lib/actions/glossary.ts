@@ -150,10 +150,9 @@ export async function createGlossaryTerm(data: {
 
   // Log activity
   await logActivity('glossary_create', `Added glossary term: ${data.termEn} = ${data.termMs}`, {
-    contentType: 'glossary',
-    contentId: term.id,
     contentTitle: data.termEn,
     user: { id: user.id, email: user.email, name: user.name },
+    metadata: { glossaryId: term.id },
   })
 
   revalidatePath('/admin/dashboard/translations')
@@ -191,10 +190,9 @@ export async function updateGlossaryTerm(id: string, data: {
 
   // Log activity
   await logActivity('glossary_update', `Updated glossary term: ${existing.termEn}`, {
-    contentType: 'glossary',
-    contentId: id,
     contentTitle: existing.termEn,
     user: { id: user.id, email: user.email, name: user.name },
+    metadata: { glossaryId: id },
   })
 
   revalidatePath('/admin/dashboard/translations')
@@ -219,10 +217,9 @@ export async function deleteGlossaryTerm(id: string) {
 
   // Log activity
   await logActivity('glossary_delete', `Deleted glossary term: ${existing.termEn}`, {
-    contentType: 'glossary',
-    contentId: id,
     contentTitle: existing.termEn,
     user: { id: user.id, email: user.email, name: user.name },
+    metadata: { glossaryId: id },
   })
 
   revalidatePath('/admin/dashboard/translations')
@@ -263,7 +260,6 @@ export async function seedGlossary() {
 
   // Log activity
   await logActivity('glossary_seed', `Seeded glossary with ${added} NGO terms`, {
-    contentType: 'glossary',
     user: { id: user.id, email: user.email, name: user.name },
     metadata: { added, skipped },
   })

@@ -10,7 +10,7 @@
   "hero": {
     "defaultTitle": "Memulihkan Maruah, Membina Semula Kehidupan",
     "defaultSubtitle": "Yayasan Insan Prihatin",
-    "defaultDescription": "Intervensi langsung dan mampan untuk golongan kurang bernasib baik di Malaysia. Sertai gerakan yang mengubah belas kasihan menjadi perubahan nyata.",
+    "defaultDescription": "Intervensi langsung dan mampan untuk golongan kurang bernasib baik di Malaysia. Sertai gerakan yang mengubah ihsan menjadi perubahan nyata.",
     "defaultCta": "Mulakan Impak Anda",
     "donationCta": "Buat Sumbangan",
     "scrollToExplore": "Tatal untuk Meneroka",
@@ -185,7 +185,7 @@
     "subscribing": "Melanggan...",
     "subscribeSuccess": "Terima kasih kerana melanggan!",
     "copyright": "Hak cipta terpelihara.",
-    "tagline": "Memperkasa komuniti melalui belas kasihan dan pembangunan mampan.",
+    "tagline": "Memperkasakan Komuniti Melalui Ihsan kepada Insan.",
     "links": {
       "ourStory": "Kisah Kami",
       "leadership": "Kepimpinan",
@@ -229,7 +229,17 @@
   },
   "solution": {
     "title": "Pendekatan Kami",
+    "subtitle": "Penyelesaian Holistik untuk",
+    "subtitleHighlight": "Impak Berkekalan",
     "description": "Kami percaya kepada penyelesaian mampan yang menangani punca masalah, bukan hanya gejala.",
+    "viewAllProjects": "Lihat Semua Projek",
+    "featured": "Utama",
+    "readStory": "Baca Kisah",
+    "totalImpact": "Jumlah Impak",
+    "livesChanged": "Nyawa Berubah",
+    "ourMission": "Misi Kami",
+    "defaultMission": "Memperkasakan komuniti melalui pembangunan mampan dan intervensi bantuan langsung.",
+    "readMore": "Baca Lagi",
     "pillars": {
       "education": {
         "title": "Pendidikan",
@@ -244,6 +254,49 @@
         "description": "Membina komuniti yang lebih kuat dan lebih berdaya tahan"
       }
     }
+  },
+  "homeAbout": {
+    "label": "Tentang Kami",
+    "title": "Menjaga Kemanusiaan, Satu Nyawa pada Satu Masa",
+    "content": "Ditubuhkan dengan visi untuk merapatkan jurang antara kemewahan dan keperluan, Yayasan Insan Prihatin telah berkembang menjadi salah satu yayasan paling dipercayai di Malaysia. Kami percaya bahawa setiap individu berhak mendapat akses kepada pendidikan, penjagaan kesihatan, dan peluang untuk berkembang.",
+    "mission": "Untuk memperkasakan komuniti kurang bernasib baik melalui program mampan dalam pendidikan, penjagaan kesihatan, dan pembangunan ekonomi.",
+    "vision": "Malaysia di mana setiap individu mempunyai peluang yang sama untuk berkembang maju dan menyumbang kepada masyarakat.",
+    "ourMission": "Misi Kami",
+    "ourVision": "Visi Kami",
+    "learnMore": "Ketahui Lebih Lanjut Tentang Kami",
+    "coreValues": "Nilai Teras Kami",
+    "totalImpact": "Jumlah Impak",
+    "impactAmount": "RM 15J+",
+    "impactDescription": "Diagihkan merentasi program pendidikan, kesihatan, dan komuniti.",
+    "values": {
+      "compassion": {
+        "title": "Belas Ihsan",
+        "description": "Kami memimpin dengan empati, memahami perjuangan mereka yang kami bantu."
+      },
+      "integrity": {
+        "title": "Integriti",
+        "description": "Ketelusan dan akauntabiliti dalam setiap tindakan yang kami ambil."
+      },
+      "community": {
+        "title": "Komuniti",
+        "description": "Membina ikatan yang lebih kukuh antara manusia dan organisasi."
+      },
+      "impact": {
+        "title": "Impak",
+        "description": "Mencipta perubahan yang boleh diukur dan berkekalan dalam setiap inisiatif."
+      }
+    }
+  },
+  "homeCta": {
+    "title": "Bersedia untuk Membuat",
+    "titleHighlight": "Impak Segera?",
+    "description": "Sertai ribuan pembuat perubahan. Sumbangan anda memberikan bantuan segera dan penyelesaian mampan untuk keluarga yang memerlukan.",
+    "donateNow": "Derma Sekarang",
+    "volunteerWithUs": "Sukarelawan Bersama Kami",
+    "quickDonation": "Derma Pantas",
+    "secureAndTaxDeductible": "Selamat & Boleh Ditolak Cukai",
+    "customAmount": "Jumlah Lain",
+    "proceedToPayment": "Teruskan ke Pembayaran"
   },
   "metadata": {
     "siteName": "Yayasan Insan Prihatin",

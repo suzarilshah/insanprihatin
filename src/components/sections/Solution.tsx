@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import Image from 'next/image'
 import { Link } from '@/i18n/navigation'
 import { type LocalizedString, type Locale, getLocalizedValue } from '@/i18n/config'
+import { useTranslations } from 'next-intl'
 
 interface Project {
   id: string
@@ -27,14 +28,27 @@ interface AboutContent {
   vision?: LocalizedString | string | null
 }
 
+interface StockPhotoFallbacks {
+  solutionFeatured?: string
+  solutionProject1?: string
+  solutionProject2?: string
+}
+
 interface SolutionProps {
   projects?: Project[]
   impactStats?: ImpactStat[]
   aboutContent?: AboutContent | null
   locale?: Locale
+  stockPhotos?: StockPhotoFallbacks
 }
 
-export default function Solution({ projects = [], impactStats = [], aboutContent, locale = 'en' }: SolutionProps) {
+// Default fallback images
+const DEFAULT_FEATURED = 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=2000'
+const DEFAULT_PROJECT1 = 'https://images.unsplash.com/photo-1532629345422-7515f3d16520?q=80&w=1000'
+const DEFAULT_PROJECT2 = 'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?q=80&w=1000'
+
+export default function Solution({ projects = [], impactStats = [], aboutContent, locale = 'en', stockPhotos }: SolutionProps) {
+  const t = useTranslations('solution')
   // Helper to get localized value
   const l = (value: LocalizedString | string | null | undefined): string => {
     return getLocalizedValue(value as LocalizedString, locale)
@@ -56,17 +70,17 @@ export default function Solution({ projects = [], impactStats = [], aboutContent
               viewport={{ once: true }}
               className="text-amber-400 font-medium uppercase tracking-widest text-xs mb-4"
             >
-              Our Approach
+              {t('title')}
             </motion.div>
-            <motion.h2 
+            <motion.h2
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
               className="heading-section text-white"
             >
-              Holistic Solutions for <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-emerald-300">Lasting Impact</span>
+              {t('subtitle')} <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-emerald-300">{t('subtitleHighlight')}</span>
             </motion.h2>
           </div>
           
@@ -76,7 +90,7 @@ export default function Solution({ projects = [], impactStats = [], aboutContent
             viewport={{ once: true }}
           >
             <Link href="/projects" className="btn-outline border-white/20 text-white hover:bg-white hover:text-foundation-charcoal">
-              View All Projects
+              {t('viewAllProjects')}
             </Link>
           </motion.div>
         </div>
@@ -94,7 +108,7 @@ export default function Solution({ projects = [], impactStats = [], aboutContent
             >
               <Link href={`/projects/${projects[0].slug}`} className="block h-full">
                 <Image
-                  src={projects[0].featuredImage || "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=2000"}
+                  src={projects[0].featuredImage || stockPhotos?.solutionFeatured || DEFAULT_FEATURED}
                   alt={l(projects[0].title)}
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -103,7 +117,7 @@ export default function Solution({ projects = [], impactStats = [], aboutContent
 
                 <div className="absolute bottom-0 left-0 p-10 max-w-2xl">
                   <div className="inline-block px-3 py-1 bg-amber-400 text-foundation-charcoal text-xs font-bold uppercase tracking-wider rounded-full mb-4">
-                    {projects[0].category || 'Featured'}
+                    {projects[0].category || t('featured')}
                   </div>
                   <h3 className="text-4xl md:text-5xl font-heading text-white mb-4 leading-tight">
                     {l(projects[0].title)}
@@ -112,7 +126,7 @@ export default function Solution({ projects = [], impactStats = [], aboutContent
                     {l(projects[0].description)}
                   </p>
                   <span className="inline-flex items-center text-amber-300 font-medium group-hover:translate-x-2 transition-transform">
-                    Read Story <svg className="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                    {t('readStory')} <svg className="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                   </span>
                 </div>
               </Link>
@@ -128,11 +142,11 @@ export default function Solution({ projects = [], impactStats = [], aboutContent
             className="md:col-span-4 bg-teal-800/60 backdrop-blur-md border border-white/10 rounded-3xl p-8 flex flex-col justify-center relative overflow-hidden"
           >
             <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/20 rounded-full blur-[50px]" />
-            <h4 className="text-teal-200 uppercase tracking-widest text-xs font-medium mb-2">Total Impact</h4>
+            <h4 className="text-teal-200 uppercase tracking-widest text-xs font-medium mb-2">{t('totalImpact')}</h4>
             <div className="text-5xl font-display font-bold text-white mb-2">
               {impactStats[0]?.value || '15K'}{l(impactStats[0]?.suffix) || '+'}
             </div>
-            <p className="text-teal-100">{l(impactStats[0]?.label) || 'Lives Changed'}</p>
+            <p className="text-teal-100">{l(impactStats[0]?.label) || t('livesChanged')}</p>
           </motion.div>
 
           {/* Secondary Project 1 */}
@@ -146,7 +160,7 @@ export default function Solution({ projects = [], impactStats = [], aboutContent
             >
               <Link href={`/projects/${projects[1].slug}`} className="block h-full">
                 <Image
-                  src={projects[1].featuredImage || "https://images.unsplash.com/photo-1532629345422-7515f3d16520?q=80&w=1000"}
+                  src={projects[1].featuredImage || stockPhotos?.solutionProject1 || DEFAULT_PROJECT1}
                   alt={l(projects[1].title)}
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -171,7 +185,7 @@ export default function Solution({ projects = [], impactStats = [], aboutContent
             >
               <Link href={`/projects/${projects[2].slug}`} className="block h-full">
                 <Image
-                  src={projects[2].featuredImage || "https://images.unsplash.com/photo-1596422846543-75c6fc197f07?q=80&w=1000"}
+                  src={projects[2].featuredImage || stockPhotos?.solutionProject2 || DEFAULT_PROJECT2}
                   alt={l(projects[2].title)}
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -197,11 +211,11 @@ export default function Solution({ projects = [], impactStats = [], aboutContent
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
             </div>
             <div>
-              <h4 className="text-white font-heading text-xl mb-2">Our Mission</h4>
+              <h4 className="text-white font-heading text-xl mb-2">{t('ourMission')}</h4>
               <p className="text-white/90 text-sm leading-relaxed mb-4 line-clamp-3">
-                {l(aboutContent?.mission) || "Empowering communities through sustainable development and direct aid intervention."}
+                {l(aboutContent?.mission) || t('defaultMission')}
               </p>
-              <Link href="/about" className="text-white text-xs font-bold uppercase tracking-wider hover:underline">Read More →</Link>
+              <Link href="/about" className="text-white text-xs font-bold uppercase tracking-wider hover:underline">{t('readMore')} →</Link>
             </div>
           </motion.div>
           

@@ -111,14 +111,14 @@ export async function submitTranslationFeedback(data: {
 
   // Log activity
   await logActivity('translation_feedback', `Submitted translation feedback for ${data.contentType}`, {
-    contentType: data.contentType,
-    contentId: data.contentId,
     contentTitle: `${data.field} translation`,
     user: { id: user.id, email: user.email, name: user.name },
     metadata: {
       feedbackId: feedback.id,
       feedbackType: data.feedbackType,
       field: data.field,
+      contentType: data.contentType,
+      contentId: data.contentId,
     },
   })
 
@@ -160,13 +160,13 @@ export async function reviewTranslationFeedback(
 
   // Log activity
   await logActivity('translation_review', `Reviewed translation feedback: ${data.status}`, {
-    contentType: existing.contentType,
-    contentId: existing.contentId,
     contentTitle: `${existing.field} translation`,
     user: { id: user.id, email: user.email, name: user.name },
     metadata: {
       feedbackId,
       status: data.status,
+      contentType: existing.contentType,
+      contentId: existing.contentId,
     },
   })
 
@@ -221,9 +221,11 @@ export async function deleteTranslationFeedback(feedbackId: string) {
 
   // Log activity
   await logActivity('translation_feedback_delete', `Deleted translation feedback`, {
-    contentType: existing.contentType,
-    contentId: existing.contentId,
     user: { id: user.id, email: user.email, name: user.name },
+    metadata: {
+      contentType: existing.contentType,
+      contentId: existing.contentId,
+    },
   })
 
   revalidatePath('/admin/dashboard/translations')

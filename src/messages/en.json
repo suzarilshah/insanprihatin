@@ -229,7 +229,17 @@
   },
   "solution": {
     "title": "Our Approach",
+    "subtitle": "Holistic Solutions for",
+    "subtitleHighlight": "Lasting Impact",
     "description": "We believe in sustainable solutions that address root causes, not just symptoms.",
+    "viewAllProjects": "View All Projects",
+    "featured": "Featured",
+    "readStory": "Read Story",
+    "totalImpact": "Total Impact",
+    "livesChanged": "Lives Changed",
+    "ourMission": "Our Mission",
+    "defaultMission": "Empowering communities through sustainable development and direct aid intervention.",
+    "readMore": "Read More",
     "pillars": {
       "education": {
         "title": "Education",
@@ -244,6 +254,49 @@
         "description": "Building stronger, more resilient communities"
       }
     }
+  },
+  "homeAbout": {
+    "label": "About Us",
+    "title": "Caring for Humanity, One Life at a Time",
+    "content": "Founded with a vision to bridge the gap between privilege and need, Yayasan Insan Prihatin has grown into one of Malaysia's most trusted foundations. We believe that every individual deserves access to education, healthcare, and opportunities for growth.",
+    "mission": "To empower underprivileged communities through sustainable programs in education, healthcare, and economic development.",
+    "vision": "A Malaysia where every individual has equal opportunities to thrive and contribute to society.",
+    "ourMission": "Our Mission",
+    "ourVision": "Our Vision",
+    "learnMore": "Learn More About Us",
+    "coreValues": "Our Core Values",
+    "totalImpact": "Total Impact",
+    "impactAmount": "RM 15M+",
+    "impactDescription": "Distributed across education, healthcare, and community programs.",
+    "values": {
+      "compassion": {
+        "title": "Compassion",
+        "description": "We lead with empathy, understanding the struggles of those we serve."
+      },
+      "integrity": {
+        "title": "Integrity",
+        "description": "Transparency and accountability in every action we take."
+      },
+      "community": {
+        "title": "Community",
+        "description": "Building stronger bonds between people and organizations."
+      },
+      "impact": {
+        "title": "Impact",
+        "description": "Creating measurable, lasting change in every initiative."
+      }
+    }
+  },
+  "homeCta": {
+    "title": "Ready to Make an",
+    "titleHighlight": "Immediate Impact?",
+    "description": "Join thousands of changemakers. Your contribution provides immediate relief and sustainable solutions for families in need.",
+    "donateNow": "Donate Now",
+    "volunteerWithUs": "Volunteer With Us",
+    "quickDonation": "Quick Donation",
+    "secureAndTaxDeductible": "Secure & Tax Deductible",
+    "customAmount": "Custom Amount",
+    "proceedToPayment": "Proceed to Payment"
   },
   "metadata": {
     "siteName": "Yayasan Insan Prihatin",

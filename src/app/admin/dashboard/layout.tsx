@@ -102,6 +102,15 @@ const sidebarLinks = [
   {
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+      </svg>
+    ),
+    label: 'Translations',
+    href: '/admin/dashboard/translations',
+  },
+  {
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
       </svg>
@@ -172,18 +181,18 @@ export default function DashboardLayout({
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-screen bg-gradient-to-b from-foundation-charcoal to-gray-900 text-white z-50 transition-all duration-300 ${
+        className={`fixed top-0 left-0 h-screen bg-[#09090b] border-r border-white/5 text-gray-400 z-50 transition-all duration-300 ${
           sidebarOpen ? 'w-64' : 'w-20'
         } ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
       >
         {/* Logo */}
-        <div className="flex items-center gap-3 p-6 border-b border-white/10">
-          <div className="relative w-10 h-10 flex-shrink-0">
+        <div className="flex items-center gap-3 p-6 h-16 border-b border-white/5">
+          <div className="relative w-6 h-6 flex-shrink-0 opacity-90">
             <Image
               src="/images/logo.png"
               alt="YIP"
               fill
-              className="object-contain"
+              className="object-contain brightness-0 invert"
             />
           </div>
           {sidebarOpen && (
@@ -192,42 +201,44 @@ export default function DashboardLayout({
               animate={{ opacity: 1 }}
               className="overflow-hidden"
             >
-              <span className="font-display text-lg font-bold whitespace-nowrap">YIP Admin</span>
+              <span className="font-medium text-sm text-white tracking-tight">Insan Prihatin</span>
             </motion.div>
           )}
         </div>
 
         {/* Navigation */}
-        <nav className="p-4 space-y-1 overflow-y-auto max-h-[calc(100vh-180px)]">
+        <nav className="p-3 space-y-0.5 overflow-y-auto max-h-[calc(100vh-140px)]">
           {sidebarLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               onClick={() => setMobileMenuOpen(false)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 group ${
                 isActive(link.href)
-                  ? 'bg-teal-500/20 text-teal-400'
-                  : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                  ? 'bg-white/10 text-white font-medium'
+                  : 'text-gray-500 hover:text-gray-200 hover:bg-white/5'
               }`}
             >
-              {link.icon}
+              <span className={`flex-shrink-0 ${isActive(link.href) ? 'text-white' : 'text-gray-500 group-hover:text-gray-300'}`}>
+                {link.icon}
+              </span>
               {sidebarOpen && <span className="whitespace-nowrap">{link.label}</span>}
             </Link>
           ))}
         </nav>
 
         {/* User Section */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/5 bg-[#09090b]">
           {sidebarOpen ? (
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center text-white font-medium flex-shrink-0">
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white text-xs font-medium flex-shrink-0 border border-white/5">
                 {userName.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-white truncate">{userName}</p>
                 <button
                   onClick={handleLogout}
-                  className="text-xs text-gray-400 hover:text-red-400 transition-colors"
+                  className="text-xs text-gray-500 hover:text-gray-300 transition-colors flex items-center gap-1.5 mt-0.5"
                 >
                   Sign out
                 </button>
@@ -236,7 +247,7 @@ export default function DashboardLayout({
           ) : (
             <button
               onClick={handleLogout}
-              className="w-full p-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-red-400 transition-all"
+              className="w-full p-2 rounded-lg text-gray-500 hover:bg-white/5 hover:text-white transition-all"
               title="Sign out"
             >
               <svg className="w-5 h-5 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -249,15 +260,15 @@ export default function DashboardLayout({
         {/* Desktop Toggle */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="absolute bottom-20 -right-3 w-6 h-6 bg-teal-500 rounded-full items-center justify-center shadow-lg hidden lg:flex"
+          className="absolute top-6 -right-3 w-6 h-6 bg-[#09090b] border border-white/10 rounded-full items-center justify-center shadow-sm hidden lg:flex text-gray-400 hover:text-white transition-colors"
         >
           <svg
-            className={`w-4 h-4 text-white transition-transform ${sidebarOpen ? '' : 'rotate-180'}`}
+            className={`w-3 h-3 transition-transform ${sidebarOpen ? '' : 'rotate-180'}`}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
       </aside>

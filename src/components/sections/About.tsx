@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 
 interface AboutProps {
   title?: string
@@ -12,51 +13,57 @@ interface AboutProps {
   image?: string
 }
 
-const values = [
-  {
-    icon: (
-      <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-      </svg>
-    ),
-    title: 'Compassion',
-    description: 'We lead with empathy, understanding the struggles of those we serve.',
-  },
-  {
-    icon: (
-      <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-      </svg>
-    ),
-    title: 'Integrity',
-    description: 'Transparency and accountability in every action we take.',
-  },
-  {
-    icon: (
-      <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-      </svg>
-    ),
-    title: 'Community',
-    description: 'Building stronger bonds between people and organizations.',
-  },
-  {
-    icon: (
-      <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-      </svg>
-    ),
-    title: 'Impact',
-    description: 'Creating measurable, lasting change in every initiative.',
-  },
-]
-
 export default function About({
-  title = 'Caring for Humanity, One Life at a Time',
-  content = 'Founded with a vision to bridge the gap between privilege and need, Yayasan Insan Prihatin has grown into one of Malaysia\'s most trusted foundations. We believe that every individual deserves access to education, healthcare, and opportunities for growth.',
-  mission = 'To empower underprivileged communities through sustainable programs in education, healthcare, and economic development.',
-  vision = 'A Malaysia where every individual has equal opportunities to thrive and contribute to society.',
+  title,
+  content,
+  mission,
+  vision,
 }: AboutProps) {
+  const t = useTranslations('homeAbout')
+
+  const values = [
+    {
+      icon: (
+        <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+        </svg>
+      ),
+      title: t('values.compassion.title'),
+      description: t('values.compassion.description'),
+    },
+    {
+      icon: (
+        <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+      ),
+      title: t('values.integrity.title'),
+      description: t('values.integrity.description'),
+    },
+    {
+      icon: (
+        <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      ),
+      title: t('values.community.title'),
+      description: t('values.community.description'),
+    },
+    {
+      icon: (
+        <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      ),
+      title: t('values.impact.title'),
+      description: t('values.impact.description'),
+    },
+  ]
+
+  const displayTitle = title || t('title')
+  const displayContent = content || t('content')
+  const displayMission = mission || t('mission')
+  const displayVision = vision || t('vision')
   return (
     <section className="section-padding bg-white overflow-hidden">
       <div className="container-wide">
@@ -95,12 +102,12 @@ export default function About({
                     </svg>
                   </div>
                   <div>
-                    <div className="font-display text-2xl font-bold text-foundation-charcoal">RM 15M+</div>
-                    <div className="text-gray-500 text-sm">Total Impact</div>
+                    <div className="font-display text-2xl font-bold text-foundation-charcoal">{t('impactAmount')}</div>
+                    <div className="text-gray-500 text-sm">{t('totalImpact')}</div>
                   </div>
                 </div>
                 <p className="text-gray-600 text-sm">
-                  Distributed across education, healthcare, and community programs.
+                  {t('impactDescription')}
                 </p>
               </motion.div>
             </div>
@@ -119,31 +126,31 @@ export default function About({
           >
             <div className="inline-flex items-center gap-2 mb-6">
               <span className="accent-line" />
-              <span className="text-teal-600 font-medium uppercase tracking-wider text-sm">About Us</span>
+              <span className="text-teal-600 font-medium uppercase tracking-wider text-sm">{t('label')}</span>
             </div>
 
             <h2 className="heading-section text-foundation-charcoal mb-6">
-              {title}
+              {displayTitle}
             </h2>
 
             <p className="text-gray-600 text-lg leading-relaxed mb-8">
-              {content}
+              {displayContent}
             </p>
 
             {/* Mission & Vision */}
             <div className="grid sm:grid-cols-2 gap-6 mb-10">
               <div className="p-6 bg-teal-50 rounded-2xl">
-                <h3 className="font-heading text-xl font-semibold text-teal-700 mb-3">Our Mission</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">{mission}</p>
+                <h3 className="font-heading text-xl font-semibold text-teal-700 mb-3">{t('ourMission')}</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">{displayMission}</p>
               </div>
               <div className="p-6 bg-amber-50 rounded-2xl">
-                <h3 className="font-heading text-xl font-semibold text-amber-700 mb-3">Our Vision</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">{vision}</p>
+                <h3 className="font-heading text-xl font-semibold text-amber-700 mb-3">{t('ourVision')}</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">{displayVision}</p>
               </div>
             </div>
 
             <Link href="/about" className="btn-primary">
-              Learn More About Us
+              {t('learnMore')}
             </Link>
           </motion.div>
         </div>
@@ -157,7 +164,7 @@ export default function About({
           className="mt-24"
         >
           <div className="text-center mb-12">
-            <h3 className="heading-subsection text-foundation-charcoal">Our Core Values</h3>
+            <h3 className="heading-subsection text-foundation-charcoal">{t('coreValues')}</h3>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">

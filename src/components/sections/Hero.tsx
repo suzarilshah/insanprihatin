@@ -13,9 +13,11 @@ interface HeroProps {
   ctaText?: string
   ctaLink?: string
   backgroundImage?: string | null
+  communityImage?: string | null
 }
 
 const DEFAULT_BACKGROUND = 'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?q=80&w=2574'
+const DEFAULT_COMMUNITY = 'https://images.unsplash.com/photo-1617450365226-9bf28c5d3575?q=80&w=1200'
 
 export default function Hero({
   title,
@@ -24,6 +26,7 @@ export default function Hero({
   ctaText,
   ctaLink = '/projects',
   backgroundImage,
+  communityImage,
 }: HeroProps) {
   const t = useTranslations('hero')
 
@@ -206,7 +209,7 @@ export default function Hero({
                 {/* Central Image/Graphic - Lazy loaded */}
                 <div className="relative w-full aspect-[4/5] rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl group">
                   <Image
-                    src="https://images.unsplash.com/photo-1617450365226-9bf28c5d3575?q=80&w=1200"
+                    src={communityImage || DEFAULT_COMMUNITY}
                     alt="Community Joy"
                     fill
                     sizes="(max-width: 1024px) 0vw, 40vw"
