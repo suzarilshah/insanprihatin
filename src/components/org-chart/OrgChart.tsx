@@ -38,29 +38,33 @@ const departmentOrder = [
   'Human Resources',
 ]
 
-const departmentColors: Record<string, { gradient: string; bg: string; text: string }> = {
-  'Board of Directors': { gradient: 'from-amber-500 to-amber-600', bg: 'bg-amber-50', text: 'text-amber-700' },
-  'Board of Trustees': { gradient: 'from-amber-500 to-amber-600', bg: 'bg-amber-50', text: 'text-amber-700' },
-  'Executive Leadership': { gradient: 'from-teal-500 to-teal-600', bg: 'bg-teal-50', text: 'text-teal-700' },
-  'Executive': { gradient: 'from-teal-500 to-teal-600', bg: 'bg-teal-50', text: 'text-teal-700' },
-  'Management': { gradient: 'from-sky-500 to-sky-600', bg: 'bg-sky-50', text: 'text-sky-700' },
-  'Program Management': { gradient: 'from-sky-500 to-sky-600', bg: 'bg-sky-50', text: 'text-sky-700' },
-  'Finance & Administration': { gradient: 'from-emerald-500 to-emerald-600', bg: 'bg-emerald-50', text: 'text-emerald-700' },
-  'Finance': { gradient: 'from-emerald-500 to-emerald-600', bg: 'bg-emerald-50', text: 'text-emerald-700' },
-  'Operations': { gradient: 'from-indigo-500 to-indigo-600', bg: 'bg-indigo-50', text: 'text-indigo-700' },
-  'Communications & PR': { gradient: 'from-purple-500 to-purple-600', bg: 'bg-purple-50', text: 'text-purple-700' },
-  'Communications': { gradient: 'from-purple-500 to-purple-600', bg: 'bg-purple-50', text: 'text-purple-700' },
-  'Strategic Partnerships': { gradient: 'from-rose-500 to-rose-600', bg: 'bg-rose-50', text: 'text-rose-700' },
-  'Human Resources': { gradient: 'from-pink-500 to-pink-600', bg: 'bg-pink-50', text: 'text-pink-700' },
+const departmentColors: Record<string, { gradient: string; bg: string; border: string; text: string }> = {
+  'Board of Directors': { gradient: 'from-amber-500 to-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700' },
+  'Board of Trustees': { gradient: 'from-amber-500 to-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700' },
+  'Executive Leadership': { gradient: 'from-teal-500 to-teal-600', bg: 'bg-teal-50', border: 'border-teal-200', text: 'text-teal-700' },
+  'Executive': { gradient: 'from-teal-500 to-teal-600', bg: 'bg-teal-50', border: 'border-teal-200', text: 'text-teal-700' },
+  'Management': { gradient: 'from-sky-500 to-sky-600', bg: 'bg-sky-50', border: 'border-sky-200', text: 'text-sky-700' },
+  'Program Management': { gradient: 'from-sky-500 to-sky-600', bg: 'bg-sky-50', border: 'border-sky-200', text: 'text-sky-700' },
+  'Finance & Administration': { gradient: 'from-emerald-500 to-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700' },
+  'Finance': { gradient: 'from-emerald-500 to-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700' },
+  'Operations': { gradient: 'from-indigo-500 to-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700' },
+  'Communications & PR': { gradient: 'from-purple-500 to-purple-600', bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700' },
+  'Communications': { gradient: 'from-purple-500 to-purple-600', bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700' },
+  'Strategic Partnerships': { gradient: 'from-rose-500 to-rose-600', bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-700' },
+  'Human Resources': { gradient: 'from-pink-500 to-pink-600', bg: 'bg-pink-50', border: 'border-pink-200', text: 'text-pink-700' },
 }
 
 function getDepartmentStyles(department: string | null) {
-  if (!department) return { gradient: 'from-gray-500 to-gray-600', bg: 'bg-gray-50', text: 'text-gray-700' }
-  return departmentColors[department] || { gradient: 'from-slate-500 to-slate-600', bg: 'bg-slate-50', text: 'text-slate-700' }
+  if (!department) return { gradient: 'from-gray-500 to-gray-600', bg: 'bg-gray-50', border: 'border-gray-200', text: 'text-gray-700' }
+  return departmentColors[department] || { gradient: 'from-slate-500 to-slate-600', bg: 'bg-slate-50', border: 'border-slate-200', text: 'text-slate-700' }
 }
 
 // Build tree structure from flat array
-function buildTree(members: TeamMemberNode[]): TeamMemberNode[] {
+// Also returns shared children (people who report to multiple founders)
+function buildTree(members: TeamMemberNode[]): {
+  roots: TeamMemberNode[]
+  sharedChildren: { child: TeamMemberNode; parentIds: string[] }[]
+} {
   const memberMap = new Map<string, TeamMemberNode>()
   const roots: TeamMemberNode[] = []
 
@@ -69,15 +73,56 @@ function buildTree(members: TeamMemberNode[]): TeamMemberNode[] {
     memberMap.set(member.id, { ...member, children: [] })
   })
 
-  // Build the tree structure
+  // First pass: identify roots (founders)
+  members.forEach(member => {
+    if (!member.parentId || !memberMap.has(member.parentId)) {
+      roots.push(memberMap.get(member.id)!)
+    }
+  })
+
+  const rootIds = new Set(roots.map(r => r.id))
+
+  // Find shared children: people who report to multiple founders
+  // (via parentId + additionalManagers)
+  const sharedChildren: { child: TeamMemberNode; parentIds: string[] }[] = []
+  const sharedChildIds = new Set<string>()
+
+  members.forEach(member => {
+    const node = memberMap.get(member.id)!
+    const allManagerIds: string[] = []
+
+    // Primary manager
+    if (member.parentId && rootIds.has(member.parentId)) {
+      allManagerIds.push(member.parentId)
+    }
+
+    // Additional managers who are founders
+    if (member.additionalManagers) {
+      member.additionalManagers.forEach(am => {
+        if (rootIds.has(am.managerId)) {
+          allManagerIds.push(am.managerId)
+        }
+      })
+    }
+
+    // If reports to multiple founders, mark as shared child
+    if (allManagerIds.length > 1) {
+      sharedChildren.push({ child: node, parentIds: allManagerIds })
+      sharedChildIds.add(member.id)
+    }
+  })
+
+  // Build tree structure (excluding shared children from roots' direct children)
   members.forEach(member => {
     const node = memberMap.get(member.id)!
     if (member.parentId && memberMap.has(member.parentId)) {
+      // Skip if this is a shared child being added to a root
+      if (sharedChildIds.has(member.id) && rootIds.has(member.parentId)) {
+        return
+      }
       const parent = memberMap.get(member.parentId)!
       parent.children = parent.children || []
       parent.children.push(node)
-    } else {
-      roots.push(node)
     }
   })
 
@@ -92,7 +137,9 @@ function buildTree(members: TeamMemberNode[]): TeamMemberNode[] {
   }
 
   sortChildren(roots)
-  return roots
+  sharedChildren.sort((a, b) => (a.child.sortOrder || 0) - (b.child.sortOrder || 0))
+
+  return { roots, sharedChildren }
 }
 
 // Group members by department
@@ -149,8 +196,8 @@ export default function OrgChart({
     [members]
   )
 
-  // Build tree structure
-  const treeData = useMemo(() => buildTree(activeMembers), [activeMembers])
+  // Build tree structure (includes shared children detection)
+  const { roots: treeData, sharedChildren } = useMemo(() => buildTree(activeMembers), [activeMembers])
 
   // Group by department
   const departmentGroups = useMemo(() => groupByDepartment(activeMembers), [activeMembers])
@@ -344,75 +391,195 @@ export default function OrgChart({
               </div>
             </div>
           )}
-          {/* Responsive tree container */}
-          <div ref={treeContainerRef} className="relative flex flex-wrap items-start justify-center gap-3 sm:gap-6 px-2 sm:px-4">
-            {/* SVG Overlay for Additional Manager Lines - BEHIND cards (z-index lower than cards) */}
-            {dottedLines.length > 0 && (
-              <svg
-                className="absolute inset-0 pointer-events-none"
-                style={{ width: '100%', height: '100%', overflow: 'visible', zIndex: 0 }}
-              >
-                <defs>
-                  <marker
-                    id="arrowhead-additional"
-                    markerWidth="8"
-                    markerHeight="8"
-                    refX="8"
-                    refY="4"
-                    orient="auto"
+          {/* Tree container with special layout for shared children */}
+          <div ref={treeContainerRef} className="relative flex flex-col items-center px-2 sm:px-4">
+            {/* SVG Overlay for connector lines */}
+            <svg
+              className="absolute inset-0 pointer-events-none"
+              style={{ width: '100%', height: '100%', overflow: 'visible', zIndex: 5 }}
+            >
+              <defs>
+                <marker
+                  id="arrowhead-down"
+                  markerWidth="8"
+                  markerHeight="8"
+                  refX="4"
+                  refY="8"
+                  orient="auto"
+                >
+                  <polygon points="0 0, 8 0, 4 8" fill="#6b7280" />
+                </marker>
+              </defs>
+              {/* Lines will be drawn via DOM measurement after render */}
+            </svg>
+
+            {/* ROW 1: Founders side by side */}
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-8 lg:gap-12">
+              {treeData.map((root) => (
+                <div key={root.id} className="flex flex-col items-center" data-founder-id={root.id}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="relative z-10"
+                    data-member-id={root.id}
                   >
-                    <polygon points="0 0, 8 4, 0 8" fill="#9ca3af" />
-                  </marker>
-                </defs>
-                {dottedLines.map((line, index) => {
-                  // Smart routing: use curved path that routes AROUND cards
-                  // Route to the outside edge (left or right) based on relative positions
-                  const dx = line.x1 - line.x2 // horizontal distance
-                  const dy = line.y1 - line.y2 // vertical distance
+                    <div
+                      onClick={() => handleMemberClick(root)}
+                      className={`
+                        relative rounded-2xl overflow-visible cursor-pointer
+                        border-2 transition-all duration-300
+                        group shadow-xl
+                        ${getDepartmentStyles(root.department).border} ${getDepartmentStyles(root.department).bg}
+                        w-[200px] sm:w-[240px] lg:w-[280px]
+                      `}
+                    >
+                      {/* Top color bar */}
+                      <div className="relative h-2 overflow-hidden rounded-t-xl">
+                        <div className={`absolute inset-0 bg-gradient-to-r ${getDepartmentStyles(root.department).gradient}`} />
+                      </div>
 
-                  // Determine which side to curve towards (away from center)
-                  const avgX = (line.x1 + line.x2) / 2
-                  const curveDirection = avgX > 200 ? -1 : 1 // curve left if on right side, curve right if on left
+                      {/* Content */}
+                      <div className="p-4 sm:p-5 text-center">
+                        {/* Avatar */}
+                        <div className="relative mx-auto mb-3 w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 transition-transform duration-300 group-hover:scale-105">
+                          <div className={`absolute -inset-1 rounded-full bg-gradient-to-br ${getDepartmentStyles(root.department).gradient} opacity-30 blur-md group-hover:opacity-40 transition-opacity`} />
+                          <div className="relative w-full h-full rounded-full overflow-hidden border-3 border-white shadow-md">
+                            {root.image ? (
+                              <Image
+                                src={root.image}
+                                alt={root.name}
+                                fill
+                                className="object-cover"
+                              />
+                            ) : (
+                              <div className={`
+                                w-full h-full bg-gradient-to-br ${getDepartmentStyles(root.department).gradient}
+                                flex items-center justify-center text-white
+                                text-xl sm:text-2xl font-bold
+                              `}>
+                                {root.name.split(' ').map((n) => n[0]).slice(0, 2).join('')}
+                              </div>
+                            )}
+                          </div>
+                        </div>
 
-                  // Calculate control points for a smooth bezier that goes around
-                  const offsetX = Math.min(Math.abs(dx) * 0.5, 80) * curveDirection
-                  const offsetY = Math.abs(dy) * 0.3 + 30
+                        {/* Name & Position */}
+                        <h3 className="font-bold text-gray-900 leading-tight mb-1 text-sm sm:text-base">
+                          {root.name}
+                        </h3>
+                        <p className={`${getDepartmentStyles(root.department).text} font-semibold leading-tight text-xs sm:text-sm`}>
+                          {root.position}
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+              ))}
+            </div>
 
-                  // Use quadratic bezier for cleaner curve
-                  const midX = (line.x1 + line.x2) / 2 + offsetX
-                  const midY = Math.max(line.y1, line.y2) + offsetY
+            {/* Connector lines from founders to shared children */}
+            {sharedChildren.length > 0 && (
+              <>
+                {/* Vertical lines from each founder + horizontal bar */}
+                <div className="flex justify-center items-end w-full" style={{ height: '40px' }}>
+                  <div className="flex items-end justify-center gap-4 sm:gap-8 lg:gap-12">
+                    {treeData.map((root, index) => (
+                      <div key={root.id} className="flex flex-col items-center w-[200px] sm:w-[240px] lg:w-[280px]">
+                        <div className="w-[2px] h-8 bg-gray-400" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
-                  // Create smooth curved path FROM manager TO report
-                  const path = `M ${line.x2} ${line.y2}
-                    Q ${midX} ${midY}, ${line.x1} ${line.y1}`
+                {/* Horizontal connector bar */}
+                <div className="w-full flex justify-center">
+                  <div
+                    className="h-[2px] bg-gray-400"
+                    style={{
+                      width: treeData.length > 1 ? `calc(${(treeData.length - 1) * 100}% / ${treeData.length} + 200px)` : '2px',
+                      maxWidth: '600px',
+                    }}
+                  />
+                </div>
 
-                  return (
-                    <g key={index}>
-                      <path
-                        d={path}
-                        fill="none"
-                        stroke="#9ca3af"
-                        strokeWidth="1.5"
-                        strokeDasharray="4 3"
-                        markerEnd="url(#arrowhead-additional)"
-                        className="transition-opacity duration-300"
-                        opacity="0.5"
-                      />
-                    </g>
-                  )
-                })}
-              </svg>
+                {/* Vertical line down to shared children */}
+                <div className="w-[2px] h-6 bg-gray-400" />
+
+                {/* Arrow pointing down */}
+                <div className="mb-2">
+                  <svg className="w-4 h-4 text-gray-500" viewBox="0 0 16 16" fill="currentColor">
+                    <polygon points="8,16 0,6 16,6" />
+                  </svg>
+                </div>
+
+                {/* ROW 2: Shared children (report to multiple founders) */}
+                <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
+                  {sharedChildren.map(({ child }) => (
+                    <OrgChartNode
+                      key={child.id}
+                      member={child}
+                      isRoot={false}
+                      isFounder={false}
+                      showDetails={true}
+                      onMemberClick={handleMemberClick}
+                    />
+                  ))}
+                </div>
+              </>
             )}
-            {/* Founders/Roots side by side - all roots get equal treatment */}
-            {treeData.map((root) => (
-              <OrgChartNode
-                key={root.id}
-                member={root}
-                isRoot={true}
-                isFounder={true}
-                onMemberClick={handleMemberClick}
-              />
-            ))}
+
+            {/* ROW 3: Each founder's exclusive children (if no shared children) */}
+            {sharedChildren.length === 0 && treeData.some(root => root.children && root.children.length > 0) && (
+              <div className="flex flex-wrap justify-center gap-4 sm:gap-8 lg:gap-12 mt-0">
+                {treeData.map((root) => (
+                  <div key={root.id} className="flex flex-col items-center">
+                    {root.children && root.children.length > 0 && (
+                      <>
+                        {/* Vertical connector from founder */}
+                        <div className="w-[2px] h-6 bg-gradient-to-b from-gray-300 to-gray-400 rounded-full" />
+
+                        {/* Children */}
+                        <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
+                          {root.children.map((child, index, arr) => {
+                            const isFirst = index === 0
+                            const isLast = index === arr.length - 1
+                            const isOnly = arr.length === 1
+
+                            return (
+                              <div key={child.id} className="flex flex-col items-center relative">
+                                {/* Horizontal connector segments */}
+                                {!isOnly && (
+                                  <div className="absolute top-0 left-0 right-0 h-[2px] flex">
+                                    <div className={`flex-1 bg-gray-300 ${isFirst ? 'invisible' : ''}`} />
+                                    <div className={`flex-1 bg-gray-300 ${isLast ? 'invisible' : ''}`} />
+                                  </div>
+                                )}
+
+                                {/* Vertical connector */}
+                                <div className={`w-[2px] bg-gray-300 rounded-b-full ${isOnly ? 'h-4' : 'h-5'}`} />
+
+                                {/* Junction point */}
+                                {!isOnly && (
+                                  <div className="w-2 h-2 rounded-full bg-gray-400 border-2 border-white shadow-sm -mt-0.5 mb-1 z-10" />
+                                )}
+
+                                <OrgChartNode
+                                  member={child}
+                                  depth={1}
+                                  isFounder={false}
+                                  showDetails={true}
+                                  onMemberClick={handleMemberClick}
+                                />
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
