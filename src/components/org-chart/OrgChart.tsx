@@ -274,6 +274,19 @@ export default function OrgChart({
     }
   }, [viewMode, calculateDottedLines, treeData])
 
+  // On mobile, if tree view is selected, switch to department view
+  // (Hierarchy tab is hidden on mobile for better UX)
+  useEffect(() => {
+    const checkMobileAndSwitchView = () => {
+      if (window.innerWidth < 640 && viewMode === 'tree') {
+        setViewMode('department')
+      }
+    }
+    checkMobileAndSwitchView()
+    window.addEventListener('resize', checkMobileAndSwitchView)
+    return () => window.removeEventListener('resize', checkMobileAndSwitchView)
+  }, [viewMode])
+
   // Also recalculate on window resize
   useEffect(() => {
     if (viewMode !== 'tree') return
@@ -296,10 +309,10 @@ export default function OrgChart({
           {/* View Mode Toggle */}
           <div className="flex bg-white rounded-xl p-1 shadow-sm border border-gray-100">
             {[
-              { mode: 'department' as const, label: 'By Department', icon: 'grid-3x3' },
-              { mode: 'tree' as const, label: 'Hierarchy', icon: 'tree' },
-              { mode: 'grid' as const, label: 'Grid', icon: 'grid' },
-            ].map(({ mode, label, icon }) => (
+              { mode: 'department' as const, label: 'By Department', icon: 'grid-3x3', hideOnMobile: false },
+              { mode: 'tree' as const, label: 'Hierarchy', icon: 'tree', hideOnMobile: true },
+              { mode: 'grid' as const, label: 'Grid', icon: 'grid', hideOnMobile: false },
+            ].map(({ mode, label, icon, hideOnMobile }) => (
               <button
                 key={mode}
                 onClick={() => setViewMode(mode)}
@@ -309,6 +322,7 @@ export default function OrgChart({
                     ? 'bg-foundation-charcoal text-white shadow-md'
                     : 'text-gray-500 hover:text-teal-600 hover:bg-gray-50'
                   }
+                  ${hideOnMobile ? 'hidden sm:flex' : ''}
                 `}
               >
                 <span className="flex items-center gap-2">
