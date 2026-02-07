@@ -40,15 +40,14 @@ export default function Hero({
     offset: ['start start', 'end start'],
   })
 
-  const backgroundY = useTransform(scrollYProgress, [0, 1], ['0%', '20%'])
-  const textY = useTransform(scrollYProgress, [0, 1], ['0%', '40%'])
-  const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0])
+  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1])
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
 
   return (
     <section ref={containerRef} className="relative min-h-[90vh] md:min-h-[90vh] flex items-center overflow-hidden">
       {/* Cinematic Background Layer */}
       <div className="absolute inset-0 z-0">
-        <motion.div style={{ y: isHydrated ? backgroundY : 0 }} className="absolute inset-0 scale-110">
+        <motion.div style={{ scale: isHydrated ? heroScale : 1 }} className="absolute inset-0">
           <Image
             src={bgImage}
             alt="Impact Background"
@@ -96,7 +95,7 @@ export default function Hero({
 
       {/* Main Content */}
       <motion.div
-        style={{ y: isHydrated ? textY : 0, opacity: isHydrated ? opacity : 1 }}
+        style={{ opacity: isHydrated ? heroOpacity : 1 }}
         className="relative container-wide pt-24 md:pt-32 pb-16 md:pb-20 z-10"
       >
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-16 items-center">

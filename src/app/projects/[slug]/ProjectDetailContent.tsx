@@ -1,6 +1,7 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { motion, useScroll, useTransform } from 'framer-motion'
+import { useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { formatDate } from '@/lib/utils'
@@ -75,6 +76,14 @@ const defaultImage = 'https://images.unsplash.com/photo-1469571486292-0ba58a3f06
 export default function ProjectDetailContent({ project, relatedProjects, forms = [] }: ProjectDetailContentProps) {
   const status = statusConfig[project.status || 'ongoing'] || statusConfig.ongoing
   const gallery = Array.isArray(project.gallery) ? project.gallery as string[] : []
+
+  const heroRef = useRef<HTMLElement>(null)
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ['start start', 'end start'],
+  })
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
+  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1])
 
   return (
     <div>

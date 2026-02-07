@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useRef } from 'react'
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import Image from 'next/image'
 
 const contactInfo = [
@@ -93,6 +93,14 @@ const colorClasses: Record<string, { bg: string; icon: string; border: string }>
 }
 
 export default function ContactContent() {
+  const heroRef = useRef<HTMLElement>(null)
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ['start start', 'end start'],
+  })
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
+  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1])
+
   const [formState, setFormState] = useState({
     name: '',
     email: '',
@@ -143,9 +151,9 @@ export default function ContactContent() {
   return (
     <div>
       {/* Premium Hero Section */}
-      <section className="relative min-h-[70vh] flex items-center overflow-hidden">
+      <section ref={heroRef} className="relative min-h-[70vh] flex items-center overflow-hidden">
         {/* Background */}
-        <div className="absolute inset-0">
+        <motion.div style={{ scale: heroScale }} className="absolute inset-0">
           <Image
             src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?q=80&w=2574"
             alt="Team meeting"
@@ -153,11 +161,11 @@ export default function ContactContent() {
             className="object-cover"
             priority
           />
-          {/* Nav-Safe Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-b from-foundation-charcoal/95 via-foundation-charcoal/80 to-foundation-charcoal/40" />
-          <div className="absolute inset-0 bg-dots opacity-10" />
-          <div className="grain" />
-        </div>
+        </motion.div>
+        {/* Nav-Safe Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-b from-foundation-charcoal/95 via-foundation-charcoal/80 to-foundation-charcoal/40" />
+        <div className="absolute inset-0 bg-dots opacity-10" />
+        <div className="grain" />
 
         {/* Animated orbs */}
         <motion.div
@@ -166,7 +174,7 @@ export default function ContactContent() {
           className="absolute top-1/4 right-1/4 w-[400px] h-[400px] bg-amber-400/20 rounded-full blur-[100px]"
         />
 
-        <div className="relative container-wide z-10 pt-20">
+        <motion.div style={{ opacity: heroOpacity }} className="relative container-wide z-10 pt-20">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
@@ -212,7 +220,7 @@ export default function ContactContent() {
               Our team is here to help you make a difference.
             </motion.p>
           </motion.div>
-        </div>
+        </motion.div>
       </section>
 
       {/* Contact Info Cards - Floating */}

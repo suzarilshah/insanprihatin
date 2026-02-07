@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useRef } from 'react'
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
 import { formatDate } from '@/lib/utils'
@@ -56,6 +56,13 @@ const defaultAuthorImage = 'https://images.unsplash.com/photo-1472099645785-5658
 
 export default function BlogContent({ posts }: BlogContentProps) {
   const [activeCategory, setActiveCategory] = useState('all')
+  const heroRef = useRef<HTMLElement>(null)
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ['start start', 'end start'],
+  })
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
+  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1])
 
   // Get unique categories from posts and merge with defaults
   const postCategories = [...new Set(posts.map(p => p.category).filter(Boolean))]
@@ -96,9 +103,9 @@ export default function BlogContent({ posts }: BlogContentProps) {
   return (
     <div>
       {/* Premium Hero Section */}
-      <section className="relative min-h-[80vh] flex items-center overflow-hidden pb-32">
+      <section ref={heroRef} className="relative min-h-[80vh] flex items-center overflow-hidden pb-32">
         {/* Background */}
-        <div className="absolute inset-0">
+        <motion.div style={{ scale: heroScale }} className="absolute inset-0">
           <Image
             src="https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=2670"
             alt="News and stories"
@@ -106,11 +113,11 @@ export default function BlogContent({ posts }: BlogContentProps) {
             className="object-cover"
             priority
           />
-          {/* Nav-Safe Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-b from-foundation-charcoal/95 via-foundation-charcoal/80 to-foundation-charcoal/40" />
-          <div className="absolute inset-0 bg-dots opacity-10" />
-          <div className="grain" />
-        </div>
+        </motion.div>
+        {/* Nav-Safe Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-b from-foundation-charcoal/95 via-foundation-charcoal/80 to-foundation-charcoal/40" />
+        <div className="absolute inset-0 bg-dots opacity-10" />
+        <div className="grain" />
 
         {/* Animated orbs */}
         <motion.div
@@ -119,7 +126,7 @@ export default function BlogContent({ posts }: BlogContentProps) {
           className="absolute top-1/4 right-1/4 w-[400px] h-[400px] bg-amber-400/20 rounded-full blur-[100px]"
         />
 
-        <div className="relative container-wide z-10 pt-20">
+        <motion.div style={{ opacity: heroOpacity }} className="relative container-wide z-10 pt-20">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
@@ -165,7 +172,7 @@ export default function BlogContent({ posts }: BlogContentProps) {
               impact we are building together. This is where our journey finds its narrative.
             </motion.p>
           </motion.div>
-        </div>
+        </motion.div>
       </section>
 
       {/* Featured Post Section */}

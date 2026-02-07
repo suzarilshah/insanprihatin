@@ -1,6 +1,7 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { motion, useScroll, useTransform } from 'framer-motion'
+import { useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { formatDate } from '@/lib/utils'
@@ -78,13 +79,20 @@ const getReadTime = (content: string) => {
 
 export default function BlogPostContent({ post, relatedPosts, forms = [] }: BlogPostContentProps) {
   const tags = Array.isArray(post.tags) ? post.tags as string[] : []
+  const heroRef = useRef<HTMLElement>(null)
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ['start start', 'end start'],
+  })
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
+  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1])
 
   return (
     <div>
       {/* Hero Section */}
-      <section className="relative py-32 overflow-hidden">
+      <section ref={heroRef} className="relative py-32 overflow-hidden">
         {/* Background */}
-        <div className="absolute inset-0">
+        <motion.div style={{ scale: heroScale }} className="absolute inset-0">
           <Image
             src={post.featuredImage || defaultImage}
             alt={l(post.title)}
@@ -95,7 +103,7 @@ export default function BlogPostContent({ post, relatedPosts, forms = [] }: Blog
           <div className="absolute inset-0 bg-gradient-to-br from-teal-900/95 via-teal-800/90 to-sky-900/85" />
           <div className="absolute inset-0 bg-dots opacity-10" />
           <div className="grain" />
-        </div>
+        </motion.div>
 
         {/* Animated orbs */}
         <motion.div
@@ -104,7 +112,7 @@ export default function BlogPostContent({ post, relatedPosts, forms = [] }: Blog
           className="absolute top-1/4 right-1/4 w-[400px] h-[400px] bg-amber-400/20 rounded-full blur-[100px]"
         />
 
-        <div className="relative container-wide z-10">
+        <motion.div style={{ opacity: heroOpacity }} className="relative container-wide z-10">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
@@ -187,7 +195,7 @@ export default function BlogPostContent({ post, relatedPosts, forms = [] }: Blog
               </div>
             </motion.div>
           </motion.div>
-        </div>
+        </motion.div>
       </section>
 
       {/* Content Section */}

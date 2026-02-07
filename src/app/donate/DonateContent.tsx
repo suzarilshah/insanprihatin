@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useEffect, useRef } from 'react'
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { formatCurrency } from '@/lib/utils'
@@ -29,6 +29,14 @@ export default function DonateContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   
+  const heroRef = useRef<HTMLElement>(null)
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ['start start', 'end start'],
+  })
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
+  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1])
+
   // State
   const [amount, setAmount] = useState<number>(100)
   const [customAmount, setCustomAmount] = useState<string>('')
@@ -120,20 +128,22 @@ export default function DonateContent() {
     <div className="min-h-screen bg-foundation-pearl selection:bg-teal-100 selection:text-teal-900">
       
       {/* Hero Background - Full Image with Premium Overlay */}
-      <div className="absolute inset-0 z-0 h-[85vh] w-full overflow-hidden">
-        <Image
-          src="https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?q=80&w=2670"
-          alt="Helping hands"
-          fill
-          className="object-cover"
-          priority
-        />
+      <section ref={heroRef} className="absolute inset-0 z-0 h-[85vh] w-full overflow-hidden">
+        <motion.div style={{ scale: heroScale }} className="absolute inset-0">
+          <Image
+            src="https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?q=80&w=2670"
+            alt="Helping hands"
+            fill
+            className="object-cover"
+            priority
+          />
+        </motion.div>
         {/* Cinematic Overlay - ensuring nav visibility and text contrast */}
         <div className="absolute inset-0 bg-gradient-to-b from-foundation-charcoal/80 via-foundation-charcoal/60 to-foundation-pearl" />
         <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.05] mix-blend-overlay" />
-      </div>
+      </section>
 
-      <div className="relative z-10 container-wide pt-40 pb-20">
+      <motion.div style={{ opacity: heroOpacity }} className="relative z-10 container-wide pt-40 pb-20">
         
         {/* Header Section */}
         <div className="text-center max-w-4xl mx-auto mb-20">
@@ -496,7 +506,7 @@ export default function DonateContent() {
 
           </motion.div>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }

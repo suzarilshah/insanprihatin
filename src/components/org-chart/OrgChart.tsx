@@ -380,41 +380,10 @@ export default function OrgChart({
       {/* Tree View */}
       {viewMode === 'tree' && (
         <div className="pb-8 pt-4">
-          {/* Legend for additional reporting lines */}
-          {dottedConnections.length > 0 && (
-            <div className="flex flex-wrap justify-center gap-3 mb-6 px-4">
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <svg width="24" height="2">
-                  <line x1="0" y1="1" x2="24" y2="1" stroke="#94a3b8" strokeWidth="2" />
-                </svg>
-                <span>Additional reporting lines</span>
-              </div>
-            </div>
-          )}
           {/* Tree container with special layout for shared children */}
           <div ref={treeContainerRef} className="relative flex flex-col items-center px-2 sm:px-4">
-            {/* SVG Overlay for connector lines */}
-            <svg
-              className="absolute inset-0 pointer-events-none"
-              style={{ width: '100%', height: '100%', overflow: 'visible', zIndex: 5 }}
-            >
-              <defs>
-                <marker
-                  id="arrowhead-down"
-                  markerWidth="8"
-                  markerHeight="8"
-                  refX="4"
-                  refY="8"
-                  orient="auto"
-                >
-                  <polygon points="0 0, 8 0, 4 8" fill="#6b7280" />
-                </marker>
-              </defs>
-              {/* Lines will be drawn via DOM measurement after render */}
-            </svg>
-
-            {/* ROW 1: Founders side by side */}
-            <div className="flex flex-wrap justify-center gap-4 sm:gap-8 lg:gap-12">
+            {/* ROW 1: Founders side by side (stack on mobile for consistency) */}
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-8 lg:gap-12">
               {treeData.map((root) => (
                 <div key={root.id} className="flex flex-col items-center" data-founder-id={root.id}>
                   <motion.div
@@ -480,40 +449,49 @@ export default function OrgChart({
             {/* Connector lines from founders to shared children */}
             {sharedChildren.length > 0 && (
               <>
-                {/* Vertical lines from each founder + horizontal bar */}
-                <div className="flex justify-center items-end w-full" style={{ height: '40px' }}>
-                  <div className="flex items-end justify-center gap-4 sm:gap-8 lg:gap-12">
-                    {treeData.map((root, index) => (
-                      <div key={root.id} className="flex flex-col items-center w-[200px] sm:w-[240px] lg:w-[280px]">
-                        <div className="w-[2px] h-8 bg-gray-400" />
-                      </div>
-                    ))}
+                {/* MOBILE: Simple vertical connector (shown on small screens) */}
+                <div className="flex sm:hidden flex-col items-center">
+                  <div className="w-[2px] h-8 bg-gray-400" />
+                  <svg className="w-4 h-4 text-gray-500" viewBox="0 0 16 16" fill="currentColor">
+                    <polygon points="8,16 0,6 16,6" />
+                  </svg>
+                </div>
+
+                {/* DESKTOP: Dual vertical lines + horizontal bar (hidden on small screens) */}
+                <div className="hidden sm:flex flex-col items-center w-full">
+                  {/* Vertical lines from each founder */}
+                  <div className="flex justify-center items-end w-full" style={{ height: '40px' }}>
+                    <div className="flex items-end justify-center gap-8 lg:gap-12">
+                      {treeData.map((root) => (
+                        <div key={root.id} className="flex flex-col items-center w-[240px] lg:w-[280px]">
+                          <div className="w-[2px] h-8 bg-gray-400" />
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
 
-                {/* Horizontal connector bar */}
-                <div className="w-full flex justify-center">
-                  <div
-                    className="h-[2px] bg-gray-400"
-                    style={{
-                      width: treeData.length > 1 ? `calc(${(treeData.length - 1) * 100}% / ${treeData.length} + 200px)` : '2px',
-                      maxWidth: '600px',
-                    }}
-                  />
-                </div>
+                  {/* Horizontal connector bar */}
+                  <div className="w-full flex justify-center">
+                    <div
+                      className="h-[2px] bg-gray-400"
+                      style={{
+                        width: treeData.length > 1 ? `calc(${(treeData.length - 1) * 280}px + 40px)` : '2px',
+                        maxWidth: '600px',
+                      }}
+                    />
+                  </div>
 
-                {/* Vertical line down to shared children */}
-                <div className="w-[2px] h-6 bg-gray-400" />
+                  {/* Vertical line down to shared children */}
+                  <div className="w-[2px] h-6 bg-gray-400" />
 
-                {/* Arrow pointing down */}
-                <div className="mb-2">
+                  {/* Arrow pointing down */}
                   <svg className="w-4 h-4 text-gray-500" viewBox="0 0 16 16" fill="currentColor">
                     <polygon points="8,16 0,6 16,6" />
                   </svg>
                 </div>
 
                 {/* ROW 2: Shared children (report to multiple founders) */}
-                <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
+                <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-6 mt-2">
                   {sharedChildren.map(({ child }) => (
                     <OrgChartNode
                       key={child.id}
@@ -530,7 +508,7 @@ export default function OrgChart({
 
             {/* ROW 3: Each founder's exclusive children (if no shared children) */}
             {sharedChildren.length === 0 && treeData.some(root => root.children && root.children.length > 0) && (
-              <div className="flex flex-wrap justify-center gap-4 sm:gap-8 lg:gap-12 mt-0">
+              <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-8 lg:gap-12 mt-0">
                 {treeData.map((root) => (
                   <div key={root.id} className="flex flex-col items-center">
                     {root.children && root.children.length > 0 && (
@@ -539,7 +517,7 @@ export default function OrgChart({
                         <div className="w-[2px] h-6 bg-gradient-to-b from-gray-300 to-gray-400 rounded-full" />
 
                         {/* Children */}
-                        <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
+                        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-6">
                           {root.children.map((child, index, arr) => {
                             const isFirst = index === 0
                             const isLast = index === arr.length - 1
@@ -547,9 +525,9 @@ export default function OrgChart({
 
                             return (
                               <div key={child.id} className="flex flex-col items-center relative">
-                                {/* Horizontal connector segments */}
+                                {/* Horizontal connector segments - hidden on mobile */}
                                 {!isOnly && (
-                                  <div className="absolute top-0 left-0 right-0 h-[2px] flex">
+                                  <div className="absolute top-0 left-0 right-0 h-[2px] hidden sm:flex">
                                     <div className={`flex-1 bg-gray-300 ${isFirst ? 'invisible' : ''}`} />
                                     <div className={`flex-1 bg-gray-300 ${isLast ? 'invisible' : ''}`} />
                                   </div>
