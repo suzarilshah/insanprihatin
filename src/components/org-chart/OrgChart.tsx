@@ -403,12 +403,12 @@ export default function OrgChart({
                 })}
               </svg>
             )}
-            {/* Founders side by side */}
-            {treeData.map((root, index) => (
+            {/* Founders/Roots side by side - all roots get equal treatment */}
+            {treeData.map((root) => (
               <OrgChartNode
                 key={root.id}
                 member={root}
-                isRoot={treeData.length === 1 || index === 0}
+                isRoot={true}
                 isFounder={true}
                 onMemberClick={handleMemberClick}
               />
