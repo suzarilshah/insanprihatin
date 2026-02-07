@@ -353,7 +353,7 @@ export default function SettingsPage() {
                     type="text"
                     value={settings.orgLogoUrl}
                     onChange={(e) => setSettings({ ...settings, orgLogoUrl: e.target.value })}
-                    placeholder="/YIP-main-logo-transparent.png"
+                    placeholder="/images/logo-light.png"
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
                   />
                   <p className="text-xs text-gray-500 mt-1">Path to the logo image (e.g., /logo.png or https://...)</p>

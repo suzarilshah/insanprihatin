@@ -4,6 +4,7 @@ import SchemaMarkup from '@/components/SEO/SchemaMarkup'
 import { generateOrganizationSchema, generateWebsiteSchema, generateDonationSchema } from '@/lib/seo'
 import { getHeroContent, getAboutContent, getImpactStats } from '@/lib/actions/content'
 import { getProjects } from '@/lib/actions/projects'
+import { getStockPhotoSettings } from '@/lib/actions/stock-photos'
 import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
 
 // Force dynamic to prevent prerender errors during build
@@ -19,11 +20,12 @@ const l = (value: LocalizedString | string | null | undefined): string | undefin
 
 export default async function HomePage() {
   // Fetch content from database
-  const [heroContent, aboutContent, impactStats, projects] = await Promise.all([
+  const [heroContent, aboutContent, impactStats, projects, stockPhotos] = await Promise.all([
     getHeroContent(),
     getAboutContent(),
     getImpactStats(),
     getProjects({ limit: 3, published: true }),
+    getStockPhotoSettings(),
   ])
 
   const schemas = [
@@ -43,13 +45,19 @@ export default async function HomePage() {
           description={l(heroContent?.description)}
           ctaText={l(heroContent?.ctaText)}
           ctaLink={heroContent?.ctaLink ?? undefined}
-          backgroundImage={heroContent?.backgroundImage ?? undefined}
+          backgroundImage={heroContent?.backgroundImage || stockPhotos.heroBackground}
+          communityImage={stockPhotos.heroCommunity}
         />
         <Problem />
-        <Solution 
-          projects={projects} 
-          impactStats={impactStats} 
+        <Solution
+          projects={projects}
+          impactStats={impactStats}
           aboutContent={aboutContent}
+          stockPhotos={{
+            solutionFeatured: stockPhotos.solutionFeatured,
+            solutionProject1: stockPhotos.solutionProject1,
+            solutionProject2: stockPhotos.solutionProject2,
+          }}
         />
         <HowItWorks />
         <CTA />

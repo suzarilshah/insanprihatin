@@ -129,7 +129,7 @@ export const organizationDetails = {
   phone: '+60 12-345 6789',
   email: 'info@insanprihatin.org',
   website: 'www.insanprihatin.org',
-  logoUrl: '/YIP-main-logo-transparent.png',
+  logoUrl: '/images/logo-light.png',
 }
 
 /**

@@ -85,34 +85,26 @@ function formatRelativeTime(date: Date) {
   return `${days} day${days > 1 ? 's' : ''} ago`
 }
 
-function StatsCard({ label, value, subtext, icon, color }: {
+function StatsCard({ label, value, subtext }: {
   label: string
   value: string
   subtext?: string
-  icon: React.ReactNode
-  color: 'teal' | 'amber' | 'purple' | 'blue'
 }) {
-  const colorClasses = {
-    teal: 'bg-teal-50 text-teal-600',
-    amber: 'bg-amber-50 text-amber-600',
-    purple: 'bg-purple-50 text-purple-600',
-    blue: 'bg-blue-50 text-blue-600',
-  }
-
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-gray-500 text-sm mb-1">{label}</p>
-          <p className="font-display text-3xl font-bold text-foundation-charcoal">{value}</p>
-          {subtext && (
-            <p className="text-sm text-gray-500 mt-1">{subtext}</p>
-          )}
+    <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:border-gray-300 transition-colors">
+      <p className="text-gray-500 text-sm font-medium mb-2">{label}</p>
+      <p className="text-3xl font-semibold text-gray-900 tracking-tight">{value}</p>
+      {subtext && (
+        <div className="mt-2 flex items-center gap-1.5">
+          <span className="flex items-center text-xs font-medium text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
+            <svg className="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+            Active
+          </span>
+          <span className="text-xs text-gray-500">{subtext}</span>
         </div>
-        <div className={`w-12 h-12 rounded-xl ${colorClasses[color]} flex items-center justify-center`}>
-          {icon}
-        </div>
-      </div>
+      )}
     </div>
   )
 }
@@ -122,78 +114,63 @@ async function DashboardContent() {
   const activities = await getRecentActivity()
 
   return (
-    <>
+    <div className="space-y-8">
+      {/* Header */}
+      <div>
+        <h2 className="text-lg font-semibold text-gray-900">Overview</h2>
+        <p className="text-sm text-gray-500">Key performance metrics for the foundation.</p>
+      </div>
+
       {/* Stats Grid */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
           label="Total Donations"
           value={`RM ${stats.totalDonations.toLocaleString()}`}
-          subtext={`${stats.donationCount} donations`}
-          color="teal"
-          icon={
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          }
+          subtext={`${stats.donationCount} contributions`}
         />
         <StatsCard
           label="Active Projects"
           value={stats.activeProjects.toString()}
-          subtext="Currently running"
-          color="blue"
-          icon={
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-            </svg>
-          }
+          subtext="Running campaigns"
         />
         <StatsCard
           label="Messages"
           value={stats.totalMessages.toString()}
-          subtext={stats.unreadMessages > 0 ? `${stats.unreadMessages} unread` : 'All read'}
-          color="amber"
-          icon={
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-          }
+          subtext={`${stats.unreadMessages} unread`}
         />
         <StatsCard
           label="Team Members"
           value={stats.teamMembers.toString()}
           subtext={`${stats.publishedPosts} blog posts`}
-          color="purple"
-          icon={
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-          }
         />
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Quick Actions */}
-        <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <h2 className="font-heading text-lg font-semibold text-foundation-charcoal mb-6">
-            Quick Actions
-          </h2>
+        <div className="lg:col-span-2 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold text-gray-900">Quick Actions</h2>
+          </div>
+          
           <div className="grid sm:grid-cols-2 gap-4">
             {[
-              { label: 'Add New Project', icon: '📦', href: '/admin/dashboard/projects/new', desc: 'Create a new community project' },
-              { label: 'Write Blog Post', icon: '✏️', href: '/admin/dashboard/blog/new', desc: 'Share updates and news' },
-              { label: 'Update Hero Section', icon: '🖼️', href: '/admin/dashboard/content/hero', desc: 'Edit homepage banner' },
-              { label: 'View All Donations', icon: '💰', href: '/admin/dashboard/donations', desc: 'Track all contributions' },
-              { label: 'Manage Team', icon: '👥', href: '/admin/dashboard/team', desc: 'Update org chart' },
-              { label: 'Check Messages', icon: '📬', href: '/admin/dashboard/messages', desc: `${stats.unreadMessages} unread` },
+              { label: 'New Project', icon: 'M12 4v16m8-8H4', href: '/admin/dashboard/projects/new', desc: 'Launch a campaign' },
+              { label: 'Write Article', icon: 'M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z', href: '/admin/dashboard/blog/new', desc: 'Publish updates' },
+              { label: 'View Donations', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', href: '/admin/dashboard/donations', desc: 'Track funds' },
+              { label: 'Check Inbox', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', href: '/admin/dashboard/messages', desc: 'Read messages' },
             ].map((action) => (
               <Link
                 key={action.label}
                 href={action.href}
-                className="flex items-start gap-4 p-4 rounded-xl border border-gray-200 hover:border-teal-200 hover:bg-teal-50/50 transition-all group"
+                className="group flex items-start gap-4 p-4 rounded-xl border border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm transition-all"
               >
-                <span className="text-2xl">{action.icon}</span>
+                <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center border border-gray-100 group-hover:bg-white group-hover:border-gray-200 transition-colors">
+                  <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={action.icon} />
+                  </svg>
+                </div>
                 <div>
-                  <span className="font-medium text-foundation-charcoal group-hover:text-teal-600 block">
+                  <span className="font-medium text-gray-900 block mb-0.5">
                     {action.label}
                   </span>
                   <span className="text-sm text-gray-500">{action.desc}</span>
@@ -204,102 +181,84 @@ async function DashboardContent() {
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <h2 className="font-heading text-lg font-semibold text-foundation-charcoal mb-6">
-            Recent Activity
-          </h2>
-          <div className="space-y-4">
+        <div className="space-y-4">
+          <h2 className="text-base font-semibold text-gray-900">Recent Activity</h2>
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100">
             {activities.length > 0 ? (
               activities.map((activity, index) => (
                 <div
                   key={index}
-                  className="flex items-start gap-3 pb-4 border-b border-gray-100 last:border-0 last:pb-0"
+                  className="p-4 flex gap-3 hover:bg-gray-50/50 transition-colors"
                 >
                   <div
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                      activity.type === 'donation'
-                        ? 'bg-emerald-100 text-emerald-600'
-                        : 'bg-amber-100 text-amber-600'
+                    className={`w-2 h-2 mt-2 rounded-full flex-shrink-0 ${
+                      activity.type === 'donation' ? 'bg-emerald-500' : 'bg-blue-500'
                     }`}
-                  >
-                    {activity.type === 'donation' ? '💰' : '✉️'}
-                  </div>
+                  />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm text-foundation-charcoal line-clamp-2">{activity.message}</p>
-                    <p className="text-xs text-gray-500 mt-1">{formatRelativeTime(activity.time)}</p>
+                    <p className="text-sm text-gray-900 font-medium line-clamp-2 leading-relaxed">
+                      {activity.message}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1.5 font-mono">
+                      {formatRelativeTime(activity.time)}
+                    </p>
                   </div>
                 </div>
               ))
             ) : (
               <p className="text-gray-500 text-sm text-center py-8">No recent activity</p>
             )}
+            {activities.length > 0 && (
+              <div className="p-3 bg-gray-50 border-t border-gray-100">
+                <Link
+                  href="/admin/dashboard/messages"
+                  className="block text-center text-xs font-medium text-gray-600 hover:text-gray-900"
+                >
+                  View all activity →
+                </Link>
+              </div>
+            )}
           </div>
-          {activities.length > 0 && (
-            <Link
-              href="/admin/dashboard/messages"
-              className="block text-center text-teal-600 text-sm font-medium mt-4 hover:text-teal-700"
-            >
-              View all activity
-            </Link>
-          )}
         </div>
       </div>
-
-      {/* Content Overview */}
-      <div className="mt-8 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Link href="/admin/dashboard/content" className="bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl p-6 text-white hover:shadow-lg transition-shadow">
-          <h3 className="font-heading text-lg font-semibold mb-2">Site Content</h3>
-          <p className="text-teal-100 text-sm mb-4">Edit hero, about, and other page sections</p>
-          <span className="text-sm font-medium flex items-center gap-2">
-            Manage Content
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </span>
-        </Link>
-
-        <Link href="/admin/dashboard/projects" className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white hover:shadow-lg transition-shadow">
-          <h3 className="font-heading text-lg font-semibold mb-2">Projects</h3>
-          <p className="text-blue-100 text-sm mb-4">{stats.activeProjects} active community projects</p>
-          <span className="text-sm font-medium flex items-center gap-2">
-            View Projects
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </span>
-        </Link>
-
-        <Link href="/admin/dashboard/blog" className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white hover:shadow-lg transition-shadow">
-          <h3 className="font-heading text-lg font-semibold mb-2">Blog</h3>
-          <p className="text-purple-100 text-sm mb-4">{stats.publishedPosts} published articles</p>
-          <span className="text-sm font-medium flex items-center gap-2">
-            Manage Blog
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </span>
-        </Link>
-      </div>
-    </>
+    </div>
   )
 }
 
 function LoadingStats() {
   return (
-    <>
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div className="space-y-8">
+      {/* Header Skeleton */}
+      <div className="space-y-2">
+        <div className="h-6 bg-gray-200 rounded w-32 animate-pulse" />
+        <div className="h-4 bg-gray-100 rounded w-64 animate-pulse" />
+      </div>
+
+      {/* Stats Grid Skeleton */}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-24 mb-3" />
-            <div className="h-8 bg-gray-200 rounded w-32" />
+          <div key={i} className="bg-white rounded-xl p-6 border border-gray-200 animate-pulse">
+            <div className="h-4 bg-gray-100 rounded w-24 mb-4" />
+            <div className="h-8 bg-gray-200 rounded w-16" />
           </div>
         ))}
       </div>
+
       <div className="grid lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100 h-64 animate-pulse" />
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 h-64 animate-pulse" />
+        <div className="lg:col-span-2 space-y-4">
+          <div className="h-5 bg-gray-200 rounded w-32 animate-pulse" />
+          <div className="grid sm:grid-cols-2 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-24 bg-white rounded-xl border border-gray-200 animate-pulse" />
+            ))}
+          </div>
+        </div>
+        <div className="space-y-4">
+          <div className="h-5 bg-gray-200 rounded w-32 animate-pulse" />
+          <div className="h-64 bg-white rounded-xl border border-gray-200 animate-pulse" />
+        </div>
       </div>
-    </>
+    </div>
   )
 }
 

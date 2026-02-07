@@ -163,7 +163,7 @@ export default function EditHeroContent() {
               label="Main Title"
               value={formData.title}
               onChange={(value) => setFormData({ ...formData, title: value })}
-              placeholder={{ en: 'e.g., Empowering Communities Through Compassion', ms: 'cth., Memperkasa Komuniti Melalui Belas Kasihan' }}
+              placeholder={{ en: 'e.g., Empowering Communities Through Compassion', ms: 'cth., Memperkasakan Komuniti Melalui Ihsan terhadap Insan' }}
               helperText="Tip: Keep it concise and impactful. Recommended: 5-8 words."
             />
 

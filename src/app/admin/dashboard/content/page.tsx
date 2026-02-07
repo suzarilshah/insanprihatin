@@ -75,6 +75,13 @@ const contentSections = [
     icon: '🔍',
     href: '/admin/dashboard/content/seo',
   },
+  {
+    id: 'stock-photos',
+    title: 'Stock Photos',
+    description: 'Default images used across the site',
+    icon: '🖼️',
+    href: '/admin/dashboard/content/stock-photos',
+  },
 ]
 
 export default async function ContentManagement() {

@@ -42,10 +42,10 @@ interface SolutionProps {
   stockPhotos?: StockPhotoFallbacks
 }
 
-// Default fallback images
-const DEFAULT_FEATURED = 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=2000'
-const DEFAULT_PROJECT1 = 'https://images.unsplash.com/photo-1532629345422-7515f3d16520?q=80&w=1000'
-const DEFAULT_PROJECT2 = 'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?q=80&w=1000'
+// Default fallback images (HD quality)
+const DEFAULT_FEATURED = 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=85&w=2560&auto=format&fit=crop'
+const DEFAULT_PROJECT1 = 'https://images.unsplash.com/photo-1531206715517-5c0ba140b2b8?q=85&w=1400&auto=format&fit=crop'
+const DEFAULT_PROJECT2 = 'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?q=85&w=1400&auto=format&fit=crop'
 
 export default function Solution({ projects = [], impactStats = [], aboutContent, locale = 'en', stockPhotos }: SolutionProps) {
   const t = useTranslations('solution')

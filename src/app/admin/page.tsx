@@ -52,13 +52,13 @@ function LoginContent() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 w-full max-w-sm">
       {/* Error Alert */}
       {error && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-red-50 border border-red-200 rounded-xl p-4"
+          className="bg-red-50/50 backdrop-blur-sm border border-red-200/60 rounded-lg p-4"
         >
           <div className="flex items-start gap-3">
             <svg
@@ -76,7 +76,7 @@ function LoginContent() {
             </svg>
             <div>
               <p className="text-red-800 font-medium text-sm">Access Denied</p>
-              <p className="text-red-600 text-sm mt-1">
+              <p className="text-red-600 text-xs mt-1 leading-relaxed">
                 {errorMessages[error] || errorMessages.Default}
               </p>
             </div>
@@ -84,23 +84,42 @@ function LoginContent() {
         </motion.div>
       )}
 
-      {/* Microsoft Sign In Button */}
-      <button
-        onClick={handleSignIn}
-        className="w-full flex items-center justify-center gap-3 bg-[#0078D4] hover:bg-[#106EBE] text-white py-4 px-6 rounded-xl font-medium transition-all hover:shadow-lg active:scale-[0.98]"
-      >
-        <MicrosoftLogo />
-        Sign in with Microsoft 365
-      </button>
-
-      {/* Help Text */}
-      <div className="text-center space-y-2">
-        <p className="text-gray-500 text-sm">
-          Sign in with your{' '}
-          <span className="font-medium">@insanprihatin.org</span> account
+      {/* Login Header */}
+      <div className="space-y-2">
+        <h2 className="text-2xl font-semibold tracking-tight text-gray-900">Welcome back</h2>
+        <p className="text-sm text-gray-500">
+          Enter your organization credentials to access the dashboard.
         </p>
-        <p className="text-gray-400 text-xs">
-          Only members of the webadmin group can access this portal
+      </div>
+
+      {/* Microsoft Sign In Button */}
+      <div className="space-y-4">
+        <button
+          onClick={handleSignIn}
+          className="group relative w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 hover:border-gray-300 py-3 px-4 rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md active:scale-[0.99]"
+        >
+          <MicrosoftLogo />
+          <span>Sign in with Microsoft 365</span>
+          <div className="absolute inset-0 rounded-lg ring-1 ring-inset ring-black/5 group-hover:ring-black/10" />
+        </button>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-100"></div>
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-2 text-gray-400">Secured Access</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer Info */}
+      <div className="text-center space-y-4">
+        <p className="text-xs text-gray-400">
+          By signing in, you agree to the{' '}
+          <a href="#" className="underline hover:text-gray-600">Terms of Service</a>
+          {' '}and{' '}
+          <a href="#" className="underline hover:text-gray-600">Privacy Policy</a>.
         </p>
       </div>
     </div>
@@ -112,68 +131,89 @@ function LoginContent() {
  */
 function LoadingSpinner() {
   return (
-    <div className="text-center py-4">
-      <div className="animate-spin w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full mx-auto" />
+    <div className="flex items-center justify-center p-8">
+      <div className="w-6 h-6 border-2 border-gray-900 border-t-transparent rounded-full animate-spin" />
     </div>
   )
 }
 
 /**
  * Admin Login Page
- * Microsoft Entra ID SSO authentication
+ * Split layout with cinematic visuals
  */
 export default function AdminLoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-foundation-charcoal via-gray-900 to-foundation-charcoal p-6">
-      {/* Background Effects */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-teal-600/10 rounded-full blur-[200px]" />
-        <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-amber-400/10 rounded-full blur-[150px]" />
-      </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative w-full max-w-md"
-      >
-        <div className="bg-white rounded-3xl shadow-elevated p-10">
-          {/* Logo and Header */}
-          <div className="text-center mb-8">
-            <div className="relative w-20 h-20 mx-auto mb-4">
+    <div className="min-h-screen grid lg:grid-cols-2 bg-white">
+      {/* Left Column: Visuals */}
+      <div className="hidden lg:flex relative bg-black flex-col justify-between p-12 overflow-hidden">
+        {/* Background Gradients & Effects */}
+        <div className="absolute inset-0 z-0">
+          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-teal-900/30 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-indigo-900/20 rounded-full blur-[120px] translate-y-1/2 -translate-x-1/2" />
+          <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay" />
+        </div>
+        
+        {/* Brand */}
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 text-white">
+            <div className="relative w-8 h-8">
               <Image
                 src="/images/logo.png"
-                alt="Yayasan Insan Prihatin"
+                alt="YIP"
                 fill
-                className="object-contain"
+                className="object-contain brightness-0 invert"
                 priority
               />
             </div>
-            <h1 className="font-display text-2xl font-bold text-foundation-charcoal">
-              Admin Portal
-            </h1>
-            <p className="text-gray-500 text-sm mt-1">Yayasan Insan Prihatin</p>
+            <span className="font-semibold tracking-tight">Yayasan Insan Prihatin</span>
           </div>
+        </div>
 
-          {/* Login Form */}
+        {/* Quote/Content */}
+        <div className="relative z-10 max-w-lg">
+          <blockquote className="space-y-6">
+            <p className="text-3xl font-medium leading-tight text-white">
+              &ldquo;Empowering communities through sustainable development and compassionate action.&rdquo;
+            </p>
+            <footer className="text-sm text-gray-400">
+              — Foundation Mission
+            </footer>
+          </blockquote>
+        </div>
+
+        {/* Bottom Info */}
+        <div className="relative z-10 flex items-center gap-6 text-sm text-gray-500">
+          <span>© 2026 YIP Foundation</span>
+          <span className="w-1 h-1 rounded-full bg-gray-700" />
+          <span>Admin Portal v2.0</span>
+        </div>
+      </div>
+
+      {/* Right Column: Login Form */}
+      <div className="flex flex-col items-center justify-center p-8 lg:p-24 bg-white relative">
+        {/* Mobile Logo (Visible only on small screens) */}
+        <div className="lg:hidden absolute top-8 left-8">
+          <div className="relative w-10 h-10">
+            <Image
+              src="/images/logo.png"
+              alt="YIP"
+              fill
+              className="object-contain"
+            />
+          </div>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="w-full max-w-sm"
+        >
           <Suspense fallback={<LoadingSpinner />}>
             <LoginContent />
           </Suspense>
-        </div>
-
-        {/* Footer */}
-        <div className="text-center mt-6 space-y-2">
-          <p className="text-gray-500 text-xs">Secured with Microsoft Entra ID</p>
-          <p className="text-gray-600 text-xs">
-            Need help?{' '}
-            <a
-              href="mailto:it@insanprihatin.org"
-              className="text-teal-400 hover:text-teal-300 transition-colors"
-            >
-              Contact IT Support
-            </a>
-          </p>
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   )
 }

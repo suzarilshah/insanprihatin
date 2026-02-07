@@ -55,7 +55,7 @@ export async function generateMetadata({
     metadataBase: new URL(baseUrl),
     title: {
       default: locale === 'ms'
-        ? 'Yayasan Insan Prihatin | Memperkasa Komuniti Melalui Belas Kasihan'
+        ? 'Yayasan Insan Prihatin | Memperkasakan Komuniti Melalui Ihsan terhadap Insan'
         : 'Yayasan Insan Prihatin | Empowering Communities Through Compassion',
       template: '%s | Yayasan Insan Prihatin',
     },

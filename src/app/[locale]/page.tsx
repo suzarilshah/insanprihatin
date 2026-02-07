@@ -5,6 +5,7 @@ import SchemaMarkup from '@/components/SEO/SchemaMarkup'
 import { generateOrganizationSchema, generateWebsiteSchema, generateDonationSchema } from '@/lib/seo'
 import { getHeroContent, getAboutContent, getImpactStats } from '@/lib/actions/content'
 import { getProjects } from '@/lib/actions/projects'
+import { getStockPhotoSettings } from '@/lib/actions/stock-photos'
 import { getLocalizedValue, type Locale } from '@/i18n/config'
 
 export default async function HomePage({
@@ -16,11 +17,12 @@ export default async function HomePage({
   setRequestLocale(locale)
 
   // Fetch content from database
-  const [heroContent, aboutContent, impactStats, projects] = await Promise.all([
+  const [heroContent, aboutContent, impactStats, projects, stockPhotos] = await Promise.all([
     getHeroContent(),
     getAboutContent(),
     getImpactStats(),
     getProjects({ limit: 3, published: true }),
+    getStockPhotoSettings(),
   ])
 
   const schemas = [
@@ -50,7 +52,8 @@ export default async function HomePage({
           description={localizedHero?.description || undefined}
           ctaText={localizedHero?.ctaText || undefined}
           ctaLink={localizedHero?.ctaLink ?? undefined}
-          backgroundImage={localizedHero?.backgroundImage ?? undefined}
+          backgroundImage={localizedHero?.backgroundImage || stockPhotos.heroBackground}
+          communityImage={stockPhotos.heroCommunity}
         />
         <Problem />
         <Solution
@@ -58,6 +61,11 @@ export default async function HomePage({
           impactStats={impactStats}
           aboutContent={aboutContent}
           locale={locale as Locale}
+          stockPhotos={{
+            solutionFeatured: stockPhotos.solutionFeatured,
+            solutionProject1: stockPhotos.solutionProject1,
+            solutionProject2: stockPhotos.solutionProject2,
+          }}
         />
         <HowItWorks />
         <CTA />

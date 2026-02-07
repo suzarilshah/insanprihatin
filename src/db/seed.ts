@@ -21,7 +21,7 @@ async function seed() {
     // Seed Hero Content
     console.log('Creating hero content...')
     await db.insert(schema.heroContent).values({
-      title: { en: 'Empowering Communities Through Compassion', ms: 'Memperkasa Komuniti Melalui Belas Kasihan' },
+      title: { en: 'Empowering Communities Through Compassion', ms: 'Memperkasakan Komuniti Melalui Ihsan terhadap Insan' },
       subtitle: { en: 'Yayasan Insan Prihatin', ms: 'Yayasan Insan Prihatin' },
       description: { en: 'Building a better tomorrow through education, healthcare, and sustainable development. Join us in creating lasting impact for communities across Malaysia.', ms: 'Membina masa depan yang lebih baik melalui pendidikan, penjagaan kesihatan, dan pembangunan mampan. Sertai kami dalam mencipta impak berpanjangan untuk komuniti di seluruh Malaysia.' },
       ctaText: { en: 'Explore Our Impact', ms: 'Terokai Impak Kami' },
@@ -189,7 +189,7 @@ async function seed() {
     // Seed Pages for SEO
     console.log('Creating page SEO entries...')
     const pagesList = [
-      { slug: 'home', title: { en: 'Home', ms: 'Laman Utama' }, metaTitle: { en: 'Yayasan Insan Prihatin | Empowering Communities Through Compassion', ms: 'Yayasan Insan Prihatin | Memperkasa Komuniti Melalui Belas Kasihan' }, metaDescription: { en: 'A prestigious Malaysian foundation dedicated to community service, education, and sustainable development.', ms: 'Yayasan Malaysia yang berprestij yang didedikasikan untuk perkhidmatan komuniti, pendidikan, dan pembangunan mampan.' } },
+      { slug: 'home', title: { en: 'Home', ms: 'Laman Utama' }, metaTitle: { en: 'Yayasan Insan Prihatin | Empowering Communities Through Compassion', ms: 'Yayasan Insan Prihatin | Memperkasakan Komuniti Melalui Ihsan terhadap Insan' }, metaDescription: { en: 'A prestigious Malaysian foundation dedicated to community service, education, and sustainable development.', ms: 'Yayasan Malaysia yang berprestij yang didedikasikan untuk perkhidmatan komuniti, pendidikan, dan pembangunan mampan.' } },
       { slug: 'about', title: { en: 'About Us', ms: 'Tentang Kami' }, metaTitle: { en: 'About Us | Yayasan Insan Prihatin', ms: 'Tentang Kami | Yayasan Insan Prihatin' }, metaDescription: { en: 'Learn about our mission, vision, and the team behind Yayasan Insan Prihatin.', ms: 'Ketahui tentang misi, visi, dan pasukan di sebalik Yayasan Insan Prihatin.' } },
       { slug: 'projects', title: { en: 'Projects', ms: 'Projek' }, metaTitle: { en: 'Our Projects | Yayasan Insan Prihatin', ms: 'Projek Kami | Yayasan Insan Prihatin' }, metaDescription: { en: 'Explore our ongoing and completed projects creating lasting impact across Malaysia.', ms: 'Terokai projek berterusan dan selesai kami yang mencipta impak berpanjangan di seluruh Malaysia.' } },
       { slug: 'blog', title: { en: 'Blog', ms: 'Blog' }, metaTitle: { en: 'Blog & News | Yayasan Insan Prihatin', ms: 'Blog & Berita | Yayasan Insan Prihatin' }, metaDescription: { en: 'Stay updated with the latest news, stories, and events from Yayasan Insan Prihatin.', ms: 'Kekal dikemas kini dengan berita, cerita, dan acara terkini dari Yayasan Insan Prihatin.' } },

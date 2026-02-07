@@ -247,7 +247,7 @@ function getLogoSource(logoUrl?: string): string | null {
       return `data:${mimeType};base64,${base64}`
     }
 
-    // Also try the root directory for files like YIP-main-logo-transparent.png
+    // Also try the root directory for files like /images/logo-light.png
     const rootPath = path.join(process.cwd(), logoUrl.replace(/^\//, ''))
     if (fs.existsSync(rootPath)) {
       const imageBuffer = fs.readFileSync(rootPath)
