@@ -202,7 +202,7 @@ export default function OrgChartNode({
         </div>
       </motion.div>
 
-      {/* Children Connection System */}
+      {/* Children Connection System - Clean elbow-style connectors */}
       <AnimatePresence>
         {hasChildren && !isCollapsed && (
           <motion.div
@@ -211,18 +211,11 @@ export default function OrgChartNode({
             exit={{ opacity: 0, height: 0 }}
             className="flex flex-col items-center w-full"
           >
-            {/* Vertical line down from parent with arrow */}
-            <div className="w-0.5 h-8 bg-gray-300 relative">
-              {/* Arrow pointing DOWN to children */}
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full">
-                <svg className="w-3 h-3 text-gray-400" viewBox="0 0 12 12" fill="currentColor">
-                  <polygon points="6,12 0,4 12,4" />
-                </svg>
-              </div>
-            </div>
+            {/* Vertical line down from parent - clean, no arrow */}
+            <div className="w-[2px] h-6 bg-gradient-to-b from-gray-300 to-gray-400 rounded-full" />
 
             {/* Children Container */}
-            <div className="flex flex-wrap justify-center gap-2 sm:gap-3 lg:gap-4 pt-4 relative">
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6 lg:gap-8 relative">
               {member.children?.map((child, index, arr) => {
                 const isFirst = index === 0
                 const isLast = index === arr.length - 1
@@ -230,22 +223,23 @@ export default function OrgChartNode({
 
                 return (
                   <div key={child.id} className="flex flex-col items-center relative">
-                    {/* Horizontal connector line for this child's section */}
+                    {/* Horizontal connector segments - only for multiple children */}
                     {!isOnly && (
-                      <>
-                        {/* Line to the left (if not first) */}
-                        <div className={`absolute top-0 left-0 w-1/2 h-0.5 bg-gray-300 ${isFirst ? 'hidden' : 'block'}`} />
-                        {/* Line to the right (if not last) */}
-                        <div className={`absolute top-0 right-0 w-1/2 h-0.5 bg-gray-300 ${isLast ? 'hidden' : 'block'}`} />
-                      </>
+                      <div className="absolute top-0 left-0 right-0 h-[2px] flex">
+                        {/* Left segment - hidden for first child */}
+                        <div className={`flex-1 bg-gray-300 ${isFirst ? 'invisible' : ''}`} />
+                        {/* Right segment - hidden for last child */}
+                        <div className={`flex-1 bg-gray-300 ${isLast ? 'invisible' : ''}`} />
+                      </div>
                     )}
 
-                    {/* Vertical line down to this child */}
-                    <div className="w-0.5 h-6 bg-gray-300 mb-2 relative">
-                      {!isOnly && (
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-gray-400" />
-                      )}
-                    </div>
+                    {/* Vertical connector to each child */}
+                    <div className={`w-[2px] bg-gray-300 rounded-b-full ${isOnly ? 'h-4' : 'h-5'}`} />
+
+                    {/* Small circle junction point for multiple children */}
+                    {!isOnly && (
+                      <div className="w-2 h-2 rounded-full bg-gray-400 border-2 border-white shadow-sm -mt-0.5 mb-1 z-10" />
+                    )}
 
                     <OrgChartNode
                       member={child}

@@ -346,42 +346,57 @@ export default function OrgChart({
           )}
           {/* Responsive tree container */}
           <div ref={treeContainerRef} className="relative flex flex-wrap items-start justify-center gap-3 sm:gap-6 px-2 sm:px-4">
-            {/* SVG Overlay for Additional Manager Lines - unified solid style */}
+            {/* SVG Overlay for Additional Manager Lines - BEHIND cards (z-index lower than cards) */}
             {dottedLines.length > 0 && (
               <svg
-                className="absolute inset-0 pointer-events-none z-40"
-                style={{ width: '100%', height: '100%', overflow: 'visible' }}
+                className="absolute inset-0 pointer-events-none"
+                style={{ width: '100%', height: '100%', overflow: 'visible', zIndex: 0 }}
               >
                 <defs>
                   <marker
                     id="arrowhead-additional"
-                    markerWidth="6"
-                    markerHeight="6"
-                    refX="6"
-                    refY="3"
+                    markerWidth="8"
+                    markerHeight="8"
+                    refX="8"
+                    refY="4"
                     orient="auto"
                   >
-                    <polygon points="0 0, 6 3, 0 6" fill="#94a3b8" />
+                    <polygon points="0 0, 8 4, 0 8" fill="#9ca3af" />
                   </marker>
                 </defs>
                 {dottedLines.map((line, index) => {
-                  // Create a curved path FROM manager (x2,y2) TO report (x1,y1)
-                  const curveOffset = Math.abs(line.x2 - line.x1) * 0.4 + 30
+                  // Smart routing: use curved path that routes AROUND cards
+                  // Route to the outside edge (left or right) based on relative positions
+                  const dx = line.x1 - line.x2 // horizontal distance
+                  const dy = line.y1 - line.y2 // vertical distance
+
+                  // Determine which side to curve towards (away from center)
+                  const avgX = (line.x1 + line.x2) / 2
+                  const curveDirection = avgX > 200 ? -1 : 1 // curve left if on right side, curve right if on left
+
+                  // Calculate control points for a smooth bezier that goes around
+                  const offsetX = Math.min(Math.abs(dx) * 0.5, 80) * curveDirection
+                  const offsetY = Math.abs(dy) * 0.3 + 30
+
+                  // Use quadratic bezier for cleaner curve
+                  const midX = (line.x1 + line.x2) / 2 + offsetX
+                  const midY = Math.max(line.y1, line.y2) + offsetY
+
+                  // Create smooth curved path FROM manager TO report
                   const path = `M ${line.x2} ${line.y2}
-                    C ${line.x2} ${line.y2 + curveOffset},
-                      ${line.x1} ${line.y1 - curveOffset},
-                      ${line.x1} ${line.y1}`
+                    Q ${midX} ${midY}, ${line.x1} ${line.y1}`
 
                   return (
                     <g key={index}>
                       <path
                         d={path}
                         fill="none"
-                        stroke={additionalLineColor}
-                        strokeWidth="2"
+                        stroke="#9ca3af"
+                        strokeWidth="1.5"
+                        strokeDasharray="4 3"
                         markerEnd="url(#arrowhead-additional)"
                         className="transition-opacity duration-300"
-                        opacity="0.6"
+                        opacity="0.5"
                       />
                     </g>
                   )
