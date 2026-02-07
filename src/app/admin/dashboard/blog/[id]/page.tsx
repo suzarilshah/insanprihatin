@@ -4,15 +4,24 @@ import { useState, useEffect, useTransition, use } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { getBlogPost, createBlogPost, updateBlogPost } from '@/lib/actions/blog'
+import { createBlogPost, updateBlogPost } from '@/lib/actions/blog'
 import ImageUpload from '@/components/admin/ImageUpload'
 import FormSelector from '@/components/admin/FormSelector'
+import BilingualEditor from '@/components/admin/BilingualEditor'
+import { type LocalizedString } from '@/i18n/config'
 
 function generateSlug(title: string) {
   return title
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
+}
+
+// Helper to get string value from LocalizedString for slug generation
+function getEnglishValue(value: LocalizedString | string | null | undefined): string {
+  if (!value) return ''
+  if (typeof value === 'string') return value
+  return value.en || value.ms || ''
 }
 
 export default function BlogPostEditor({ params }: { params: Promise<{ id: string }> }) {
@@ -23,17 +32,19 @@ export default function BlogPostEditor({ params }: { params: Promise<{ id: strin
   const [isLoading, setIsLoading] = useState(!isNew)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const [showMarkdownHelp, setShowMarkdownHelp] = useState(false)
+  const [editorMode, setEditorMode] = useState<'tabs' | 'side-by-side'>('tabs')
 
+  // Form data with LocalizedString support
   const [formData, setFormData] = useState({
-    title: '',
+    title: { en: '', ms: '' } as LocalizedString,
     slug: '',
-    excerpt: '',
-    content: '',
+    excerpt: { en: '', ms: '' } as LocalizedString,
+    content: { en: '', ms: '' } as LocalizedString,
     featuredImage: '',
     category: '',
     tags: [] as string[],
-    metaTitle: '',
-    metaDescription: '',
+    metaTitle: { en: '', ms: '' } as LocalizedString,
+    metaDescription: { en: '', ms: '' } as LocalizedString,
     isPublished: false,
   })
 
@@ -43,21 +54,27 @@ export default function BlogPostEditor({ params }: { params: Promise<{ id: strin
     if (!isNew) {
       async function loadPost() {
         try {
-          // Get by ID using a different approach
           const response = await fetch(`/api/blog/${resolvedParams.id}`)
           if (response.ok) {
             const post = await response.json()
             if (post) {
+              // Handle both LocalizedString and string formats from DB
+              const normalizeField = (field: LocalizedString | string | null): LocalizedString => {
+                if (!field) return { en: '', ms: '' }
+                if (typeof field === 'string') return { en: field, ms: field }
+                return { en: field.en || '', ms: field.ms || '' }
+              }
+
               setFormData({
-                title: post.title || '',
+                title: normalizeField(post.title),
                 slug: post.slug || '',
-                excerpt: post.excerpt || '',
-                content: post.content || '',
+                excerpt: normalizeField(post.excerpt),
+                content: normalizeField(post.content),
                 featuredImage: post.featuredImage || '',
                 category: post.category || '',
                 tags: (post.tags as string[]) || [],
-                metaTitle: post.metaTitle || '',
-                metaDescription: post.metaDescription || '',
+                metaTitle: normalizeField(post.metaTitle),
+                metaDescription: normalizeField(post.metaDescription),
                 isPublished: post.isPublished || false,
               })
             }
@@ -72,11 +89,11 @@ export default function BlogPostEditor({ params }: { params: Promise<{ id: strin
     }
   }, [isNew, resolvedParams.id])
 
-  const handleTitleChange = (title: string) => {
+  const handleTitleChange = (title: LocalizedString) => {
     setFormData({
       ...formData,
       title,
-      slug: isNew ? generateSlug(title) : formData.slug,
+      slug: isNew ? generateSlug(getEnglishValue(title)) : formData.slug,
     })
   }
 
@@ -98,16 +115,19 @@ export default function BlogPostEditor({ params }: { params: Promise<{ id: strin
   }
 
   const handleSave = (publish?: boolean) => {
-    if (!formData.title.trim()) {
-      setMessage({ type: 'error', text: 'Title is required' })
+    const titleValue = getEnglishValue(formData.title)
+    const contentValue = getEnglishValue(formData.content)
+
+    if (!titleValue.trim()) {
+      setMessage({ type: 'error', text: 'Title is required (at least in English)' })
       return
     }
     if (!formData.slug.trim()) {
       setMessage({ type: 'error', text: 'Slug is required' })
       return
     }
-    if (!formData.content.trim()) {
-      setMessage({ type: 'error', text: 'Content is required' })
+    if (!contentValue.trim()) {
+      setMessage({ type: 'error', text: 'Content is required (at least in English)' })
       return
     }
 
@@ -115,20 +135,28 @@ export default function BlogPostEditor({ params }: { params: Promise<{ id: strin
     startTransition(async () => {
       try {
         const data = {
-          ...formData,
+          title: formData.title,
+          slug: formData.slug,
+          excerpt: formData.excerpt,
+          content: formData.content,
+          featuredImage: formData.featuredImage,
+          category: formData.category,
+          tags: formData.tags,
+          metaTitle: formData.metaTitle,
+          metaDescription: formData.metaDescription,
           isPublished: publish !== undefined ? publish : formData.isPublished,
         }
 
         if (isNew) {
           const result = await createBlogPost(data)
           if (result.success) {
-            setMessage({ type: 'success', text: 'Post created successfully!' })
+            setMessage({ type: 'success', text: 'Post created successfully! Auto-translation applied.' })
             router.push('/admin/dashboard/blog')
           }
         } else {
           const result = await updateBlogPost(resolvedParams.id, data)
           if (result.success) {
-            setMessage({ type: 'success', text: 'Post updated successfully!' })
+            setMessage({ type: 'success', text: 'Post updated successfully! Auto-translation applied.' })
             if (publish !== undefined) {
               setFormData({ ...formData, isPublished: publish })
             }
@@ -166,6 +194,27 @@ export default function BlogPostEditor({ params }: { params: Promise<{ id: strin
           </h1>
         </div>
         <div className="flex items-center gap-3">
+          {/* Editor Mode Toggle */}
+          <div className="flex items-center gap-1 p-1 bg-gray-100 rounded-lg">
+            <button
+              type="button"
+              onClick={() => setEditorMode('tabs')}
+              className={`px-3 py-1.5 text-xs font-medium rounded ${
+                editorMode === 'tabs' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+              }`}
+            >
+              Tabs
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditorMode('side-by-side')}
+              className={`px-3 py-1.5 text-xs font-medium rounded ${
+                editorMode === 'side-by-side' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+              }`}
+            >
+              Side by Side
+            </button>
+          </div>
           {!isNew && formData.slug && (
             <Link
               href={`/blog/${formData.slug}`}
@@ -210,24 +259,40 @@ export default function BlogPostEditor({ params }: { params: Promise<{ id: strin
         </motion.div>
       )}
 
+      {/* Bilingual Editor Info Banner */}
+      <div className="mb-6 p-4 bg-teal-50 border border-teal-200 rounded-xl">
+        <div className="flex items-start gap-3">
+          <svg className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div className="text-sm text-teal-800">
+            <p className="font-medium mb-1">Bilingual Content Editor</p>
+            <p className="text-teal-700">
+              Enter content in English, Malay, or both. Missing translations will be auto-generated when you save.
+              Use the auto-translate button to preview translations before saving.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white rounded-2xl p-6 border border-gray-100">
             <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Title *
-                </label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => handleTitleChange(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 text-lg"
-                  placeholder="Enter post title"
-                />
-              </div>
+              {/* Title - Bilingual */}
+              <BilingualEditor
+                value={formData.title}
+                onChange={handleTitleChange}
+                label="Title"
+                required
+                placeholder={{ en: 'Enter post title...', ms: 'Masukkan tajuk artikel...' }}
+                mode={editorMode}
+                showCharCount
+                maxLength={200}
+              />
 
+              {/* Slug */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   URL Slug *
@@ -244,19 +309,20 @@ export default function BlogPostEditor({ params }: { params: Promise<{ id: strin
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Excerpt
-                </label>
-                <textarea
-                  value={formData.excerpt}
-                  onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
-                  rows={2}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 resize-none"
-                  placeholder="Brief description for previews..."
-                />
-              </div>
+              {/* Excerpt - Bilingual */}
+              <BilingualEditor
+                value={formData.excerpt}
+                onChange={(excerpt) => setFormData({ ...formData, excerpt })}
+                label="Excerpt"
+                placeholder={{ en: 'Brief description for previews...', ms: 'Penerangan ringkas untuk pratonton...' }}
+                fieldType="textarea"
+                rows={2}
+                mode={editorMode}
+                showCharCount
+                maxLength={500}
+              />
 
+              {/* Content - Bilingual */}
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="block text-sm font-medium text-gray-700">Content *</label>
@@ -265,7 +331,10 @@ export default function BlogPostEditor({ params }: { params: Promise<{ id: strin
                       onInsert={(embedCode) => {
                         setFormData({
                           ...formData,
-                          content: formData.content + '\n\n' + embedCode + '\n',
+                          content: {
+                            en: formData.content.en + '\n\n' + embedCode + '\n',
+                            ms: formData.content.ms + '\n\n' + embedCode + '\n',
+                          },
                         })
                       }}
                     />
@@ -308,19 +377,17 @@ export default function BlogPostEditor({ params }: { params: Promise<{ id: strin
                   </motion.div>
                 )}
 
-                <textarea
+                <BilingualEditor
                   value={formData.content}
-                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                  onChange={(content) => setFormData({ ...formData, content })}
+                  placeholder={{
+                    en: 'Write your content here...\n\n# Use Markdown for formatting\nWrite your content using **bold**, *italic*, lists, and more.',
+                    ms: 'Tulis kandungan anda di sini...\n\n# Gunakan Markdown untuk pemformatan\nTulis kandungan menggunakan **tebal**, *italik*, senarai, dan lain-lain.'
+                  }}
+                  fieldType="textarea"
                   rows={15}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 resize-none font-mono text-sm"
-                  placeholder="Write your content here...
-
-# Use Markdown for formatting
-Write your content using **bold**, *italic*, lists, and more.
-
-## Embed Forms
-To add a feedback or survey form, use: {{form:form-slug}}
-Create forms in the Forms section of the admin panel."
+                  mode={editorMode}
+                  showCharCount
                 />
               </div>
             </div>
@@ -443,30 +510,30 @@ Create forms in the Forms section of the admin panel."
             )}
           </div>
 
-          {/* SEO */}
+          {/* SEO - Bilingual */}
           <div className="bg-white rounded-2xl p-6 border border-gray-100">
             <h3 className="font-medium text-foundation-charcoal mb-4">SEO Settings</h3>
             <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Meta Title</label>
-                <input
-                  type="text"
-                  value={formData.metaTitle}
-                  onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 text-sm"
-                  placeholder="SEO title"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Meta Description</label>
-                <textarea
-                  value={formData.metaDescription}
-                  onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
-                  rows={2}
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 text-sm resize-none"
-                  placeholder="SEO description"
-                />
-              </div>
+              <BilingualEditor
+                value={formData.metaTitle}
+                onChange={(metaTitle) => setFormData({ ...formData, metaTitle })}
+                label="Meta Title"
+                placeholder={{ en: 'SEO title...', ms: 'Tajuk SEO...' }}
+                mode="tabs"
+                showCharCount
+                maxLength={70}
+              />
+              <BilingualEditor
+                value={formData.metaDescription}
+                onChange={(metaDescription) => setFormData({ ...formData, metaDescription })}
+                label="Meta Description"
+                placeholder={{ en: 'SEO description...', ms: 'Penerangan SEO...' }}
+                fieldType="textarea"
+                rows={2}
+                mode="tabs"
+                showCharCount
+                maxLength={160}
+              />
             </div>
           </div>
         </div>

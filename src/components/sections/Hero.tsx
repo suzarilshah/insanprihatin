@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRef, useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 
 interface HeroProps {
   title?: string
@@ -17,13 +18,21 @@ interface HeroProps {
 const DEFAULT_BACKGROUND = 'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?q=80&w=2574'
 
 export default function Hero({
-  title = 'Restoring Dignity, Rebuilding Lives',
-  subtitle = 'Yayasan Insan Prihatin',
-  description = 'Direct, sustainable intervention for Malaysia\'s underserved. Join a movement that turns compassion into tangible change.',
-  ctaText = 'Start Your Impact',
+  title,
+  subtitle,
+  description,
+  ctaText,
   ctaLink = '/projects',
   backgroundImage,
 }: HeroProps) {
+  const t = useTranslations('hero')
+
+  // Use translations as defaults if props not provided
+  const displayTitle = title || t('defaultTitle')
+  const displaySubtitle = subtitle || t('defaultSubtitle')
+  const displayDescription = description || t('defaultDescription')
+  const displayCtaText = ctaText || t('defaultCta')
+
   const bgImage = backgroundImage || DEFAULT_BACKGROUND
   const containerRef = useRef<HTMLElement>(null)
   // Delay heavy animations until after initial render for better LCP
@@ -107,7 +116,7 @@ export default function Hero({
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 mb-6 md:mb-8">
                 <div className="inline-flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-md">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                  <span className="text-[10px] md:text-xs font-medium text-white tracking-widest uppercase shadow-sm">{subtitle}</span>
+                  <span className="text-[10px] md:text-xs font-medium text-white tracking-widest uppercase shadow-sm">{displaySubtitle}</span>
                 </div>
                 <div className="inline-flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-amber-400/20 border border-amber-400/30 backdrop-blur-md">
                   <span className="text-xs md:text-sm font-display font-bold text-amber-300 italic">&ldquo;Ini Rumah Kita&rdquo;</span>
@@ -115,20 +124,20 @@ export default function Hero({
               </div>
 
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-display font-bold text-white mb-6 md:mb-8 leading-[1.1] drop-shadow-lg">
-                <span className="block">{title.split(' ').slice(0, 2).join(' ')}</span>
+                <span className="block">{displayTitle.split(' ').slice(0, 2).join(' ')}</span>
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-teal-300 via-sky-200 to-white">
-                  {title.split(' ').slice(2).join(' ')}
+                  {displayTitle.split(' ').slice(2).join(' ')}
                 </span>
               </h1>
 
               <p className="text-base md:text-lg lg:text-xl text-white/95 mb-8 md:mb-10 max-w-xl font-light leading-relaxed border-l-4 border-amber-400 pl-4 md:pl-6 bg-black/20 backdrop-blur-sm py-3 md:py-4 pr-4 md:pr-6 rounded-r-2xl drop-shadow-md">
-                {description}
+                {displayDescription}
               </p>
 
               <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 sm:gap-5">
                 <Link href={ctaLink} className="group relative px-6 md:px-8 py-3 md:py-4 bg-teal-500 text-white rounded-full font-bold tracking-wide overflow-hidden transition-all hover:shadow-[0_0_40px_-10px_rgba(42,173,173,0.5)] text-center sm:text-left">
                   <span className="relative z-10 flex items-center justify-center sm:justify-start gap-2">
-                    {ctaText}
+                    {displayCtaText}
                     <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                     </svg>
@@ -137,7 +146,7 @@ export default function Hero({
                 </Link>
 
                 <Link href="/donate" className="group px-6 md:px-8 py-3 md:py-4 rounded-full border border-white/30 text-white font-medium hover:bg-white/10 transition-all backdrop-blur-sm flex items-center justify-center sm:justify-start gap-3">
-                  <span>Make a Donation</span>
+                  <span>{t('donationCta')}</span>
                   <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-amber-400 group-hover:text-foundation-charcoal transition-colors">
                      <svg className="w-3.5 h-3.5 md:w-4 md:h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                   </div>
@@ -163,7 +172,7 @@ export default function Hero({
                 >
                   <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-4 md:p-6 rounded-2xl shadow-2xl max-w-[180px] md:max-w-[200px]">
                     <div className="text-2xl md:text-3xl font-bold text-amber-400 mb-1">100%</div>
-                    <div className="text-[10px] md:text-xs text-white/80 uppercase tracking-wider">Donation Transparency</div>
+                    <div className="text-[10px] md:text-xs text-white/80 uppercase tracking-wider">{t('donationTransparency')}</div>
                   </div>
                 </motion.div>
 
@@ -180,7 +189,7 @@ export default function Hero({
                        </div>
                        <div>
                          <div className="text-white font-bold text-sm md:text-base">15,000+</div>
-                         <div className="text-[10px] md:text-xs text-gray-400">Lives Impacted</div>
+                         <div className="text-[10px] md:text-xs text-gray-400">{t('livesImpacted')}</div>
                        </div>
                      </div>
                      <div className="w-full bg-white/10 h-1 rounded-full overflow-hidden">
@@ -222,7 +231,7 @@ export default function Hero({
           transition={{ delay: 1, duration: 1 }}
           className="absolute bottom-6 md:bottom-10 left-1/2 -translate-x-1/2 z-20 flex-col items-center gap-2 hidden md:flex"
         >
-          <span className="text-[10px] uppercase tracking-[0.2em] text-white/40">Scroll to Explore</span>
+          <span className="text-[10px] uppercase tracking-[0.2em] text-white/40">{t('scrollToExplore')}</span>
           <div className="w-[1px] h-12 bg-gradient-to-b from-white/0 via-white/50 to-white/0" />
         </motion.div>
       )}

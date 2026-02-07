@@ -354,3 +354,45 @@ export const teamMemberReports = pgTable('team_member_reports', {
   notes: text('notes'), // Optional notes about the relationship
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
+
+// ============================================
+// TRANSLATION SYSTEM
+// ============================================
+
+// Translation Feedback - Allows admins to flag and correct translations
+export const translationFeedback = pgTable('translation_feedback', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  contentType: text('content_type').notNull(), // 'blog_posts', 'projects', 'team_members', etc.
+  contentId: uuid('content_id').notNull(), // ID of the content being translated
+  field: text('field').notNull(), // 'title', 'content', 'description', etc.
+  sourceLanguage: text('source_language').notNull(), // 'en' or 'ms'
+  targetLanguage: text('target_language').notNull(), // 'en' or 'ms'
+  originalText: text('original_text').notNull(), // The source text that was translated
+  translatedText: text('translated_text').notNull(), // The auto-generated translation
+  correctedText: text('corrected_text'), // Admin-provided correction
+  feedbackType: text('feedback_type').notNull(), // 'incorrect', 'awkward', 'context_missing', 'grammar'
+  notes: text('notes'), // Additional context or explanation
+  status: text('status').default('pending'), // 'pending', 'reviewed', 'applied', 'dismissed'
+  submittedBy: uuid('submitted_by'),
+  submittedByEmail: text('submitted_by_email'),
+  submittedByName: text('submitted_by_name'),
+  reviewedBy: uuid('reviewed_by'),
+  reviewedByEmail: text('reviewed_by_email'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  reviewedAt: timestamp('reviewed_at'),
+})
+
+// Translation Glossary - Custom terminology for consistent translations
+export const translationGlossary = pgTable('translation_glossary', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  termEn: text('term_en').notNull(), // English term
+  termMs: text('term_ms').notNull(), // Malay translation
+  context: text('context'), // 'general', 'donation', 'project', 'about', etc.
+  notes: text('notes'), // Usage notes or examples
+  caseSensitive: boolean('case_sensitive').default(false),
+  isActive: boolean('is_active').default(true),
+  createdBy: uuid('created_by'),
+  createdByEmail: text('created_by_email'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
