@@ -1,31 +1,33 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { formatCurrency } from '@/lib/utils'
+import { useTranslations } from 'next-intl'
 
 // Configuration
 const PRESET_AMOUNTS = [50, 100, 250, 500, 1000, 2500]
 
-const PROGRAMS = [
-  { id: 'general', name: 'General Fund', description: 'Maximum flexibility where needed most', icon: '🌍', color: 'from-teal-400 to-teal-500' },
-  { id: 'education', name: 'Education', description: 'Scholarships & digital literacy', icon: '🎓', color: 'from-blue-400 to-blue-500' },
-  { id: 'healthcare', name: 'Healthcare', description: 'Medical camps & screenings', icon: '🩺', color: 'from-rose-400 to-rose-500' },
-  { id: 'community', name: 'Community', description: 'Skills training & development', icon: '🤝', color: 'from-amber-400 to-amber-500' },
-]
-
 const IMPACT_TIERS = [
-  { threshold: 50, label: 'School Supplies', desc: 'Equips 1 student for a term', emoji: '📚' },
-  { threshold: 100, label: 'Medical Checkup', desc: 'Screening for 5 villagers', emoji: '🩺' },
-  { threshold: 250, label: 'Skills Training', desc: '1 month vocational course', emoji: '🛠️' },
-  { threshold: 500, label: 'Reforestation', desc: 'Plants 50 native trees', emoji: '🌱' },
-  { threshold: 1000, label: 'Scholarship', desc: 'Full semester support', emoji: '🎓' },
-  { threshold: 2500, label: 'Classroom Tech', desc: 'Smart equipment for rural school', emoji: '💻' },
+  { threshold: 50, labelKey: 'schoolSupplies', descKey: 'equipsStudent', emoji: '📚' },
+  { threshold: 100, labelKey: 'medicalCheckup', descKey: 'screeningVillagers', emoji: '🩺' },
+  { threshold: 250, labelKey: 'skillsTraining', descKey: 'vocationalCourse', emoji: '🛠️' },
+  { threshold: 500, labelKey: 'reforestation', descKey: 'plantsTrees', emoji: '🌱' },
+  { threshold: 1000, labelKey: 'scholarship', descKey: 'semesterSupport', emoji: '🎓' },
+  { threshold: 2500, labelKey: 'classroomTech', descKey: 'smartEquipment', emoji: '💻' },
 ]
 
 export default function DonateContent() {
+  const t = useTranslations('donate')
+
+  // Programs with translations
+  const PROGRAMS = [
+    { id: 'general', name: t('programs.general.name'), description: t('programs.general.description'), icon: '🌍', color: 'from-teal-400 to-teal-500' },
+    { id: 'education', name: t('programs.education.name'), description: t('programs.education.description'), icon: '🎓', color: 'from-blue-400 to-blue-500' },
+    { id: 'healthcare', name: t('programs.healthcare.name'), description: t('programs.healthcare.description'), icon: '🩺', color: 'from-rose-400 to-rose-500' },
+    { id: 'community', name: t('programs.community.name'), description: t('programs.community.description'), icon: '🤝', color: 'from-amber-400 to-amber-500' },
+  ]
   const router = useRouter()
   const searchParams = useSearchParams()
   
@@ -71,12 +73,12 @@ export default function DonateContent() {
 
   const handleSubmit = async () => {
     if (!displayAmount || displayAmount < 1) {
-      setError('Please enter a valid donation amount')
+      setError(t('errors.invalidAmount'))
       return
     }
 
     if (!donor.isAnonymous && (!donor.name || !donor.email)) {
-      setError('Please provide your name and email')
+      setError(t('errors.missingInfo'))
       return
     }
 
@@ -156,26 +158,26 @@ export default function DonateContent() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
             </span>
-            <span className="text-sm font-medium text-amber-100 tracking-wide uppercase">2025 Impact Fund Open</span>
+            <span className="text-sm font-medium text-amber-100 tracking-wide uppercase">{t('badge')}</span>
           </motion.div>
-          
-          <motion.h1 
+
+          <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             className="heading-display text-6xl md:text-8xl mb-8 text-white tracking-tight"
           >
-            Invest in <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-300 via-emerald-300 to-teal-300 animate-gradient-x">Sustainable</span> Futures.
+            {t('heroTitle')} <br/>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-300 via-emerald-300 to-teal-300 animate-gradient-x">{t('heroTitleHighlight')}</span> {t('heroTitleEnd')}
           </motion.h1>
-          
-          <motion.p 
+
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="text-2xl text-gray-200 leading-relaxed max-w-2xl mx-auto font-light"
           >
-            Join a community of visionaries. 100% of your donation goes directly to verified programs.
+            {t('heroDescription')}
           </motion.p>
         </div>
 
@@ -218,19 +220,19 @@ export default function DonateContent() {
                             key={f}
                             onClick={() => setFrequency(f as any)}
                             className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-                              frequency === f 
-                                ? 'bg-white text-teal-700 shadow-sm' 
+                              frequency === f
+                                ? 'bg-white text-teal-700 shadow-sm'
                                 : 'text-gray-500 hover:text-gray-700'
                             }`}
                           >
-                            {f === 'one-time' ? 'One-Time' : 'Monthly'}
+                            {f === 'one-time' ? t('frequency.oneTime') : t('frequency.monthly')}
                           </button>
                         ))}
                       </div>
 
                       {/* Main Amount Display */}
                       <div className="text-center py-6">
-                        <div className="text-gray-400 font-medium mb-2 uppercase tracking-wider text-xs">Enter Amount</div>
+                        <div className="text-gray-400 font-medium mb-2 uppercase tracking-wider text-xs">{t('amount.label')}</div>
                         <div className="flex items-baseline justify-center gap-2 font-display text-foundation-charcoal">
                           <span className="text-4xl text-gray-300 font-light">RM</span>
                           <input 
@@ -262,7 +264,7 @@ export default function DonateContent() {
 
                       {/* Program Selector */}
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-3">Allocated Fund</label>
+                        <label className="block text-sm font-semibold text-gray-700 mb-3">{t('allocatedFund')}</label>
                         <div className="grid sm:grid-cols-2 gap-3">
                           {PROGRAMS.map((p) => (
                             <button
@@ -284,11 +286,11 @@ export default function DonateContent() {
                         </div>
                       </div>
 
-                      <button 
+                      <button
                         onClick={() => setStep('details')}
                         className="w-full py-4 bg-foundation-charcoal text-white rounded-xl font-bold text-lg hover:bg-black transition-all hover:scale-[1.01] active:scale-[0.99] shadow-lg shadow-gray-200"
                       >
-                        Continue
+                        {t('continue')}
                       </button>
                     </motion.div>
                   )}
@@ -303,27 +305,27 @@ export default function DonateContent() {
                       className="space-y-6"
                     >
                       <div className="flex items-center justify-between mb-6">
-                        <h3 className="font-heading text-2xl font-bold">Your Details</h3>
-                        <button onClick={() => setStep('amount')} className="text-sm text-gray-500 hover:text-teal-600">Edit Amount</button>
+                        <h3 className="font-heading text-2xl font-bold">{t('form.title')}</h3>
+                        <button onClick={() => setStep('amount')} className="text-sm text-gray-500 hover:text-teal-600">{t('form.editAmount')}</button>
                       </div>
 
                       <div className="grid md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <label className="text-sm font-semibold text-gray-700">Full Name</label>
-                          <input 
-                            type="text" 
+                          <label className="text-sm font-semibold text-gray-700">{t('form.name')}</label>
+                          <input
+                            type="text"
                             className="w-full px-4 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-teal-500 focus:ring-0 transition-all"
-                            placeholder="Jane Doe"
+                            placeholder={t('form.namePlaceholder')}
                             value={donor.name}
                             onChange={e => setDonor({...donor, name: e.target.value})}
                           />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-sm font-semibold text-gray-700">Email Address</label>
-                          <input 
-                            type="email" 
+                          <label className="text-sm font-semibold text-gray-700">{t('form.email')}</label>
+                          <input
+                            type="email"
                             className="w-full px-4 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-teal-500 focus:ring-0 transition-all"
-                            placeholder="jane@example.com"
+                            placeholder={t('form.emailPlaceholder')}
                             value={donor.email}
                             onChange={e => setDonor({...donor, email: e.target.value})}
                           />
@@ -331,11 +333,11 @@ export default function DonateContent() {
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-sm font-semibold text-gray-700">Phone (Optional)</label>
-                        <input 
-                          type="tel" 
+                        <label className="text-sm font-semibold text-gray-700">{t('form.phone')}</label>
+                        <input
+                          type="tel"
                           className="w-full px-4 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-teal-500 focus:ring-0 transition-all"
-                          placeholder="+60 12 345 6789"
+                          placeholder={t('form.phonePlaceholder')}
                           value={donor.phone}
                           onChange={e => setDonor({...donor, phone: e.target.value})}
                         />
@@ -347,17 +349,17 @@ export default function DonateContent() {
                         </div>
                         <input type="checkbox" className="hidden" checked={donor.isAnonymous} onChange={e => setDonor({...donor, isAnonymous: e.target.checked})} />
                         <div>
-                          <div className="font-medium text-gray-900">Make this donation anonymous</div>
-                          <div className="text-xs text-gray-500">Your name won&apos;t appear on public lists</div>
+                          <div className="font-medium text-gray-900">{t('form.anonymous')}</div>
+                          <div className="text-xs text-gray-500">{t('form.anonymousDescription')}</div>
                         </div>
                       </label>
 
-                      <button 
+                      <button
                         onClick={() => setStep('confirm')}
                         disabled={!donor.name || !donor.email}
                         className="w-full py-4 bg-foundation-charcoal text-white rounded-xl font-bold text-lg hover:bg-black transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        Review Donation
+                        {t('form.reviewDonation')}
                       </button>
                     </motion.div>
                   )}
@@ -375,54 +377,54 @@ export default function DonateContent() {
                         <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
                           🔒
                         </div>
-                        <h3 className="font-heading text-2xl font-bold">Secure Checkout</h3>
+                        <h3 className="font-heading text-2xl font-bold">{t('confirm.title')}</h3>
                       </div>
 
                       {/* Error Message */}
                       {(error || wasCancelled) && (
                         <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                          {error || 'Payment was cancelled. You can try again.'}
+                          {error || t('confirm.paymentCancelled')}
                         </div>
                       )}
 
                       <div className="bg-gray-50 rounded-2xl p-6 space-y-4 text-sm">
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-500">Amount</span>
+                          <span className="text-gray-500">{t('confirm.amount')}</span>
                           <span className="font-bold text-xl text-gray-900">RM {displayAmount}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-500">Frequency</span>
-                          <span className="font-medium capitalize">{frequency}</span>
+                          <span className="text-gray-500">{t('confirm.frequency')}</span>
+                          <span className="font-medium capitalize">{frequency === 'one-time' ? t('frequency.oneTime') : t('frequency.monthly')}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-500">Program</span>
+                          <span className="text-gray-500">{t('confirm.program')}</span>
                           <span className="font-medium">{PROGRAMS.find(p => p.id === program)?.name}</span>
                         </div>
                         <div className="h-px bg-gray-200 my-2" />
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-500">Name</span>
+                          <span className="text-gray-500">{t('confirm.name')}</span>
                           <span className="font-medium">{donor.name}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-500">Email</span>
+                          <span className="text-gray-500">{t('confirm.email')}</span>
                           <span className="font-medium">{donor.email}</span>
                         </div>
                       </div>
 
-                      <button 
+                      <button
                         onClick={handleSubmit}
                         disabled={isSubmitting}
                         className="w-full py-4 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-xl font-bold text-lg hover:shadow-lg hover:shadow-teal-500/20 transition-all flex items-center justify-center gap-2"
                       >
                         {isSubmitting ? (
-                          <span className="animate-pulse">Processing...</span>
+                          <span className="animate-pulse">{t('confirm.processing')}</span>
                         ) : (
-                          <>Pay RM {displayAmount} Securely</>
+                          <>{t('confirm.paySecurely').replace('{amount}', String(displayAmount))}</>
                         )}
                       </button>
-                      
+
                       <button onClick={() => setStep('details')} className="w-full text-sm text-gray-400 hover:text-gray-600">
-                        Back to details
+                        {t('confirm.backToDetails')}
                       </button>
                     </motion.div>
                   )}
@@ -443,18 +445,18 @@ export default function DonateContent() {
             <div className="bg-gradient-to-br from-amber-400 to-orange-500 rounded-[2rem] p-1 shadow-2xl text-white relative overflow-hidden group">
               <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20" />
               <div className="relative bg-white/10 backdrop-blur-md rounded-[1.8rem] p-8 h-full border border-white/20">
-                <div className="text-amber-100 text-sm font-semibold uppercase tracking-wider mb-2">Projected Impact</div>
+                <div className="text-amber-100 text-sm font-semibold uppercase tracking-wider mb-2">{t('impact.title')}</div>
                 <div className="text-5xl mb-4 transform group-hover:scale-110 transition-transform duration-500">{currentImpact.emoji}</div>
-                <h3 className="font-heading text-3xl font-bold mb-3">{currentImpact.label}</h3>
+                <h3 className="font-heading text-3xl font-bold mb-3">{currentImpact.labelKey}</h3>
                 <p className="text-amber-50 text-xl leading-relaxed font-light">
-                  Your <span className="font-bold text-white">RM {displayAmount}</span> investment helps provide {currentImpact.desc.toLowerCase()}.
+                  {t('impact.yourInvestment').replace('{amount}', String(displayAmount)).replace('{description}', currentImpact.descKey.toLowerCase())}
                 </p>
-                
+
                 {/* Progress Visual */}
                 <div className="mt-8">
                   <div className="flex justify-between text-xs font-medium text-amber-100 mb-2">
-                    <span>Impact Scale</span>
-                    <span>High Impact</span>
+                    <span>{t('impact.scaleLabel')}</span>
+                    <span>{t('impact.highImpact')}</span>
                   </div>
                   <div className="h-2 bg-black/10 rounded-full overflow-hidden">
                     <motion.div 
@@ -469,26 +471,26 @@ export default function DonateContent() {
 
             {/* Transparency Card */}
             <div className="bg-white/80 backdrop-blur-lg rounded-[2rem] p-8 border border-white shadow-xl">
-              <h4 className="font-heading text-lg font-bold text-gray-900 mb-6">Where Your Money Goes</h4>
+              <h4 className="font-heading text-lg font-bold text-gray-900 mb-6">{t('transparency.title')}</h4>
               <div className="space-y-4">
                 {[
-                  { label: 'Direct Aid & Programs', val: '85%', color: 'bg-teal-500' },
-                  { label: 'Operations & Staff', val: '10%', color: 'bg-blue-500' },
-                  { label: 'Fundraising', val: '5%', color: 'bg-amber-500' },
+                  { labelKey: 'transparency.directAid', val: '85%', color: 'bg-teal-500' },
+                  { labelKey: 'transparency.operations', val: '10%', color: 'bg-blue-500' },
+                  { labelKey: 'transparency.fundraising', val: '5%', color: 'bg-amber-500' },
                 ].map((item) => (
-                  <div key={item.label}>
+                  <div key={item.labelKey}>
                     <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-600 font-medium">{item.label}</span>
+                      <span className="text-gray-600 font-medium">{t(item.labelKey)}</span>
                       <span className="font-bold text-gray-900">{item.val}</span>
                     </div>
                     <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div className={`h-full ${item.color} w-[${item.val}]`} style={{ width: item.val }} />
+                      <div className={`h-full ${item.color}`} style={{ width: item.val }} />
                     </div>
                   </div>
                 ))}
               </div>
               <p className="text-xs text-gray-500 mt-6 pt-6 border-t border-gray-100/50">
-                *Audited annually by Deloitte. 2025 Transparency Report available.
+                {t('transparency.auditNote')}
               </p>
             </div>
 
@@ -496,11 +498,11 @@ export default function DonateContent() {
             <div className="grid grid-cols-2 gap-4">
               <div className="flex items-center gap-3 p-4 bg-white/80 backdrop-blur-sm rounded-2xl border border-white shadow-lg">
                 <span className="text-2xl">🔒</span>
-                <div className="text-xs font-medium text-gray-600">256-bit SSL<br/>Encryption</div>
+                <div className="text-xs font-medium text-gray-600">{t('security.ssl')}<br/>{t('security.encryption')}</div>
               </div>
               <div className="flex items-center gap-3 p-4 bg-white/80 backdrop-blur-sm rounded-2xl border border-white shadow-lg">
                 <span className="text-2xl">🛡️</span>
-                <div className="text-xs font-medium text-gray-600">Official Tax<br/>Receipt</div>
+                <div className="text-xs font-medium text-gray-600">{t('security.taxReceipt')}<br/>{t('security.receipt')}</div>
               </div>
             </div>
 

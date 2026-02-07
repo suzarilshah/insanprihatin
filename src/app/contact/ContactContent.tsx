@@ -3,87 +3,7 @@
 import { useState, useRef } from 'react'
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import Image from 'next/image'
-
-const contactInfo = [
-  {
-    icon: (
-      <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    ),
-    title: 'Visit Us',
-    lines: [
-      'Level 15, Menara Yayasan',
-      'Jalan Sultan Ismail',
-      '50250 Kuala Lumpur',
-      'Malaysia',
-    ],
-    color: 'teal',
-  },
-  {
-    icon: (
-      <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-      </svg>
-    ),
-    title: 'Email Us',
-    lines: ['info@insanprihatin.org', 'donations@insanprihatin.org'],
-    color: 'amber',
-  },
-  {
-    icon: (
-      <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-      </svg>
-    ),
-    title: 'Call Us',
-    lines: ['+60 3-1234 5678', '+60 3-8765 4321'],
-    color: 'sky',
-  },
-  {
-    icon: (
-      <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-    title: 'Office Hours',
-    lines: ['Monday - Friday', '9:00 AM - 6:00 PM', 'Saturday: 9:00 AM - 1:00 PM'],
-    color: 'emerald',
-  },
-]
-
-const inquiryTypes = [
-  { value: 'general', label: 'General Inquiry', icon: '💬' },
-  { value: 'donation', label: 'Donation Question', icon: '💰' },
-  { value: 'volunteer', label: 'Volunteering', icon: '🤝' },
-  { value: 'partnership', label: 'Partnership Opportunity', icon: '🏢' },
-  { value: 'media', label: 'Media Inquiry', icon: '📰' },
-  { value: 'other', label: 'Other', icon: '📝' },
-]
-
-const faqs = [
-  {
-    q: 'How can I donate to Yayasan Insan Prihatin?',
-    a: 'You can donate through our website, bank transfer, or by visiting our office. All donations are tax-deductible under Section 44(6) of the Income Tax Act 1967.',
-  },
-  {
-    q: 'Can I volunteer with your organization?',
-    a: 'Yes! We welcome volunteers for various programs including education, community outreach, and events. Please fill out the contact form above with "Volunteering" as the subject, and our volunteer coordinator will reach out.',
-  },
-  {
-    q: 'How do I apply for assistance from your programs?',
-    a: 'Please contact us with details about your situation. Our team will guide you through the application process and determine which programs you may be eligible for.',
-  },
-  {
-    q: 'Do you accept corporate partnerships?',
-    a: 'Absolutely! We actively seek partnerships with corporations for CSR initiatives. We offer various partnership tiers and can customize programs to align with your corporate values.',
-  },
-  {
-    q: 'Is my donation tax-deductible?',
-    a: 'Yes, Yayasan Insan Prihatin is a registered charity. All donations are tax-deductible, and we provide official receipts for tax purposes.',
-  },
-]
+import { useTranslations } from 'next-intl'
 
 const colorClasses: Record<string, { bg: string; icon: string; border: string }> = {
   teal: { bg: 'from-teal-50 to-teal-100', icon: 'text-teal-600', border: 'border-teal-200' },
@@ -93,6 +13,92 @@ const colorClasses: Record<string, { bg: string; icon: string; border: string }>
 }
 
 export default function ContactContent() {
+  const t = useTranslations('contact')
+
+  // Define contact info with translations
+  const contactInfo = [
+    {
+      icon: (
+        <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      ),
+      title: t('info.visitUs'),
+      lines: [
+        'Level 15, Menara Yayasan',
+        'Jalan Sultan Ismail',
+        '50250 Kuala Lumpur',
+        'Malaysia',
+      ],
+      color: 'teal',
+    },
+    {
+      icon: (
+        <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+      ),
+      title: t('info.emailUs'),
+      lines: ['info@insanprihatin.org', 'donations@insanprihatin.org'],
+      color: 'amber',
+    },
+    {
+      icon: (
+        <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+        </svg>
+      ),
+      title: t('info.callUs'),
+      lines: ['+60 3-1234 5678', '+60 3-8765 4321'],
+      color: 'sky',
+    },
+    {
+      icon: (
+        <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      title: t('info.officeHours'),
+      lines: [t('info.weekdays'), t('info.weekdayHours'), t('info.saturdayHours')],
+      color: 'emerald',
+    },
+  ]
+
+  // Define inquiry types with translations
+  const inquiryTypes = [
+    { value: 'general', label: t('inquiryTypes.general'), icon: '💬' },
+    { value: 'donation', label: t('inquiryTypes.donation'), icon: '💰' },
+    { value: 'volunteer', label: t('inquiryTypes.volunteer'), icon: '🤝' },
+    { value: 'partnership', label: t('inquiryTypes.partnership'), icon: '🏢' },
+    { value: 'media', label: t('inquiryTypes.media'), icon: '📰' },
+    { value: 'other', label: t('inquiryTypes.other'), icon: '📝' },
+  ]
+
+  // Define FAQs with translations
+  const faqs = [
+    {
+      q: t('faq.questions.donate.q'),
+      a: t('faq.questions.donate.a'),
+    },
+    {
+      q: t('faq.questions.volunteer.q'),
+      a: t('faq.questions.volunteer.a'),
+    },
+    {
+      q: t('faq.questions.assistance.q'),
+      a: t('faq.questions.assistance.a'),
+    },
+    {
+      q: t('faq.questions.corporate.q'),
+      a: t('faq.questions.corporate.a'),
+    },
+    {
+      q: t('faq.questions.taxDeductible.q'),
+      a: t('faq.questions.taxDeductible.a'),
+    },
+  ]
+
   const heroRef = useRef<HTMLElement>(null)
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -142,7 +148,7 @@ export default function ContactContent() {
       setSubmitted(true)
     } catch (error) {
       console.error('Form submission error:', error)
-      setSubmitError(error instanceof Error ? error.message : 'Failed to submit form. Please try again.')
+      setSubmitError(error instanceof Error ? error.message : t('form.error'))
     } finally {
       setIsSubmitting(false)
     }
@@ -188,7 +194,7 @@ export default function ContactContent() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/10 mb-8"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              <span className="text-sm font-medium tracking-wide text-white uppercase">Get In Touch</span>
+              <span className="text-sm font-medium tracking-wide text-white uppercase">{t('heroBadge')}</span>
             </motion.div>
 
             <h1 className="heading-display text-white mb-6">
@@ -198,7 +204,7 @@ export default function ContactContent() {
                 transition={{ delay: 0.3 }}
                 className="block"
               >
-                We&apos;d Love to
+                {t('heroTitle')}
               </motion.span>
               <motion.span
                 initial={{ opacity: 0, y: 30 }}
@@ -206,7 +212,7 @@ export default function ContactContent() {
                 transition={{ delay: 0.4 }}
                 className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 animate-gradient-x"
               >
-                Hear From You
+                {t('heroTitleHighlight')}
               </motion.span>
             </h1>
 
@@ -216,8 +222,7 @@ export default function ContactContent() {
               transition={{ delay: 0.5 }}
               className="body-large text-white/80"
             >
-              Have questions about our programs? Want to partner with us?
-              Our team is here to help you make a difference.
+              {t('heroDescription')}
             </motion.p>
           </motion.div>
         </motion.div>
@@ -275,15 +280,14 @@ export default function ContactContent() {
             >
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 border border-teal-100 mb-6">
                 <span className="w-2 h-2 bg-teal-500 rounded-full" />
-                <span className="text-sm font-medium text-teal-700 uppercase tracking-wide">Send a Message</span>
+                <span className="text-sm font-medium text-teal-700 uppercase tracking-wide">{t('form.badge')}</span>
               </div>
 
               <h2 className="heading-subsection text-foundation-charcoal mb-4">
-                Let&apos;s Start a Conversation
+                {t('form.title')}
               </h2>
               <p className="text-gray-600 mb-8 max-w-md">
-                Fill out the form below and our team will get back to you within
-                24-48 business hours.
+                {t('form.description')}
               </p>
 
               {submitted ? (
@@ -303,10 +307,10 @@ export default function ContactContent() {
                     </svg>
                   </motion.div>
                   <h3 className="font-heading text-2xl font-bold text-foundation-charcoal mb-3">
-                    Message Sent Successfully!
+                    {t('form.success.title')}
                   </h3>
                   <p className="text-gray-600 mb-6">
-                    Thank you for reaching out. Our team will review your message and respond soon.
+                    {t('form.success.description')}
                   </p>
                   <button
                     onClick={() => {
@@ -315,17 +319,17 @@ export default function ContactContent() {
                     }}
                     className="text-teal-600 font-bold hover:text-teal-700 transition-colors underline decoration-2 underline-offset-4"
                   >
-                    Send another message
+                    {t('form.success.sendAnother')}
                   </button>
                 </motion.div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-6 bg-white p-8 md:p-10 rounded-[2rem] shadow-xl border border-gray-100 relative overflow-hidden">
                    <div className="absolute top-0 right-0 w-32 h-32 bg-teal-50 rounded-full blur-3xl -z-10" />
-                   
+
                   <div className="grid sm:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-bold text-gray-700 mb-2">
-                        Your Name *
+                        {t('form.name')} {t('form.required')}
                       </label>
                       <input
                         type="text"
@@ -333,12 +337,12 @@ export default function ContactContent() {
                         value={formState.name}
                         onChange={(e) => setFormState({ ...formState, name: e.target.value })}
                         className="w-full px-5 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all"
-                        placeholder="John Doe"
+                        placeholder={t('form.namePlaceholder')}
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-bold text-gray-700 mb-2">
-                        Email Address *
+                        {t('form.email')} {t('form.required')}
                       </label>
                       <input
                         type="email"
@@ -346,7 +350,7 @@ export default function ContactContent() {
                         value={formState.email}
                         onChange={(e) => setFormState({ ...formState, email: e.target.value })}
                         className="w-full px-5 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all"
-                        placeholder="john@example.com"
+                        placeholder={t('form.emailPlaceholder')}
                       />
                     </div>
                   </div>
@@ -354,19 +358,19 @@ export default function ContactContent() {
                   <div className="grid sm:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-bold text-gray-700 mb-2">
-                        Phone Number
+                        {t('form.phone')}
                       </label>
                       <input
                         type="tel"
                         value={formState.phone}
                         onChange={(e) => setFormState({ ...formState, phone: e.target.value })}
                         className="w-full px-5 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all"
-                        placeholder="+60 12-345 6789"
+                        placeholder={t('form.phonePlaceholder')}
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-bold text-gray-700 mb-2">
-                        Inquiry Type *
+                        {t('form.inquiryType')} {t('form.required')}
                       </label>
                       <div className="relative">
                         <select
@@ -390,7 +394,7 @@ export default function ContactContent() {
 
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">
-                      Your Message *
+                      {t('form.message')} {t('form.required')}
                     </label>
                     <textarea
                       required
@@ -398,7 +402,7 @@ export default function ContactContent() {
                       value={formState.message}
                       onChange={(e) => setFormState({ ...formState, message: e.target.value })}
                       className="w-full px-5 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all resize-none"
-                      placeholder="Tell us how we can help you..."
+                      placeholder={t('form.messagePlaceholder')}
                     />
                   </div>
 
@@ -443,11 +447,11 @@ export default function ContactContent() {
                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                           />
                         </svg>
-                        Sending...
+                        {t('form.sending')}
                       </span>
                     ) : (
                       <span className="flex items-center gap-2 justify-center">
-                        Send Message
+                        {t('form.submit')}
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                         </svg>
@@ -483,7 +487,7 @@ export default function ContactContent() {
                         </svg>
                       </motion.div>
                       <h3 className="font-heading text-xl font-bold text-foundation-charcoal mb-2">
-                        Yayasan Insan Prihatin
+                        {t('map.title')}
                       </h3>
                       <p className="text-gray-600 text-sm mb-6 leading-relaxed">
                         Level 15, Menara Yayasan<br />
@@ -496,7 +500,7 @@ export default function ContactContent() {
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 px-6 py-3 bg-white rounded-full shadow-md text-teal-700 font-bold hover:shadow-lg hover:-translate-y-1 transition-all"
                       >
-                        Open in Google Maps
+                        {t('map.openInMaps')}
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>
@@ -509,10 +513,10 @@ export default function ContactContent() {
               {/* Social Links */}
               <div className="bg-white p-10 rounded-[2rem] shadow-xl border border-gray-100">
                 <h3 className="font-heading text-lg font-bold text-foundation-charcoal mb-4">
-                  Connect With Us
+                  {t('social.title')}
                 </h3>
                 <p className="text-gray-600 text-sm mb-8">
-                  Follow us on social media for the latest updates, stories, and ways to get involved.
+                  {t('social.description')}
                 </p>
                 <div className="flex gap-4">
                   {[
@@ -553,13 +557,13 @@ export default function ContactContent() {
           >
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 border border-teal-100 mb-6">
               <span className="w-2 h-2 bg-teal-500 rounded-full" />
-              <span className="text-sm font-medium text-teal-700 uppercase tracking-wide">FAQ</span>
+              <span className="text-sm font-medium text-teal-700 uppercase tracking-wide">{t('faq.badge')}</span>
             </div>
             <h2 className="heading-section text-foundation-charcoal mb-4">
-              Frequently Asked Questions
+              {t('faq.title')}
             </h2>
             <p className="text-gray-600 text-lg">
-              Find quick answers to common questions about our foundation and programs
+              {t('faq.description')}
             </p>
           </motion.div>
 

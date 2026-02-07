@@ -16,8 +16,8 @@ interface HeroProps {
   communityImage?: string | null
 }
 
-const DEFAULT_BACKGROUND = 'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?q=80&w=2574'
-const DEFAULT_COMMUNITY = 'https://images.unsplash.com/photo-1617450365226-9bf28c5d3575?q=80&w=1200'
+const DEFAULT_BACKGROUND = 'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?q=85&w=3840&auto=format&fit=crop'
+const DEFAULT_COMMUNITY = 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=85&w=1600&auto=format&fit=crop'
 
 export default function Hero({
   title,

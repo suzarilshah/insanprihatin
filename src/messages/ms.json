@@ -112,55 +112,199 @@
   },
   "contact": {
     "pageTitle": "Hubungi Kami",
-    "heroTitle": "Hubungi",
-    "heroTitleHighlight": "Kami",
-    "heroDescription": "Ada soalan atau ingin melibatkan diri? Kami ingin mendengar daripada anda.",
+    "heroBadge": "Hubungi Kami",
+    "heroTitle": "Kami Ingin",
+    "heroTitleHighlight": "Mendengar Daripada Anda",
+    "heroDescription": "Ada soalan tentang program kami? Ingin bekerjasama dengan kami? Pasukan kami sedia membantu anda membuat perbezaan.",
+    "info": {
+      "visitUs": "Lawati Kami",
+      "emailUs": "E-mel Kami",
+      "callUs": "Hubungi Kami",
+      "officeHours": "Waktu Pejabat",
+      "weekdays": "Isnin - Jumaat",
+      "weekdayHours": "9:00 PG - 6:00 PTG",
+      "saturdayHours": "Sabtu: 9:00 PG - 1:00 PTG"
+    },
+    "inquiryTypes": {
+      "general": "Pertanyaan Umum",
+      "donation": "Soalan Derma",
+      "volunteer": "Kesukarelawanan",
+      "partnership": "Peluang Perkongsian",
+      "media": "Pertanyaan Media",
+      "other": "Lain-lain"
+    },
     "form": {
+      "badge": "Hantar Mesej",
+      "title": "Mari Mulakan Perbualan",
+      "description": "Isikan borang di bawah dan pasukan kami akan menghubungi anda dalam masa 24-48 jam bekerja.",
       "name": "Nama Anda",
+      "namePlaceholder": "Ahmad bin Abdullah",
       "email": "Alamat E-mel",
+      "emailPlaceholder": "ahmad@contoh.com",
       "phone": "Nombor Telefon",
-      "subject": "Subjek",
+      "phonePlaceholder": "+60 12-345 6789",
+      "inquiryType": "Jenis Pertanyaan",
       "message": "Mesej Anda",
+      "messagePlaceholder": "Beritahu kami bagaimana kami boleh membantu anda...",
       "submit": "Hantar Mesej",
       "sending": "Menghantar...",
-      "success": "Mesej berjaya dihantar! Kami akan menghubungi anda tidak lama lagi.",
+      "required": "*",
+      "success": {
+        "title": "Mesej Berjaya Dihantar!",
+        "description": "Terima kasih kerana menghubungi kami. Pasukan kami akan menyemak mesej anda dan akan membalas tidak lama lagi.",
+        "sendAnother": "Hantar mesej lain"
+      },
       "error": "Gagal menghantar mesej. Sila cuba lagi."
     },
-    "info": {
-      "title": "Maklumat Hubungan",
-      "address": "Alamat",
-      "phone": "Telefon",
-      "email": "E-mel",
-      "hours": "Waktu Pejabat",
-      "hoursValue": "Isnin - Jumaat: 9:00 AM - 5:00 PM"
+    "map": {
+      "title": "Yayasan Insan Prihatin",
+      "openInMaps": "Buka di Google Maps"
+    },
+    "social": {
+      "title": "Ikuti Kami",
+      "description": "Ikuti kami di media sosial untuk perkembangan terkini, kisah, dan cara untuk terlibat."
     },
     "faq": {
-      "title": "Soalan Lazim"
+      "badge": "Soalan Lazim",
+      "title": "Soalan Lazim",
+      "description": "Cari jawapan pantas untuk soalan lazim tentang yayasan dan program kami",
+      "questions": {
+        "donate": {
+          "q": "Bagaimana saya boleh menderma kepada Yayasan Insan Prihatin?",
+          "a": "Anda boleh menderma melalui laman web kami, pindahan bank, atau dengan melawat pejabat kami. Kami menerima pelbagai kaedah pembayaran untuk kemudahan anda."
+        },
+        "volunteer": {
+          "q": "Bolehkah saya menjadi sukarelawan dengan organisasi anda?",
+          "a": "Ya! Kami mengalu-alukan sukarelawan untuk pelbagai program termasuk pendidikan, jangkauan komuniti, dan acara. Sila isikan borang hubungan di atas dengan 'Kesukarelawanan' sebagai subjek, dan penyelaras sukarelawan kami akan menghubungi anda."
+        },
+        "assistance": {
+          "q": "Bagaimana saya memohon bantuan daripada program anda?",
+          "a": "Sila hubungi kami dengan butiran tentang situasi anda. Pasukan kami akan membimbing anda melalui proses permohonan dan menentukan program mana yang anda layak."
+        },
+        "corporate": {
+          "q": "Adakah anda menerima perkongsian korporat?",
+          "a": "Sudah tentu! Kami aktif mencari perkongsian dengan korporat untuk inisiatif CSR. Kami menawarkan pelbagai peringkat perkongsian dan boleh menyesuaikan program untuk selaras dengan nilai korporat anda."
+        },
+        "taxDeductible": {
+          "q": "Adakah derma saya boleh ditolak cukai?",
+          "a": "Yayasan Insan Prihatin adalah yayasan kebajikan berdaftar. Walaupun kami sedang dalam proses mendapatkan status pengecualian cukai di bawah Seksyen 44(6) Akta Cukai Pendapatan 1967, kelulusan ini dijangka tidak lama lagi. Setelah diluluskan, semua derma akan boleh ditolak cukai dan kami akan menyediakan resit rasmi untuk tujuan cukai."
+        }
+      }
     }
   },
   "donate": {
     "pageTitle": "Buat Sumbangan",
-    "heroTitle": "Kemurahan Hati Anda",
-    "heroTitleHighlight": "Mencipta Perubahan",
-    "heroDescription": "Setiap sumbangan, tidak kira saiznya, membuat perbezaan bermakna dalam kehidupan seseorang.",
+    "badge": "Dana Impak 2025 Dibuka",
+    "heroTitle": "Laburkan untuk",
+    "heroTitleHighlight": "Masa Depan",
+    "heroTitleEnd": "Mampan.",
+    "heroDescription": "Sertai komuniti yang bervisioner. 100% sumbangan anda disalurkan terus kepada program yang disahkan.",
+    "frequency": {
+      "oneTime": "Sekali",
+      "monthly": "Bulanan"
+    },
+    "amount": {
+      "label": "Masukkan Jumlah",
+      "currency": "RM"
+    },
+    "allocatedFund": "Dana Diperuntukkan",
+    "programs": {
+      "general": {
+        "name": "Dana Am",
+        "description": "Fleksibiliti maksimum untuk keperluan utama"
+      },
+      "education": {
+        "name": "Pendidikan",
+        "description": "Biasiswa & literasi digital"
+      },
+      "healthcare": {
+        "name": "Kesihatan",
+        "description": "Kem perubatan & saringan"
+      },
+      "community": {
+        "name": "Komuniti",
+        "description": "Latihan kemahiran & pembangunan"
+      }
+    },
+    "continue": "Teruskan",
     "form": {
-      "amount": "Jumlah Derma",
-      "customAmount": "Jumlah Lain",
+      "title": "Maklumat Anda",
+      "editAmount": "Ubah Jumlah",
       "name": "Nama Penuh",
+      "namePlaceholder": "Ahmad Abdullah",
       "email": "Alamat E-mel",
-      "phone": "Nombor Telefon",
-      "message": "Mesej (Pilihan)",
+      "emailPlaceholder": "ahmad@contoh.com",
+      "phone": "Telefon (Pilihan)",
+      "phonePlaceholder": "+60 12 345 6789",
       "anonymous": "Jadikan derma ini tanpa nama",
-      "project": "Sokong Projek Tertentu",
-      "generalFund": "Dana Am",
-      "submit": "Selesaikan Derma",
-      "processing": "Memproses..."
+      "anonymousDescription": "Nama anda tidak akan dipaparkan di senarai awam",
+      "reviewDonation": "Semak Derma"
+    },
+    "confirm": {
+      "title": "Pembayaran Selamat",
+      "paymentCancelled": "Pembayaran dibatalkan. Anda boleh cuba semula.",
+      "amount": "Jumlah",
+      "frequency": "Kekerapan",
+      "program": "Program",
+      "name": "Nama",
+      "email": "E-mel",
+      "paySecurely": "Bayar RM {amount} dengan Selamat",
+      "processing": "Memproses...",
+      "backToDetails": "Kembali ke maklumat"
+    },
+    "impact": {
+      "title": "Impak Dijangka",
+      "scaleLabel": "Skala Impak",
+      "highImpact": "Impak Tinggi",
+      "yourInvestment": "Pelaburan RM {amount} anda membantu menyediakan {description}."
+    },
+    "transparency": {
+      "title": "Ke Mana Wang Anda Disalurkan",
+      "directAid": "Bantuan Langsung & Program",
+      "operations": "Operasi & Kakitangan",
+      "fundraising": "Pengumpulan Dana",
+      "auditNote": "*Diaudit setiap tahun oleh Deloitte. Laporan Ketelusan 2025 tersedia."
+    },
+    "security": {
+      "ssl": "SSL 256-bit",
+      "encryption": "Penyulitan",
+      "taxReceipt": "Resit Cukai",
+      "receipt": "Rasmi"
     },
     "success": {
-      "title": "Terima Kasih!",
-      "description": "Derma anda telah diterima dengan jayanya. Anda akan menerima e-mel pengesahan tidak lama lagi.",
-      "receiptSent": "Resit dihantar ke e-mel anda",
-      "returnHome": "Kembali ke Laman Utama"
+      "title": "Terima Kasih Atas Kemurahan Hati Anda!",
+      "description": "Pembayaran anda telah diterima dengan jayanya.",
+      "receiptNumber": "No. Resit",
+      "processing": "Memproses...",
+      "amountDonated": "Jumlah Diderma",
+      "donorName": "Nama Penderma",
+      "email": "E-mel",
+      "project": "Projek",
+      "date": "Tarikh",
+      "reference": "Rujukan",
+      "status": "Status",
+      "completed": "Selesai",
+      "yourMessage": "Mesej Anda",
+      "downloadReceipt": "Muat Turun Resit (PDF)",
+      "generatingPdf": "Menjana PDF...",
+      "taxNotice": {
+        "title": "Notis Potongan Cukai",
+        "description": "Yayasan Insan Prihatin adalah organisasi amal berdaftar. Derma anda mungkin layak untuk potongan cukai di bawah Seksyen 44(6) Akta Cukai Pendapatan 1967. Sila simpan resit ini untuk rekod anda."
+      },
+      "emailReceipt": {
+        "title": "Resit E-mel",
+        "description": "Dapatkan resit rasmi anda dihantar ke",
+        "sendButton": "Hantar Resit ke E-mel",
+        "sending": "Menghantar...",
+        "checkSpam": "Tidak nampak? Semak folder spam anda atau klik di atas untuk hantar semula.",
+        "sentSuccess": "Resit berjaya dihantar ke {email}"
+      },
+      "share": {
+        "title": "Sebarkan kebaikan",
+        "tweetText": "Saya baru sahaja menderma kepada Yayasan Insan Prihatin! Sertai saya untuk membuat perubahan."
+      },
+      "returnHome": "Kembali ke Utama",
+      "donateAgain": "Derma Lagi"
     },
     "failed": {
       "title": "Derma Gagal",
@@ -168,11 +312,32 @@
       "tryAgain": "Cuba Lagi",
       "contactSupport": "Hubungi Sokongan"
     },
-    "impact": {
-      "title": "Impak Anda",
-      "meals": "hidangan disediakan",
-      "students": "pelajar disokong",
-      "families": "keluarga dibantu"
+    "notFound": {
+      "title": "Derma Tidak Dijumpai",
+      "description": "Kami tidak dapat mencari derma dengan rujukan tersebut. Sila semak e-mel anda untuk pengesahan atau hubungi kami untuk bantuan.",
+      "makeDonation": "Buat Derma"
+    },
+    "pending": {
+      "title": "Pembayaran Sedang Diproses",
+      "description": "Pembayaran anda sedang disahkan. Ini mungkin mengambil beberapa saat.",
+      "donationDetails": "Butiran Derma",
+      "reference": "Rujukan",
+      "amount": "Jumlah",
+      "donor": "Penderma",
+      "status": "Status",
+      "pendingVerification": "Menunggu Pengesahan",
+      "whatHappensNext": "Apa yang berlaku seterusnya?",
+      "processingInfo1": "Pembayaran anda sedang diproses oleh gerbang pembayaran",
+      "processingInfo2": "Anda akan menerima e-mel pengesahan setelah disahkan",
+      "processingInfo3": "Jika anda tidak menerima pengesahan dalam 24 jam, sila hubungi kami",
+      "refreshStatus": "Muat Semula Status",
+      "returnHome": "Kembali ke Utama",
+      "contactQuestion": "Soalan? Hubungi kami di"
+    },
+    "verifying": "Mengesahkan pembayaran anda...",
+    "errors": {
+      "invalidAmount": "Sila masukkan jumlah derma yang sah",
+      "missingInfo": "Sila berikan nama dan e-mel anda"
     }
   },
   "footer": {
@@ -185,7 +350,7 @@
     "subscribing": "Melanggan...",
     "subscribeSuccess": "Terima kasih kerana melanggan!",
     "copyright": "Hak cipta terpelihara.",
-    "tagline": "Memperkasakan Komuniti Melalui Ihsan kepada Insan.",
+    "tagline": "Memperkasakan Komuniti Melalui Ihsan terhadap Insan.",
     "links": {
       "ourStory": "Kisah Kami",
       "leadership": "Kepimpinan",

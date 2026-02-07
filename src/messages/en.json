@@ -112,55 +112,199 @@
   },
   "contact": {
     "pageTitle": "Contact Us",
-    "heroTitle": "Get in",
-    "heroTitleHighlight": "Touch",
-    "heroDescription": "Have questions or want to get involved? We'd love to hear from you.",
+    "heroBadge": "Get In Touch",
+    "heroTitle": "We'd Love to",
+    "heroTitleHighlight": "Hear From You",
+    "heroDescription": "Have questions about our programs? Want to partner with us? Our team is here to help you make a difference.",
+    "info": {
+      "visitUs": "Visit Us",
+      "emailUs": "Email Us",
+      "callUs": "Call Us",
+      "officeHours": "Office Hours",
+      "weekdays": "Monday - Friday",
+      "weekdayHours": "9:00 AM - 6:00 PM",
+      "saturdayHours": "Saturday: 9:00 AM - 1:00 PM"
+    },
+    "inquiryTypes": {
+      "general": "General Inquiry",
+      "donation": "Donation Question",
+      "volunteer": "Volunteering",
+      "partnership": "Partnership Opportunity",
+      "media": "Media Inquiry",
+      "other": "Other"
+    },
     "form": {
+      "badge": "Send a Message",
+      "title": "Let's Start a Conversation",
+      "description": "Fill out the form below and our team will get back to you within 24-48 business hours.",
       "name": "Your Name",
+      "namePlaceholder": "John Doe",
       "email": "Email Address",
+      "emailPlaceholder": "john@example.com",
       "phone": "Phone Number",
-      "subject": "Subject",
+      "phonePlaceholder": "+60 12-345 6789",
+      "inquiryType": "Inquiry Type",
       "message": "Your Message",
+      "messagePlaceholder": "Tell us how we can help you...",
       "submit": "Send Message",
       "sending": "Sending...",
-      "success": "Message sent successfully! We'll get back to you soon.",
+      "required": "*",
+      "success": {
+        "title": "Message Sent Successfully!",
+        "description": "Thank you for reaching out. Our team will review your message and respond soon.",
+        "sendAnother": "Send another message"
+      },
       "error": "Failed to send message. Please try again."
     },
-    "info": {
-      "title": "Contact Information",
-      "address": "Address",
-      "phone": "Phone",
-      "email": "Email",
-      "hours": "Office Hours",
-      "hoursValue": "Monday - Friday: 9:00 AM - 5:00 PM"
+    "map": {
+      "title": "Yayasan Insan Prihatin",
+      "openInMaps": "Open in Google Maps"
+    },
+    "social": {
+      "title": "Connect With Us",
+      "description": "Follow us on social media for the latest updates, stories, and ways to get involved."
     },
     "faq": {
-      "title": "Frequently Asked Questions"
+      "badge": "FAQ",
+      "title": "Frequently Asked Questions",
+      "description": "Find quick answers to common questions about our foundation and programs",
+      "questions": {
+        "donate": {
+          "q": "How can I donate to Yayasan Insan Prihatin?",
+          "a": "You can donate through our website, bank transfer, or by visiting our office. We accept various payment methods for your convenience."
+        },
+        "volunteer": {
+          "q": "Can I volunteer with your organization?",
+          "a": "Yes! We welcome volunteers for various programs including education, community outreach, and events. Please fill out the contact form above with 'Volunteering' as the subject, and our volunteer coordinator will reach out."
+        },
+        "assistance": {
+          "q": "How do I apply for assistance from your programs?",
+          "a": "Please contact us with details about your situation. Our team will guide you through the application process and determine which programs you may be eligible for."
+        },
+        "corporate": {
+          "q": "Do you accept corporate partnerships?",
+          "a": "Absolutely! We actively seek partnerships with corporations for CSR initiatives. We offer various partnership tiers and can customize programs to align with your corporate values."
+        },
+        "taxDeductible": {
+          "q": "Is my donation tax-deductible?",
+          "a": "Yayasan Insan Prihatin is a registered charitable foundation. While we are currently in the process of obtaining tax-exemption status under Section 44(6) of the Income Tax Act 1967, this approval is expected soon. Once approved, all donations will be tax-deductible and we will provide official receipts for tax purposes."
+        }
+      }
     }
   },
   "donate": {
     "pageTitle": "Make a Donation",
-    "heroTitle": "Your Generosity",
-    "heroTitleHighlight": "Creates Change",
-    "heroDescription": "Every contribution, no matter the size, makes a meaningful difference in someone's life.",
+    "badge": "2025 Impact Fund Open",
+    "heroTitle": "Invest in",
+    "heroTitleHighlight": "Sustainable",
+    "heroTitleEnd": "Futures.",
+    "heroDescription": "Join a community of visionaries. 100% of your donation goes directly to verified programs.",
+    "frequency": {
+      "oneTime": "One-Time",
+      "monthly": "Monthly"
+    },
+    "amount": {
+      "label": "Enter Amount",
+      "currency": "RM"
+    },
+    "allocatedFund": "Allocated Fund",
+    "programs": {
+      "general": {
+        "name": "General Fund",
+        "description": "Maximum flexibility where needed most"
+      },
+      "education": {
+        "name": "Education",
+        "description": "Scholarships & digital literacy"
+      },
+      "healthcare": {
+        "name": "Healthcare",
+        "description": "Medical camps & screenings"
+      },
+      "community": {
+        "name": "Community",
+        "description": "Skills training & development"
+      }
+    },
+    "continue": "Continue",
     "form": {
-      "amount": "Donation Amount",
-      "customAmount": "Custom Amount",
+      "title": "Your Details",
+      "editAmount": "Edit Amount",
       "name": "Full Name",
+      "namePlaceholder": "Jane Doe",
       "email": "Email Address",
-      "phone": "Phone Number",
-      "message": "Message (Optional)",
+      "emailPlaceholder": "jane@example.com",
+      "phone": "Phone (Optional)",
+      "phonePlaceholder": "+60 12 345 6789",
       "anonymous": "Make this donation anonymous",
-      "project": "Support a Specific Project",
-      "generalFund": "General Fund",
-      "submit": "Complete Donation",
-      "processing": "Processing..."
+      "anonymousDescription": "Your name won't appear on public lists",
+      "reviewDonation": "Review Donation"
+    },
+    "confirm": {
+      "title": "Secure Checkout",
+      "paymentCancelled": "Payment was cancelled. You can try again.",
+      "amount": "Amount",
+      "frequency": "Frequency",
+      "program": "Program",
+      "name": "Name",
+      "email": "Email",
+      "paySecurely": "Pay RM {amount} Securely",
+      "processing": "Processing...",
+      "backToDetails": "Back to details"
+    },
+    "impact": {
+      "title": "Projected Impact",
+      "scaleLabel": "Impact Scale",
+      "highImpact": "High Impact",
+      "yourInvestment": "Your RM {amount} investment helps provide {description}."
+    },
+    "transparency": {
+      "title": "Where Your Money Goes",
+      "directAid": "Direct Aid & Programs",
+      "operations": "Operations & Staff",
+      "fundraising": "Fundraising",
+      "auditNote": "*Audited annually by Deloitte. 2025 Transparency Report available."
+    },
+    "security": {
+      "ssl": "256-bit SSL",
+      "encryption": "Encryption",
+      "taxReceipt": "Official Tax",
+      "receipt": "Receipt"
     },
     "success": {
-      "title": "Thank You!",
-      "description": "Your donation has been received successfully. You will receive a confirmation email shortly.",
-      "receiptSent": "Receipt sent to your email",
-      "returnHome": "Return to Home"
+      "title": "Thank You for Your Generosity!",
+      "description": "Your payment has been received successfully.",
+      "receiptNumber": "Receipt No.",
+      "processing": "Processing...",
+      "amountDonated": "Amount Donated",
+      "donorName": "Donor Name",
+      "email": "Email",
+      "project": "Project",
+      "date": "Date",
+      "reference": "Reference",
+      "status": "Status",
+      "completed": "Completed",
+      "yourMessage": "Your Message",
+      "downloadReceipt": "Download Receipt (PDF)",
+      "generatingPdf": "Generating PDF...",
+      "taxNotice": {
+        "title": "Tax Deduction Notice",
+        "description": "Yayasan Insan Prihatin is a registered charitable organization. Your donation may be eligible for tax deduction under Section 44(6) of the Income Tax Act 1967. Please keep this receipt for your records."
+      },
+      "emailReceipt": {
+        "title": "Email Receipt",
+        "description": "Get your official receipt sent to",
+        "sendButton": "Send Receipt to Email",
+        "sending": "Sending...",
+        "checkSpam": "Don't see it? Check your spam folder or click above to resend.",
+        "sentSuccess": "Receipt sent successfully to {email}"
+      },
+      "share": {
+        "title": "Help spread kindness",
+        "tweetText": "I just donated to Yayasan Insan Prihatin! Join me in making a difference."
+      },
+      "returnHome": "Return Home",
+      "donateAgain": "Donate Again"
     },
     "failed": {
       "title": "Donation Failed",
@@ -168,11 +312,32 @@
       "tryAgain": "Try Again",
       "contactSupport": "Contact Support"
     },
-    "impact": {
-      "title": "Your Impact",
-      "meals": "meals provided",
-      "students": "students supported",
-      "families": "families helped"
+    "notFound": {
+      "title": "Donation Not Found",
+      "description": "We couldn't find a donation with that reference. Please check your email for confirmation or contact us for assistance.",
+      "makeDonation": "Make a Donation"
+    },
+    "pending": {
+      "title": "Payment Processing",
+      "description": "Your payment is being verified. This may take a few moments.",
+      "donationDetails": "Donation Details",
+      "reference": "Reference",
+      "amount": "Amount",
+      "donor": "Donor",
+      "status": "Status",
+      "pendingVerification": "Pending Verification",
+      "whatHappensNext": "What happens next?",
+      "processingInfo1": "Your payment is being processed by our payment gateway",
+      "processingInfo2": "You will receive an email confirmation once verified",
+      "processingInfo3": "If you don't receive confirmation within 24 hours, please contact us",
+      "refreshStatus": "Refresh Status",
+      "returnHome": "Return Home",
+      "contactQuestion": "Questions? Contact us at"
+    },
+    "verifying": "Verifying your payment...",
+    "errors": {
+      "invalidAmount": "Please enter a valid donation amount",
+      "missingInfo": "Please provide your name and email"
     }
   },
   "footer": {
