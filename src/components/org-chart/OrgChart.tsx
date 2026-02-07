@@ -5,13 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import OrgChartNode, { type TeamMemberNode, type ReportType } from './OrgChartNode'
 
-// Dotted line colors based on report type
-const reportTypeColors: Record<ReportType, string> = {
-  direct: '#14b8a6', // teal
-  dotted: '#8b5cf6', // purple
-  functional: '#f59e0b', // amber
-  project: '#3b82f6', // blue
-}
+// Line color for additional reporting relationships (unified style)
+const additionalLineColor = '#94a3b8' // slate-400
 
 // Type for dotted line connection
 type DottedConnection = {
@@ -144,7 +139,7 @@ export default function OrgChart({
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all')
   const [selectedMember, setSelectedMember] = useState<TeamMemberNode | null>(null)
   const [dottedLines, setDottedLines] = useState<Array<{
-    x1: number; y1: number; x2: number; y2: number; color: string; reportType: ReportType
+    x1: number; y1: number; x2: number; y2: number
   }>>([])
   const treeContainerRef = useRef<HTMLDivElement>(null)
 
@@ -214,11 +209,7 @@ export default function OrgChart({
         const x2 = toRect.left + toRect.width / 2 - containerRect.left
         const y2 = toRect.bottom - containerRect.top
 
-        newLines.push({
-          x1, y1, x2, y2,
-          color: reportTypeColors[conn.reportType],
-          reportType: conn.reportType,
-        })
+        newLines.push({ x1, y1, x2, y2 })
       }
     })
 
@@ -342,32 +333,20 @@ export default function OrgChart({
       {/* Tree View */}
       {viewMode === 'tree' && (
         <div className="pb-8 pt-4">
-          {/* Dotted Line Legend */}
+          {/* Legend for additional reporting lines */}
           {dottedConnections.length > 0 && (
             <div className="flex flex-wrap justify-center gap-3 mb-6 px-4">
-              <span className="text-[10px] sm:text-xs text-gray-500 font-medium">Additional Reporting:</span>
-              {(['dotted', 'functional', 'project'] as ReportType[]).map(type => {
-                const hasType = dottedConnections.some(c => c.reportType === type)
-                if (!hasType) return null
-                return (
-                  <div key={type} className="flex items-center gap-1.5">
-                    <svg width="20" height="2">
-                      <line
-                        x1="0" y1="1" x2="20" y2="1"
-                        stroke={reportTypeColors[type]}
-                        strokeWidth="2"
-                        strokeDasharray="3,2"
-                      />
-                    </svg>
-                    <span className="text-[10px] sm:text-xs text-gray-600 capitalize">{type}</span>
-                  </div>
-                )
-              })}
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                <svg width="24" height="2">
+                  <line x1="0" y1="1" x2="24" y2="1" stroke="#94a3b8" strokeWidth="2" />
+                </svg>
+                <span>Additional reporting lines</span>
+              </div>
             </div>
           )}
-          {/* Responsive tree container - no horizontal scroll */}
-          <div ref={treeContainerRef} className="relative flex flex-wrap items-start justify-center gap-2 sm:gap-4 px-2 sm:px-4">
-            {/* SVG Overlay for Dotted Lines - arrows FROM manager TO report */}
+          {/* Responsive tree container */}
+          <div ref={treeContainerRef} className="relative flex flex-wrap items-start justify-center gap-3 sm:gap-6 px-2 sm:px-4">
+            {/* SVG Overlay for Additional Manager Lines - unified solid style */}
             {dottedLines.length > 0 && (
               <svg
                 className="absolute inset-0 pointer-events-none z-40"
@@ -375,40 +354,19 @@ export default function OrgChart({
               >
                 <defs>
                   <marker
-                    id="arrowhead-dotted"
-                    markerWidth="5"
-                    markerHeight="5"
-                    refX="5"
-                    refY="2.5"
+                    id="arrowhead-additional"
+                    markerWidth="6"
+                    markerHeight="6"
+                    refX="6"
+                    refY="3"
                     orient="auto"
                   >
-                    <polygon points="0 0, 5 2.5, 0 5" fill="#8b5cf6" />
-                  </marker>
-                  <marker
-                    id="arrowhead-functional"
-                    markerWidth="5"
-                    markerHeight="5"
-                    refX="5"
-                    refY="2.5"
-                    orient="auto"
-                  >
-                    <polygon points="0 0, 5 2.5, 0 5" fill="#f59e0b" />
-                  </marker>
-                  <marker
-                    id="arrowhead-project"
-                    markerWidth="5"
-                    markerHeight="5"
-                    refX="5"
-                    refY="2.5"
-                    orient="auto"
-                  >
-                    <polygon points="0 0, 5 2.5, 0 5" fill="#3b82f6" />
+                    <polygon points="0 0, 6 3, 0 6" fill="#94a3b8" />
                   </marker>
                 </defs>
                 {dottedLines.map((line, index) => {
                   // Create a curved path FROM manager (x2,y2) TO report (x1,y1)
-                  // Arrow points DOWN toward the report
-                  const curveOffset = Math.abs(line.x2 - line.x1) * 0.4 + 20
+                  const curveOffset = Math.abs(line.x2 - line.x1) * 0.4 + 30
                   const path = `M ${line.x2} ${line.y2}
                     C ${line.x2} ${line.y2 + curveOffset},
                       ${line.x1} ${line.y1 - curveOffset},
@@ -419,19 +377,18 @@ export default function OrgChart({
                       <path
                         d={path}
                         fill="none"
-                        stroke={line.color}
-                        strokeWidth="1.5"
-                        strokeDasharray="4,3"
-                        markerEnd={`url(#arrowhead-${line.reportType})`}
+                        stroke={additionalLineColor}
+                        strokeWidth="2"
+                        markerEnd="url(#arrowhead-additional)"
                         className="transition-opacity duration-300"
-                        opacity="0.7"
+                        opacity="0.6"
                       />
                     </g>
                   )
                 })}
               </svg>
             )}
-            {/* Founders side by side - using flex gap */}
+            {/* Founders side by side */}
             {treeData.map((root, index) => (
               <OrgChartNode
                 key={root.id}
