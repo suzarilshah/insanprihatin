@@ -38,7 +38,7 @@ export default function HowItWorks() {
             A Transparent Path to <br />
             <span className="text-teal-600 italic font-serif">Real Change</span>
           </motion.h2>
-          <p className="body-large text-gray-500">
+          <p className="body-large text-gray-600">
             We&apos;ve removed the bureaucracy. Your help goes directly to where it&apos;s needed, faster and more effectively.
           </p>
         </div>
@@ -68,7 +68,7 @@ export default function HowItWorks() {
                 <h3 className="font-heading text-xl font-bold text-foundation-charcoal mb-3 group-hover:text-teal-600 transition-colors">
                   {step.title}
                 </h3>
-                <p className="text-gray-500 text-sm leading-relaxed">
+                <p className="text-gray-600 text-sm leading-relaxed">
                   {step.description}
                 </p>
               </div>

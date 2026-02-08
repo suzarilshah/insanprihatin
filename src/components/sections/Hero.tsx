@@ -163,7 +163,7 @@ export default function Hero({
               </p>
 
               <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 sm:gap-5">
-                <Link href={ctaLink} className="group relative px-6 md:px-8 py-3 md:py-4 bg-teal-600 text-white rounded-full font-bold tracking-wide overflow-hidden transition-all hover:shadow-[0_0_40px_-10px_rgba(42,173,173,0.5)] text-center sm:text-left">
+                <Link href={ctaLink} className="group relative px-6 md:px-8 py-3 md:py-4 bg-teal-700 text-white rounded-full font-bold tracking-wide overflow-hidden transition-all hover:shadow-[0_0_40px_-10px_rgba(42,173,173,0.5)] text-center sm:text-left">
                   <span className="relative z-10 flex items-center justify-center sm:justify-start gap-2">
                     {displayCtaText}
                     <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">

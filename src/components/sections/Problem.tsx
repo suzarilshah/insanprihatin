@@ -41,7 +41,7 @@ export default function Problem() {
                  className="absolute -bottom-12 -right-12 bg-white p-8 rounded-2xl shadow-xl max-w-xs hidden md:block"
                >
                  <div className="text-4xl font-display font-bold text-teal-600 mb-2">2.4M</div>
-                 <p className="text-sm text-gray-500 leading-relaxed">Families in Malaysia currently living below the relative poverty line.</p>
+                 <p className="text-sm text-gray-600 leading-relaxed">Families in Malaysia currently living below the relative poverty line.</p>
                </motion.div>
              </motion.div>
 
@@ -104,7 +104,7 @@ export default function Problem() {
                   </div>
                   <div>
                     <h4 className="font-heading text-lg font-bold text-foundation-charcoal mb-1 group-hover:text-teal-700 transition-colors">{item.title}</h4>
-                    <p className="text-sm text-gray-500">{item.desc}</p>
+                    <p className="text-sm text-gray-600">{item.desc}</p>
                   </div>
                 </motion.div>
               ))}

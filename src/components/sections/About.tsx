@@ -103,7 +103,7 @@ export default function About({
                   </div>
                   <div>
                     <div className="font-display text-2xl font-bold text-foundation-charcoal">{t('impactAmount')}</div>
-                    <div className="text-gray-500 text-sm">{t('totalImpact')}</div>
+                    <div className="text-gray-600 text-sm">{t('totalImpact')}</div>
                   </div>
                 </div>
                 <p className="text-gray-600 text-sm">
@@ -183,7 +183,7 @@ export default function About({
                 <h4 className="font-heading text-xl font-semibold text-foundation-charcoal mb-3">
                   {value.title}
                 </h4>
-                <p className="text-gray-500 text-sm leading-relaxed">
+                <p className="text-gray-600 text-sm leading-relaxed">
                   {value.description}
                 </p>
               </motion.div>

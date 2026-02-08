@@ -106,6 +106,14 @@ export default async function LocaleLayout({
       className={`${playfair.variable} ${cormorant.variable} ${outfit.variable} ${inter.variable} ${jetbrains.variable}`}
     >
       <head>
+        {/* LCP Optimization: Preload hero background image */}
+        <link
+          rel="preload"
+          as="image"
+          href="https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?q=85&w=3840&auto=format&fit=crop"
+          fetchPriority="high"
+        />
+        {/* Favicons */}
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/favicon-16x16.png" type="image/png" sizes="16x16" />
         <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />

@@ -65,7 +65,7 @@ export default function CTA() {
               
               <div className="mb-6">
                 <h3 className="text-foundation-charcoal font-heading text-xl font-bold mb-1">{t('quickDonation')}</h3>
-                <p className="text-gray-500 text-sm">{t('secureAndTaxDeductible')}</p>
+                <p className="text-gray-600 text-sm">{t('secureAndTaxDeductible')}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-3 mb-4">
@@ -75,8 +75,8 @@ export default function CTA() {
                     onClick={() => { setSelectedAmount(amount); setCustomAmount('') }}
                     className={`py-3 px-4 rounded-xl font-bold text-sm transition-all border ${
                       selectedAmount === amount && !customAmount
-                        ? 'bg-teal-600 text-white border-teal-600 shadow-lg shadow-teal-600/30'
-                        : 'bg-gray-50 text-gray-600 border-gray-100 hover:bg-white hover:border-teal-200'
+                        ? 'bg-teal-700 text-white border-teal-700 shadow-lg shadow-teal-700/30'
+                        : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-white hover:border-teal-300'
                     }`}
                   >
                     RM {amount}
@@ -90,7 +90,7 @@ export default function CTA() {
                   placeholder={t('customAmount')}
                   value={customAmount}
                   onChange={(e) => setCustomAmount(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-100 rounded-xl py-4 pl-12 pr-4 font-medium text-gray-800 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl py-4 pl-12 pr-4 font-medium text-gray-800 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-teal-600 transition-all"
                 />
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 font-bold">RM</span>
               </div>

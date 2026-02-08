@@ -54,9 +54,10 @@ export default function LanguageSwitcher({
             className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm transition-all ${
               loc === locale
                 ? 'bg-teal-100 text-teal-700'
-                : 'text-gray-500 hover:bg-gray-100'
+                : 'text-gray-600 hover:bg-gray-100'
             }`}
             title={localeNames[loc]}
+            aria-label={`Switch to ${localeNames[loc]}`}
           >
             {localeFlags[loc]}
           </button>
@@ -75,9 +76,11 @@ export default function LanguageSwitcher({
             onClick={() => handleLocaleChange(loc)}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
               loc === locale
-                ? 'bg-teal-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'bg-teal-700 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
+            aria-label={`Switch to ${localeNames[loc]}`}
+            aria-pressed={loc === locale}
           >
             {localeFlags[loc]} {loc.toUpperCase()}
           </button>
@@ -92,6 +95,9 @@ export default function LanguageSwitcher({
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white/90 hover:text-white transition-all text-sm font-medium backdrop-blur-sm border border-white/10"
+        aria-label={`Language: ${localeNames[locale]}. Click to change language.`}
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
       >
         <span>{localeFlags[locale]}</span>
         <span className="hidden sm:inline">{localeNames[locale]}</span>
