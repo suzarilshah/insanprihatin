@@ -4,9 +4,41 @@ import { useState, useEffect, useTransition } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { getSiteSetting, updateSiteSetting } from '@/lib/actions/content'
-import { getDefaultOrganizationConfig } from '@/lib/organization-config'
+import { getDefaultOrganizationConfig } from '@/lib/organization-config-client'
+import type {
+  ContactSettings,
+  ContactAddress,
+  ContactEmail,
+  ContactPhone,
+  OfficeHours,
+} from '@/lib/contact-settings-types'
 
 const defaultOrgConfig = getDefaultOrganizationConfig()
+
+// Default contact settings
+const DEFAULT_CONTACT_SETTINGS: ContactSettings = {
+  primaryAddress: {
+    label: 'Registered Address',
+    lines: [
+      'D-G-05 Jalan PKAK 2',
+      'Pusat Komersil Ayer Keroh',
+      '75450 Ayer Keroh',
+      'Melaka, Malaysia',
+    ],
+  },
+  emails: [
+    { type: 'general', label: 'General Inquiries', address: 'info@insanprihatin.org' },
+  ],
+  phones: [
+    { type: 'main', label: 'Main Office', number: '+60 12-345 6789' },
+  ],
+  officeHours: {
+    weekdays: 'Monday - Friday',
+    weekdayHours: '9:00 AM - 5:00 PM',
+    saturday: 'Saturday',
+    saturdayHours: '9:00 AM - 1:00 PM',
+  },
+}
 
 export default function SettingsPage() {
   const [isPending, startTransition] = useTransition()
@@ -39,6 +71,10 @@ export default function SettingsPage() {
     orgLogoUrl: defaultOrgConfig.logoUrl,
     orgFullAddress: defaultOrgConfig.address.join('\n'),
   })
+
+  // Contact settings state
+  const [contactSettings, setContactSettings] = useState<ContactSettings>(DEFAULT_CONTACT_SETTINGS)
+  const [showSecondaryAddress, setShowSecondaryAddress] = useState(false)
   const [isSendingTestEmail, setIsSendingTestEmail] = useState(false)
   const [testEmailResult, setTestEmailResult] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
@@ -55,6 +91,7 @@ export default function SettingsPage() {
           notificationEmail,
           emailNotificationsEnabled,
           organizationConfig,
+          contactSettingsData,
         ] = await Promise.all([
           getSiteSetting('siteName'),
           getSiteSetting('siteTagline'),
@@ -65,6 +102,7 @@ export default function SettingsPage() {
           getSiteSetting('notificationEmail'),
           getSiteSetting('emailNotificationsEnabled'),
           getSiteSetting('organizationConfig'),
+          getSiteSetting('contactSettings'),
         ])
 
         const orgConfig = organizationConfig as {
@@ -92,6 +130,34 @@ export default function SettingsPage() {
           orgLogoUrl: orgConfig?.logoUrl || prev.orgLogoUrl,
           orgFullAddress: orgConfig?.address?.join('\n') || (address as string) || prev.orgFullAddress,
         }))
+
+        // Load contact settings
+        if (contactSettingsData) {
+          const loadedContactSettings = contactSettingsData as ContactSettings
+          setContactSettings({
+            ...DEFAULT_CONTACT_SETTINGS,
+            ...loadedContactSettings,
+          })
+          setShowSecondaryAddress(!!loadedContactSettings.secondaryAddress)
+        } else if (address || contactEmail || contactPhone) {
+          // Migrate from legacy settings
+          const legacyContactSettings: ContactSettings = {
+            ...DEFAULT_CONTACT_SETTINGS,
+            primaryAddress: {
+              label: 'Registered Address',
+              lines: address
+                ? (address as string).split('\n').map(l => l.trim()).filter(Boolean)
+                : DEFAULT_CONTACT_SETTINGS.primaryAddress.lines,
+            },
+            emails: contactEmail
+              ? [{ type: 'general', label: 'General Inquiries', address: contactEmail as string }]
+              : DEFAULT_CONTACT_SETTINGS.emails,
+            phones: contactPhone
+              ? [{ type: 'main', label: 'Main Office', number: contactPhone as string }]
+              : DEFAULT_CONTACT_SETTINGS.phones,
+          }
+          setContactSettings(legacyContactSettings)
+        }
       } catch (error) {
         console.error('Failed to load settings:', error)
       } finally {
@@ -105,6 +171,13 @@ export default function SettingsPage() {
     setMessage(null)
     startTransition(async () => {
       try {
+        // Prepare contact settings for saving
+        const contactSettingsToSave: ContactSettings = {
+          ...contactSettings,
+          // Remove secondary address if not enabled
+          secondaryAddress: showSecondaryAddress ? contactSettings.secondaryAddress : undefined,
+        }
+
         await Promise.all([
           updateSiteSetting('siteName', settings.siteName),
           updateSiteSetting('siteTagline', settings.siteTagline),
@@ -128,6 +201,8 @@ export default function SettingsPage() {
             logoUrl: settings.orgLogoUrl,
             address: settings.orgFullAddress.split('\n').map(line => line.trim()).filter(Boolean),
           }),
+          // Save new contact settings
+          updateSiteSetting('contactSettings', contactSettingsToSave),
         ])
         setMessage({ type: 'success', text: 'Settings saved successfully!' })
       } catch (error) {
@@ -378,37 +453,441 @@ export default function SettingsPage() {
           )}
 
           {activeTab === 'contact' && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-6">
-              <h2 className="font-heading text-lg font-semibold text-foundation-charcoal mb-6">
-                Contact Information
-              </h2>
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-                  <input
-                    type="email"
-                    value={settings.contactEmail}
-                    onChange={(e) => setSettings({ ...settings, contactEmail: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
-                  />
+            <div className="space-y-6">
+              {/* Primary Address */}
+              <div className="bg-white rounded-2xl border border-gray-100 p-6">
+                <h2 className="font-heading text-lg font-semibold text-foundation-charcoal mb-2">
+                  Registered Address
+                </h2>
+                <p className="text-gray-500 text-sm mb-6">
+                  Primary address displayed on the contact page and footer.
+                </p>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Address Label</label>
+                    <input
+                      type="text"
+                      value={contactSettings.primaryAddress.label}
+                      onChange={(e) => setContactSettings({
+                        ...contactSettings,
+                        primaryAddress: { ...contactSettings.primaryAddress, label: e.target.value }
+                      })}
+                      placeholder="Registered Address"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Address Lines</label>
+                    <textarea
+                      value={contactSettings.primaryAddress.lines.join('\n')}
+                      onChange={(e) => setContactSettings({
+                        ...contactSettings,
+                        primaryAddress: {
+                          ...contactSettings.primaryAddress,
+                          lines: e.target.value.split('\n'),
+                        }
+                      })}
+                      rows={4}
+                      placeholder={"D-G-05 Jalan PKAK 2\nPusat Komersil Ayer Keroh\n75450 Ayer Keroh\nMelaka, Malaysia"}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 resize-none font-mono text-sm"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Enter each line on a new row</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Google Maps URL (optional)</label>
+                    <input
+                      type="text"
+                      value={contactSettings.primaryAddress.googleMapsUrl || ''}
+                      onChange={(e) => setContactSettings({
+                        ...contactSettings,
+                        primaryAddress: { ...contactSettings.primaryAddress, googleMapsUrl: e.target.value || undefined }
+                      })}
+                      placeholder="https://maps.google.com/..."
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                  <input
-                    type="text"
-                    value={settings.contactPhone}
-                    onChange={(e) => setSettings({ ...settings, contactPhone: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
-                  />
+              </div>
+
+              {/* Secondary Address Toggle */}
+              <div className="bg-white rounded-2xl border border-gray-100 p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="font-heading text-lg font-semibold text-foundation-charcoal">
+                      Operational Address
+                    </h2>
+                    <p className="text-gray-500 text-sm mt-1">
+                      Add a secondary address if your operations are at a different location.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowSecondaryAddress(!showSecondaryAddress)
+                      if (!showSecondaryAddress && !contactSettings.secondaryAddress) {
+                        setContactSettings({
+                          ...contactSettings,
+                          secondaryAddress: {
+                            label: 'Operational Address',
+                            lines: [],
+                          }
+                        })
+                      }
+                    }}
+                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 ${
+                      showSecondaryAddress ? 'bg-teal-600' : 'bg-gray-200'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        showSecondaryAddress ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
-                  <textarea
-                    value={settings.address}
-                    onChange={(e) => setSettings({ ...settings, address: e.target.value })}
-                    rows={3}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 resize-none"
-                  />
+
+                {showSecondaryAddress && contactSettings.secondaryAddress && (
+                  <div className="mt-6 pt-6 border-t border-gray-100 space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Address Label</label>
+                      <input
+                        type="text"
+                        value={contactSettings.secondaryAddress.label}
+                        onChange={(e) => setContactSettings({
+                          ...contactSettings,
+                          secondaryAddress: { ...contactSettings.secondaryAddress!, label: e.target.value }
+                        })}
+                        placeholder="Operational Address"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Address Lines</label>
+                      <textarea
+                        value={contactSettings.secondaryAddress.lines.join('\n')}
+                        onChange={(e) => setContactSettings({
+                          ...contactSettings,
+                          secondaryAddress: {
+                            ...contactSettings.secondaryAddress!,
+                            lines: e.target.value.split('\n'),
+                          }
+                        })}
+                        rows={4}
+                        placeholder={"Level 15, Menara Example\nJalan Example\n50000 Kuala Lumpur"}
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 resize-none font-mono text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Google Maps URL (optional)</label>
+                      <input
+                        type="text"
+                        value={contactSettings.secondaryAddress.googleMapsUrl || ''}
+                        onChange={(e) => setContactSettings({
+                          ...contactSettings,
+                          secondaryAddress: { ...contactSettings.secondaryAddress!, googleMapsUrl: e.target.value || undefined }
+                        })}
+                        placeholder="https://maps.google.com/..."
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Email Addresses */}
+              <div className="bg-white rounded-2xl border border-gray-100 p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="font-heading text-lg font-semibold text-foundation-charcoal">
+                      Email Addresses
+                    </h2>
+                    <p className="text-gray-500 text-sm mt-1">
+                      Contact email addresses displayed on the contact page.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setContactSettings({
+                      ...contactSettings,
+                      emails: [...contactSettings.emails, { type: 'general', label: '', address: '' }]
+                    })}
+                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-teal-700 bg-teal-50 rounded-lg hover:bg-teal-100 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add Email
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  {contactSettings.emails.map((email, index) => (
+                    <div key={index} className="flex gap-4 p-4 bg-gray-50 rounded-xl">
+                      <div className="flex-1 grid sm:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1.5">Type</label>
+                          <select
+                            value={email.type}
+                            onChange={(e) => {
+                              const newEmails = [...contactSettings.emails]
+                              newEmails[index] = { ...email, type: e.target.value as ContactEmail['type'] }
+                              setContactSettings({ ...contactSettings, emails: newEmails })
+                            }}
+                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                          >
+                            <option value="general">General</option>
+                            <option value="donations">Donations</option>
+                            <option value="support">Support</option>
+                            <option value="other">Other</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1.5">Label</label>
+                          <input
+                            type="text"
+                            value={email.label}
+                            onChange={(e) => {
+                              const newEmails = [...contactSettings.emails]
+                              newEmails[index] = { ...email, label: e.target.value }
+                              setContactSettings({ ...contactSettings, emails: newEmails })
+                            }}
+                            placeholder="General Inquiries"
+                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1.5">Email Address</label>
+                          <input
+                            type="email"
+                            value={email.address}
+                            onChange={(e) => {
+                              const newEmails = [...contactSettings.emails]
+                              newEmails[index] = { ...email, address: e.target.value }
+                              setContactSettings({ ...contactSettings, emails: newEmails })
+                            }}
+                            placeholder="info@example.org"
+                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                          />
+                        </div>
+                      </div>
+                      {contactSettings.emails.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newEmails = contactSettings.emails.filter((_, i) => i !== index)
+                            setContactSettings({ ...contactSettings, emails: newEmails })
+                          }}
+                          className="self-end p-2 text-gray-400 hover:text-red-500 transition-colors"
+                        >
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Phone Numbers */}
+              <div className="bg-white rounded-2xl border border-gray-100 p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="font-heading text-lg font-semibold text-foundation-charcoal">
+                      Phone Numbers
+                    </h2>
+                    <p className="text-gray-500 text-sm mt-1">
+                      Contact phone numbers displayed on the contact page.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setContactSettings({
+                      ...contactSettings,
+                      phones: [...contactSettings.phones, { type: 'main', label: '', number: '' }]
+                    })}
+                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-teal-700 bg-teal-50 rounded-lg hover:bg-teal-100 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add Phone
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  {contactSettings.phones.map((phone, index) => (
+                    <div key={index} className="flex gap-4 p-4 bg-gray-50 rounded-xl">
+                      <div className="flex-1 grid sm:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1.5">Type</label>
+                          <select
+                            value={phone.type}
+                            onChange={(e) => {
+                              const newPhones = [...contactSettings.phones]
+                              newPhones[index] = { ...phone, type: e.target.value as ContactPhone['type'] }
+                              setContactSettings({ ...contactSettings, phones: newPhones })
+                            }}
+                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                          >
+                            <option value="main">Main Office</option>
+                            <option value="hotline">Hotline</option>
+                            <option value="whatsapp">WhatsApp</option>
+                            <option value="other">Other</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1.5">Label</label>
+                          <input
+                            type="text"
+                            value={phone.label}
+                            onChange={(e) => {
+                              const newPhones = [...contactSettings.phones]
+                              newPhones[index] = { ...phone, label: e.target.value }
+                              setContactSettings({ ...contactSettings, phones: newPhones })
+                            }}
+                            placeholder="Main Office"
+                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1.5">Phone Number</label>
+                          <input
+                            type="text"
+                            value={phone.number}
+                            onChange={(e) => {
+                              const newPhones = [...contactSettings.phones]
+                              newPhones[index] = { ...phone, number: e.target.value }
+                              setContactSettings({ ...contactSettings, phones: newPhones })
+                            }}
+                            placeholder="+60 12-345 6789"
+                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                          />
+                        </div>
+                      </div>
+                      {contactSettings.phones.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newPhones = contactSettings.phones.filter((_, i) => i !== index)
+                            setContactSettings({ ...contactSettings, phones: newPhones })
+                          }}
+                          className="self-end p-2 text-gray-400 hover:text-red-500 transition-colors"
+                        >
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Office Hours */}
+              <div className="bg-white rounded-2xl border border-gray-100 p-6">
+                <h2 className="font-heading text-lg font-semibold text-foundation-charcoal mb-2">
+                  Office Hours
+                </h2>
+                <p className="text-gray-500 text-sm mb-6">
+                  Operating hours displayed on the contact page.
+                </p>
+                <div className="space-y-4">
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Weekdays</label>
+                      <input
+                        type="text"
+                        value={contactSettings.officeHours?.weekdays || ''}
+                        onChange={(e) => setContactSettings({
+                          ...contactSettings,
+                          officeHours: { ...contactSettings.officeHours!, weekdays: e.target.value }
+                        })}
+                        placeholder="Monday - Friday"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Weekday Hours</label>
+                      <input
+                        type="text"
+                        value={contactSettings.officeHours?.weekdayHours || ''}
+                        onChange={(e) => setContactSettings({
+                          ...contactSettings,
+                          officeHours: { ...contactSettings.officeHours!, weekdayHours: e.target.value }
+                        })}
+                        placeholder="9:00 AM - 5:00 PM"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Saturday (optional)</label>
+                      <input
+                        type="text"
+                        value={contactSettings.officeHours?.saturday || ''}
+                        onChange={(e) => setContactSettings({
+                          ...contactSettings,
+                          officeHours: { ...contactSettings.officeHours!, saturday: e.target.value || undefined }
+                        })}
+                        placeholder="Saturday"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Saturday Hours</label>
+                      <input
+                        type="text"
+                        value={contactSettings.officeHours?.saturdayHours || ''}
+                        onChange={(e) => setContactSettings({
+                          ...contactSettings,
+                          officeHours: { ...contactSettings.officeHours!, saturdayHours: e.target.value || undefined }
+                        })}
+                        placeholder="9:00 AM - 1:00 PM"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Sunday (optional)</label>
+                      <input
+                        type="text"
+                        value={contactSettings.officeHours?.sunday || ''}
+                        onChange={(e) => setContactSettings({
+                          ...contactSettings,
+                          officeHours: { ...contactSettings.officeHours!, sunday: e.target.value || undefined }
+                        })}
+                        placeholder="Sunday"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Sunday Hours</label>
+                      <input
+                        type="text"
+                        value={contactSettings.officeHours?.sundayHours || ''}
+                        onChange={(e) => setContactSettings({
+                          ...contactSettings,
+                          officeHours: { ...contactSettings.officeHours!, sundayHours: e.target.value || undefined }
+                        })}
+                        placeholder="Closed"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Note (optional)</label>
+                    <input
+                      type="text"
+                      value={contactSettings.officeHours?.note || ''}
+                      onChange={(e) => setContactSettings({
+                        ...contactSettings,
+                        officeHours: { ...contactSettings.officeHours!, note: e.target.value || undefined }
+                      })}
+                      placeholder="Closed on public holidays"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                    />
+                  </div>
                 </div>
               </div>
             </div>

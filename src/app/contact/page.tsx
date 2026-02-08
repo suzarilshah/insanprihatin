@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import { Header, Footer } from '@/components/layout'
 import ContactContent from './ContactContent'
+import { getContactSettings } from '@/lib/contact-settings'
 
 // Force dynamic to prevent prerender errors during build
 export const dynamic = 'force-dynamic'
@@ -15,14 +16,16 @@ export const metadata: Metadata = {
   },
 }
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const contactSettings = await getContactSettings()
+
   return (
     <>
       <Header />
       <main>
-        <ContactContent />
+        <ContactContent contactSettings={contactSettings} />
       </main>
-      <Footer />
+      <Footer contactSettings={contactSettings} />
     </>
   )
 }

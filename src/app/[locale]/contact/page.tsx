@@ -3,6 +3,7 @@ import { setRequestLocale, getTranslations } from 'next-intl/server'
 import { Header, Footer } from '@/components/layout'
 import ContactContent from './ContactContent'
 import { type Locale } from '@/i18n/config'
+import { getContactSettings } from '@/lib/contact-settings'
 
 export async function generateMetadata({
   params,
@@ -46,13 +47,15 @@ export default async function ContactPage({
   const { locale } = await params
   setRequestLocale(locale)
 
+  const contactSettings = await getContactSettings()
+
   return (
     <>
       <Header />
       <main>
-        <ContactContent />
+        <ContactContent contactSettings={contactSettings} />
       </main>
-      <Footer />
+      <Footer contactSettings={contactSettings} />
     </>
   )
 }

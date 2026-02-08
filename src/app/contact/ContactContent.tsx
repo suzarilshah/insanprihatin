@@ -1,69 +1,125 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import React, { useState, useRef, useMemo } from 'react'
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
+import type { ContactSettings } from '@/lib/contact-settings-types'
 
 const colorClasses: Record<string, { bg: string; icon: string; border: string }> = {
   teal: { bg: 'from-teal-50 to-teal-100', icon: 'text-teal-600', border: 'border-teal-200' },
   amber: { bg: 'from-amber-50 to-amber-100', icon: 'text-amber-600', border: 'border-amber-200' },
   sky: { bg: 'from-sky-50 to-sky-100', icon: 'text-sky-600', border: 'border-sky-200' },
   emerald: { bg: 'from-emerald-50 to-emerald-100', icon: 'text-emerald-600', border: 'border-emerald-200' },
+  purple: { bg: 'from-purple-50 to-purple-100', icon: 'text-purple-600', border: 'border-purple-200' },
 }
 
-export default function ContactContent() {
+interface ContactContentProps {
+  contactSettings: ContactSettings
+}
+
+export default function ContactContent({ contactSettings }: ContactContentProps) {
   const t = useTranslations('contact')
 
-  // Define contact info with translations
-  const contactInfo = [
-    {
+  // Build contact info dynamically from settings
+  const contactInfo = useMemo(() => {
+    const items: Array<{
+      icon: React.ReactNode
+      title: string
+      lines: string[]
+      color: string
+      mapsUrl?: string
+    }> = []
+
+    // Primary Address
+    items.push({
       icon: (
         <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
       ),
-      title: t('info.visitUs'),
-      lines: [
-        'Level 15, Menara Yayasan',
-        'Jalan Sultan Ismail',
-        '50250 Kuala Lumpur',
-        'Malaysia',
-      ],
+      title: contactSettings.primaryAddress.label || t('info.visitUs'),
+      lines: contactSettings.primaryAddress.lines.filter(Boolean),
       color: 'teal',
-    },
-    {
-      icon: (
-        <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
-      ),
-      title: t('info.emailUs'),
-      lines: ['info@insanprihatin.org', 'donations@insanprihatin.org'],
-      color: 'amber',
-    },
-    {
-      icon: (
-        <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-        </svg>
-      ),
-      title: t('info.callUs'),
-      lines: ['+60 3-1234 5678', '+60 3-8765 4321'],
-      color: 'sky',
-    },
-    {
-      icon: (
-        <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-      title: t('info.officeHours'),
-      lines: [t('info.weekdays'), t('info.weekdayHours'), t('info.saturdayHours')],
-      color: 'emerald',
-    },
-  ]
+      mapsUrl: contactSettings.primaryAddress.googleMapsUrl,
+    })
+
+    // Secondary Address (if exists)
+    if (contactSettings.secondaryAddress && contactSettings.secondaryAddress.lines.filter(Boolean).length > 0) {
+      items.push({
+        icon: (
+          <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+        ),
+        title: contactSettings.secondaryAddress.label || 'Operational Address',
+        lines: contactSettings.secondaryAddress.lines.filter(Boolean),
+        color: 'purple',
+        mapsUrl: contactSettings.secondaryAddress.googleMapsUrl,
+      })
+    }
+
+    // Email addresses
+    if (contactSettings.emails.length > 0) {
+      items.push({
+        icon: (
+          <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+        ),
+        title: t('info.emailUs'),
+        lines: contactSettings.emails.map(e => e.address),
+        color: 'amber',
+      })
+    }
+
+    // Phone numbers
+    if (contactSettings.phones.length > 0) {
+      items.push({
+        icon: (
+          <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+          </svg>
+        ),
+        title: t('info.callUs'),
+        lines: contactSettings.phones.map(p => p.number),
+        color: 'sky',
+      })
+    }
+
+    // Office hours
+    if (contactSettings.officeHours) {
+      const hoursLines: string[] = []
+      if (contactSettings.officeHours.weekdays && contactSettings.officeHours.weekdayHours) {
+        hoursLines.push(`${contactSettings.officeHours.weekdays}: ${contactSettings.officeHours.weekdayHours}`)
+      }
+      if (contactSettings.officeHours.saturday && contactSettings.officeHours.saturdayHours) {
+        hoursLines.push(`${contactSettings.officeHours.saturday}: ${contactSettings.officeHours.saturdayHours}`)
+      }
+      if (contactSettings.officeHours.sunday && contactSettings.officeHours.sundayHours) {
+        hoursLines.push(`${contactSettings.officeHours.sunday}: ${contactSettings.officeHours.sundayHours}`)
+      }
+      if (contactSettings.officeHours.note) {
+        hoursLines.push(contactSettings.officeHours.note)
+      }
+
+      if (hoursLines.length > 0) {
+        items.push({
+          icon: (
+            <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          ),
+          title: t('info.officeHours'),
+          lines: hoursLines,
+          color: 'emerald',
+        })
+      }
+    }
+
+    return items
+  }, [contactSettings, t])
 
   // Define inquiry types with translations
   const inquiryTypes = [
@@ -490,12 +546,15 @@ export default function ContactContent() {
                         {t('map.title')}
                       </h3>
                       <p className="text-gray-600 text-sm mb-6 leading-relaxed">
-                        Level 15, Menara Yayasan<br />
-                        Jalan Sultan Ismail<br />
-                        50250 Kuala Lumpur
+                        {contactSettings.primaryAddress.lines.filter(Boolean).map((line, i) => (
+                          <span key={i}>
+                            {line}
+                            {i < contactSettings.primaryAddress.lines.filter(Boolean).length - 1 && <br />}
+                          </span>
+                        ))}
                       </p>
                       <a
-                        href="https://maps.google.com"
+                        href={contactSettings.primaryAddress.googleMapsUrl || `https://maps.google.com/maps?q=${encodeURIComponent(contactSettings.primaryAddress.lines.filter(Boolean).join(', '))}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 px-6 py-3 bg-white rounded-full shadow-md text-teal-700 font-bold hover:shadow-lg hover:-translate-y-1 transition-all"

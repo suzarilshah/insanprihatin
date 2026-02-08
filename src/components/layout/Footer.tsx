@@ -3,9 +3,28 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
+import type { ContactSettings } from '@/lib/contact-settings-types'
 
-export default function Footer() {
+interface FooterProps {
+  contactSettings?: ContactSettings
+}
+
+// Default contact info for when settings aren't passed
+const DEFAULT_ADDRESS = {
+  label: 'Registered Address',
+  lines: [
+    'D-G-05 Jalan PKAK 2',
+    'Pusat Komersil Ayer Keroh',
+    '75450 Ayer Keroh',
+    'Melaka, Malaysia',
+  ],
+}
+
+export default function Footer({ contactSettings }: FooterProps) {
   const t = useTranslations('footer')
+
+  // Use provided settings or defaults
+  const primaryAddress = contactSettings?.primaryAddress || DEFAULT_ADDRESS
 
   const footerLinks = {
     about: [
@@ -116,11 +135,13 @@ export default function Footer() {
 
             {/* Official Address */}
             <address className="not-italic text-gray-400 text-sm leading-relaxed mb-4 max-w-sm">
-              <p className="font-medium text-gray-300 mb-1">Registered Address:</p>
-              D-G-05 Jalan PKAK 2<br />
-              Pusat Komersil Ayer Keroh<br />
-              75450 Ayer Keroh<br />
-              Melaka, Malaysia
+              <p className="font-medium text-gray-300 mb-1">{primaryAddress.label}:</p>
+              {primaryAddress.lines.filter(Boolean).map((line, index) => (
+                <span key={index}>
+                  {line}
+                  {index < primaryAddress.lines.filter(Boolean).length - 1 && <br />}
+                </span>
+              ))}
             </address>
 
             <p className="text-gray-400 leading-relaxed mb-6 max-w-sm">
