@@ -21,8 +21,8 @@ export default function CTA() {
 
   return (
     <section className="relative py-32 overflow-hidden bg-foundation-charcoal">
-      {/* Background FX */}
-      <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.05]" />
+      {/* Background FX - CSS-based grain for performance */}
+      <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E\")" }} />
       <div className="absolute inset-0 bg-gradient-to-br from-foundation-charcoal via-gray-900 to-black" />
       
       {/* Glows */}
@@ -90,9 +90,9 @@ export default function CTA() {
                   placeholder={t('customAmount')}
                   value={customAmount}
                   onChange={(e) => setCustomAmount(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-100 rounded-xl py-4 pl-12 pr-4 font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
+                  className="w-full bg-gray-50 border border-gray-100 rounded-xl py-4 pl-12 pr-4 font-medium text-gray-800 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
                 />
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">RM</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 font-bold">RM</span>
               </div>
 
               <button

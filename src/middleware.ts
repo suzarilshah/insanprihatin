@@ -27,6 +27,16 @@ function addSecurityHeaders(response: NextResponse) {
 // Wrap the auth middleware with NextAuth
 export default auth((req) => {
   const { pathname } = req.nextUrl
+  const host = req.headers.get('host') || ''
+
+  // Redirect non-www to www (fixes CORS preflight issues)
+  // Production only - skip localhost and preview deployments
+  if (host === 'insanprihatin.org') {
+    const url = req.nextUrl.clone()
+    url.host = 'www.insanprihatin.org'
+    url.protocol = 'https'
+    return NextResponse.redirect(url, 301)
+  }
 
   // Get client IP for logging
   const forwardedFor = req.headers.get('x-forwarded-for')

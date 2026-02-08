@@ -46,15 +46,29 @@ export const metadata: Metadata = {
     'Yayasan Insan Prihatin is a prestigious Malaysian foundation dedicated to community service, education, and sustainable development. Join us in making a difference.',
   keywords: [
     'Yayasan Insan Prihatin',
+    'yayasan malaysia',
+    'charity malaysia',
+    'derma online',
+    'sumbangan amal',
+    'bantuan komuniti',
+    'NGO malaysia',
+    'badan kebajikan',
+    'community service malaysia',
+    'nonprofit malaysia',
+    'sedekah online',
+    'zakat fitrah',
+    'tabung amal',
+    'pertubuhan kebajikan',
+    'bantuan pendidikan',
     'Malaysian foundation',
-    'charity Malaysia',
-    'community service',
-    'education foundation',
-    'sustainable development',
-    'social impact',
-    'nonprofit Malaysia',
-    'philanthropic organization',
+    'charity donation malaysia',
   ],
+  other: {
+    'geo.region': 'MY',
+    'geo.placename': 'Kuala Lumpur, Malaysia',
+    'geo.position': '3.139003;101.686855',
+    'ICBM': '3.139003, 101.686855',
+  },
   authors: [{ name: 'Yayasan Insan Prihatin' }],
   creator: 'Yayasan Insan Prihatin',
   publisher: 'Yayasan Insan Prihatin',
@@ -101,10 +115,11 @@ export const metadata: Metadata = {
     google: 'your-google-verification-code',
   },
   alternates: {
-    canonical: '/',
+    canonical: 'https://www.insanprihatin.org',
     languages: {
-      'en-MY': '/',
-      'ms-MY': '/ms',
+      'en': 'https://www.insanprihatin.org/en',
+      'ms': 'https://www.insanprihatin.org/ms',
+      'x-default': 'https://www.insanprihatin.org/en',
     },
   },
 }
@@ -140,8 +155,10 @@ export default function RootLayout({
             `,
           }}
         />
-        {/* Preconnect to external resources for faster loading */}
-        <link rel="preconnect" href="https://images.unsplash.com" />
+        {/* Preconnect to external resources for faster loading (LCP optimization) */}
+        <link rel="preconnect" href="https://sgp.cloud.appwrite.io" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://sgp.cloud.appwrite.io" />
+        <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
 
         {/* Favicons */}

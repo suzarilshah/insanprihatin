@@ -5,6 +5,9 @@ import Image from 'next/image'
 import { Link } from '@/i18n/navigation'
 import { type LocalizedString, type Locale, getLocalizedValue } from '@/i18n/config'
 import { useTranslations } from 'next-intl'
+import { PhotoAttributionOverlay } from '@/components/ui/PhotoAttribution'
+import { useUnsplashTracking } from '@/hooks/useUnsplashTracking'
+import { type StockPhotoItem, DEFAULT_STOCK_PHOTOS } from '@/lib/stock-photo-config'
 
 interface Project {
   id: string
@@ -29,9 +32,9 @@ interface AboutContent {
 }
 
 interface StockPhotoFallbacks {
-  solutionFeatured?: string
-  solutionProject1?: string
-  solutionProject2?: string
+  solutionFeatured?: StockPhotoItem
+  solutionProject1?: StockPhotoItem
+  solutionProject2?: StockPhotoItem
 }
 
 interface SolutionProps {
@@ -42,21 +45,30 @@ interface SolutionProps {
   stockPhotos?: StockPhotoFallbacks
 }
 
-// Default fallback images (HD quality)
-const DEFAULT_FEATURED = 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=85&w=2560&auto=format&fit=crop'
-const DEFAULT_PROJECT1 = 'https://images.unsplash.com/photo-1531206715517-5c0ba140b2b8?q=85&w=1400&auto=format&fit=crop'
-const DEFAULT_PROJECT2 = 'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?q=85&w=1400&auto=format&fit=crop'
-
 export default function Solution({ projects = [], impactStats = [], aboutContent, locale = 'en', stockPhotos }: SolutionProps) {
   const t = useTranslations('solution')
   // Helper to get localized value
   const l = (value: LocalizedString | string | null | undefined): string => {
     return getLocalizedValue(value as LocalizedString, locale)
   }
+
+  // Get stock photos with defaults
+  const featuredStock = stockPhotos?.solutionFeatured || DEFAULT_STOCK_PHOTOS.solutionFeatured
+  const project1Stock = stockPhotos?.solutionProject1 || DEFAULT_STOCK_PHOTOS.solutionProject1
+  const project2Stock = stockPhotos?.solutionProject2 || DEFAULT_STOCK_PHOTOS.solutionProject2
+
+  // Track stock photo views (only track if actually using stock photo)
+  const usesStockFeatured = !projects[0]?.featuredImage
+  const usesStockProject1 = !projects[1]?.featuredImage
+  const usesStockProject2 = !projects[2]?.featuredImage
+
+  useUnsplashTracking(usesStockFeatured ? featuredStock.photoId : null)
+  useUnsplashTracking(usesStockProject1 ? project1Stock.photoId : null)
+  useUnsplashTracking(usesStockProject2 ? project2Stock.photoId : null)
   return (
     <section className="section-padding bg-foundation-charcoal relative overflow-hidden text-white">
-      {/* Dark Aesthetic Background */}
-      <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay" />
+      {/* Dark Aesthetic Background - CSS-based grain for performance */}
+      <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E\")" }} />
       <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-teal-900/20 rounded-full blur-[120px] translate-x-1/2 -translate-y-1/2" />
       
       <div className="container-wide relative z-10">
@@ -100,7 +112,7 @@ export default function Solution({ projects = [], impactStats = [], aboutContent
           
           {/* Main Feature - Large Card */}
           {projects[0] && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
@@ -108,7 +120,7 @@ export default function Solution({ projects = [], impactStats = [], aboutContent
             >
               <Link href={`/projects/${projects[0].slug}`} className="block h-full">
                 <Image
-                  src={projects[0].featuredImage || stockPhotos?.solutionFeatured || DEFAULT_FEATURED}
+                  src={projects[0].featuredImage || featuredStock.url}
                   alt={l(projects[0].title)}
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -129,6 +141,15 @@ export default function Solution({ projects = [], impactStats = [], aboutContent
                     {t('readStory')} <svg className="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                   </span>
                 </div>
+                {/* Unsplash Attribution (only for stock photos) */}
+                {usesStockFeatured && (
+                  <PhotoAttributionOverlay
+                    photographerName={featuredStock.photographerName}
+                    photographerUsername={featuredStock.photographerUsername}
+                    position="bottom-right"
+                    showOnHover={true}
+                  />
+                )}
               </Link>
             </motion.div>
           )}
@@ -151,7 +172,7 @@ export default function Solution({ projects = [], impactStats = [], aboutContent
 
           {/* Secondary Project 1 */}
           {projects[1] && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -160,7 +181,7 @@ export default function Solution({ projects = [], impactStats = [], aboutContent
             >
               <Link href={`/projects/${projects[1].slug}`} className="block h-full">
                 <Image
-                  src={projects[1].featuredImage || stockPhotos?.solutionProject1 || DEFAULT_PROJECT1}
+                  src={projects[1].featuredImage || project1Stock.url}
                   alt={l(projects[1].title)}
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -170,13 +191,22 @@ export default function Solution({ projects = [], impactStats = [], aboutContent
                   <h3 className="text-2xl font-heading text-white mb-2">{l(projects[1].title)}</h3>
                   <p className="text-sm text-gray-200 line-clamp-2">{l(projects[1].description)}</p>
                 </div>
+                {/* Unsplash Attribution (only for stock photos) */}
+                {usesStockProject1 && (
+                  <PhotoAttributionOverlay
+                    photographerName={project1Stock.photographerName}
+                    photographerUsername={project1Stock.photographerUsername}
+                    position="bottom-right"
+                    showOnHover={true}
+                  />
+                )}
               </Link>
             </motion.div>
           )}
 
            {/* Secondary Project 2 */}
            {projects[2] && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -185,7 +215,7 @@ export default function Solution({ projects = [], impactStats = [], aboutContent
             >
               <Link href={`/projects/${projects[2].slug}`} className="block h-full">
                 <Image
-                  src={projects[2].featuredImage || stockPhotos?.solutionProject2 || DEFAULT_PROJECT2}
+                  src={projects[2].featuredImage || project2Stock.url}
                   alt={l(projects[2].title)}
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -195,6 +225,15 @@ export default function Solution({ projects = [], impactStats = [], aboutContent
                   <h3 className="text-2xl font-heading text-white mb-2">{l(projects[2].title)}</h3>
                   <p className="text-sm text-gray-200 line-clamp-2">{l(projects[2].description)}</p>
                 </div>
+                {/* Unsplash Attribution (only for stock photos) */}
+                {usesStockProject2 && (
+                  <PhotoAttributionOverlay
+                    photographerName={project2Stock.photographerName}
+                    photographerUsername={project2Stock.photographerUsername}
+                    position="bottom-right"
+                    showOnHover={true}
+                  />
+                )}
               </Link>
             </motion.div>
           )}
