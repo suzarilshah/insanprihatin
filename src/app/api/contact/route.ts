@@ -2,8 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db, contactSubmissions } from '@/db'
 import { sendContactNotificationEmail } from '@/lib/email'
 import { notifyContactMessage } from '@/lib/actions/notifications'
+import { RateLimiters } from '@/lib/api-rate-limit'
 
 export async function POST(request: NextRequest) {
+  // SECURITY: Rate limit contact form submissions to prevent spam
+  const rateLimitResponse = RateLimiters.contactForm(request)
+  if (rateLimitResponse) {
+    return rateLimitResponse
+  }
+
   try {
     const body = await request.json()
     const { name, email, phone, subject, message } = body

@@ -1,15 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendDonationReceiptEmail } from '@/lib/email'
 import { getDefaultOrganizationConfig } from '@/lib/organization-config'
+import { requireAuth } from '@/lib/auth/server'
+import { RateLimiters } from '@/lib/api-rate-limit'
 
 /**
  * Test Receipt Email API
  *
+ * SECURITY: Requires admin authentication to prevent email abuse.
  * Use this endpoint to test if Resend is configured correctly.
+ *
  * POST /api/test-receipt-email
  * Body: { email: "your@email.com" }
+ * Requires: Valid admin session
  */
 export async function POST(request: NextRequest) {
+  // SECURITY: Require admin authentication
+  try {
+    await requireAuth()
+  } catch {
+    return NextResponse.json(
+      { error: 'Authentication required. Please sign in as admin.' },
+      { status: 401 }
+    )
+  }
+
+  // SECURITY: Rate limit test emails to prevent abuse
+  const rateLimitResponse = RateLimiters.testEndpoint(request)
+  if (rateLimitResponse) {
+    return rateLimitResponse
+  }
+
   try {
     const body = await request.json()
     const testEmail = body.email
@@ -111,6 +132,16 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
+  // SECURITY: Require admin authentication to view config status
+  try {
+    await requireAuth()
+  } catch {
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    )
+  }
+
   return NextResponse.json({
     message: 'Test Receipt Email Endpoint',
     usage: 'POST /api/test-receipt-email with body: { "email": "your@email.com" }',

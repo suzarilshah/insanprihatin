@@ -92,9 +92,15 @@ export function isValidTokenFormat(token: string, minLength = 10): boolean {
 
 /**
  * Checks if a string is the development bypass token
+ * SECURITY: Always returns false in production to prevent auth bypass
  * @param token - The token to check
- * @returns true if this is the dev token
+ * @returns true if this is the dev token (only in development)
+ * @deprecated This function should not be used in production code
  */
 export function isDevToken(token: string): boolean {
+  // SECURITY: Never allow dev token bypass in production
+  if (process.env.NODE_ENV === 'production') {
+    return false
+  }
   return token === 'dev-token'
 }

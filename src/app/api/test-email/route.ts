@@ -1,15 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSession } from '@/lib/auth/server'
+import { requireAuth } from '@/lib/auth/server'
 import { sendTestEmail } from '@/lib/email'
+import { RateLimiters } from '@/lib/api-rate-limit'
 
 export async function POST(request: NextRequest) {
+  // SECURITY: Require admin authentication with group verification
   try {
-    // Verify authentication
-    const session = await getSession()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    await requireAuth()
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
+  // SECURITY: Rate limit test emails
+  const rateLimitResponse = RateLimiters.testEndpoint(request)
+  if (rateLimitResponse) {
+    return rateLimitResponse
+  }
+
+  try {
     const body = await request.json()
     const { email } = body
 

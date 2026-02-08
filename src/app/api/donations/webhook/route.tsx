@@ -179,8 +179,43 @@ export async function POST(request: NextRequest) {
 
     // ===== MAP PAYMENT STATUS =====
 
-    const newStatus = ToyyibPayService.mapPaymentStatus(paymentStatus)
+    let newStatus = ToyyibPayService.mapPaymentStatus(paymentStatus)
     console.log(`[Webhook ${requestId}] ToyyibPay status '${paymentStatus}' mapped to '${newStatus}'`)
+
+    // ===== SECURITY: VERIFY WITH TOYYIBPAY API =====
+    // Before marking as completed, verify via API to prevent forged webhooks
+    if (newStatus === 'completed' && donation.toyyibpayBillCode && ToyyibPayService.isConfigured()) {
+      try {
+        console.log(`[Webhook ${requestId}] Verifying payment via ToyyibPay API...`)
+        const transactions = await ToyyibPayService.getBillTransactions(donation.toyyibpayBillCode)
+
+        if (transactions && transactions.length > 0) {
+          const latestTransaction = transactions[0]
+          const verifiedStatus = ToyyibPayService.mapPaymentStatus(latestTransaction.billpaymentStatus)
+
+          if (verifiedStatus !== 'completed') {
+            console.warn(`[Webhook ${requestId}] SECURITY: Webhook claimed success but API shows '${verifiedStatus}'`)
+            await logWebhookEvent(donation.id, 'verification_mismatch', {
+              webhookStatus: paymentStatus,
+              apiStatus: latestTransaction.billpaymentStatus,
+              verifiedStatus,
+            }, request)
+            // Trust the API over the webhook
+            newStatus = verifiedStatus
+          } else {
+            console.log(`[Webhook ${requestId}] Payment verified via API`)
+          }
+        } else {
+          console.warn(`[Webhook ${requestId}] No transactions found via API, proceeding with webhook status`)
+        }
+      } catch (verifyError) {
+        console.error(`[Webhook ${requestId}] API verification failed:`, verifyError)
+        await logWebhookEvent(donation.id, 'verification_error', {
+          error: verifyError instanceof Error ? verifyError.message : 'Unknown error',
+        }, request)
+        // Continue with webhook status but log the verification failure
+      }
+    }
 
     // ===== UPDATE DONATION =====
 

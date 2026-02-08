@@ -1,16 +1,17 @@
 import { NextResponse } from 'next/server'
 import { db, contactSubmissions } from '@/db'
 import { desc } from 'drizzle-orm'
-import { getSession } from '@/lib/auth/server'
+import { requireAuth } from '@/lib/auth/server'
 
 export async function GET() {
+  // SECURITY: Require admin authentication with group membership verification
   try {
-    // Verify authentication - only admins can view messages
-    const session = await getSession()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    await requireAuth()
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
+  try {
     const messages = await db.query.contactSubmissions.findMany({
       orderBy: [desc(contactSubmissions.createdAt)],
     })

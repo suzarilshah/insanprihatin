@@ -4,6 +4,8 @@ import { eq, desc, sql } from 'drizzle-orm'
 import { notifyDonationReceived } from '@/lib/actions/notifications'
 import { ToyyibPayService, ToyyibPayError } from '@/lib/toyyibpay'
 import { headers } from 'next/headers'
+import { RateLimiters } from '@/lib/api-rate-limit'
+import { requireAuth } from '@/lib/auth/server'
 
 /**
  * Donation API Routes
@@ -11,9 +13,10 @@ import { headers } from 'next/headers'
  * Security measures:
  * - Server-side only ToyyibPay API calls
  * - Input validation and sanitization
- * - Rate limiting (via middleware)
+ * - Rate limiting on donation creation
  * - Secure logging (no API keys in logs)
  * - Session tracking for fraud prevention
+ * - Authentication required for admin operations (stats, PATCH)
  */
 
 // Get base URL dynamically from request or environment
@@ -77,7 +80,17 @@ export async function GET(request: NextRequest) {
     const stats = searchParams.get('stats')
 
     // Get donation stats for admin dashboard
+    // SECURITY: Stats require authentication
     if (stats === 'true') {
+      try {
+        await requireAuth()
+      } catch {
+        return NextResponse.json(
+          { error: 'Authentication required to view donation statistics' },
+          { status: 401 }
+        )
+      }
+
       const statsData = await db.select({
         total: sql<number>`COALESCE(SUM(amount), 0)`,
         count: sql<number>`COUNT(*)`,
@@ -162,6 +175,12 @@ export async function GET(request: NextRequest) {
 
 // POST - Create new donation and initiate payment
 export async function POST(request: NextRequest) {
+  // SECURITY: Rate limit donation creation to prevent abuse
+  const rateLimitResponse = RateLimiters.donationCreate(request)
+  if (rateLimitResponse) {
+    return rateLimitResponse
+  }
+
   const requestId = `donation_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`
   console.log(`\n${'='.repeat(60)}`)
   console.log(`[Donation ${requestId}] New donation request received`)
@@ -457,6 +476,16 @@ export async function POST(request: NextRequest) {
 
 // PATCH - Update donation status (for admin)
 export async function PATCH(request: NextRequest) {
+  // SECURITY: Require admin authentication for status updates
+  try {
+    await requireAuth()
+  } catch {
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    )
+  }
+
   try {
     const body = await request.json()
     const { reference, status, reason } = body

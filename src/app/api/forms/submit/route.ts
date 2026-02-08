@@ -3,6 +3,7 @@ import { createFormSubmission, getFormBySlug, FormField } from '@/lib/actions/fo
 import { sendFormNotificationEmail } from '@/lib/email'
 import { notifyFormSubmission } from '@/lib/actions/notifications'
 import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
+import { RateLimiters } from '@/lib/api-rate-limit'
 
 // Helper to get string from LocalizedString
 const getTitle = (title: LocalizedString | string | null | undefined): string => {
@@ -12,6 +13,12 @@ const getTitle = (title: LocalizedString | string | null | undefined): string =>
 }
 
 export async function POST(request: NextRequest) {
+  // SECURITY: Rate limit form submissions to prevent spam/abuse
+  const rateLimitResponse = RateLimiters.formSubmission(request)
+  if (rateLimitResponse) {
+    return rateLimitResponse
+  }
+
   try {
     const body = await request.json()
     const {

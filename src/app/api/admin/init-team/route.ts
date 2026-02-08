@@ -2,17 +2,50 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db, teamMembers } from '@/db'
 import { revalidatePath } from 'next/cache'
 import { randomUUID } from 'crypto'
+import { requireAuth } from '@/lib/auth/server'
 
-// One-time setup endpoint for initializing official team members
-// Use with: curl -X POST http://localhost:3000/api/admin/init-team -H "X-Setup-Token: YIP-INIT-2025"
+/**
+ * One-time setup endpoint for initializing official team members
+ *
+ * SECURITY: Requires both:
+ * 1. Valid admin session (Azure AD SSO with webadmin group)
+ * 2. Setup token from environment variable (ADMIN_SETUP_TOKEN)
+ *
+ * Usage (authenticated admin only):
+ * curl -X POST http://localhost:3000/api/admin/init-team \
+ *   -H "X-Setup-Token: $ADMIN_SETUP_TOKEN" \
+ *   -H "Cookie: <session-cookie>"
+ */
 export async function POST(request: NextRequest) {
   try {
-    // Check for setup token to prevent unauthorized access
+    // SECURITY: Require admin authentication first
+    try {
+      await requireAuth()
+    } catch {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required. Please sign in as admin.' },
+        { status: 401 }
+      )
+    }
+
+    // SECURITY: Check for setup token from environment variable
     const setupToken = request.headers.get('X-Setup-Token')
-    if (setupToken !== 'YIP-INIT-2025') {
+    const expectedToken = process.env.ADMIN_SETUP_TOKEN
+
+    // In production, require the environment variable to be set
+    if (!expectedToken) {
+      console.error('[init-team] ADMIN_SETUP_TOKEN environment variable is not set')
+      return NextResponse.json(
+        { success: false, error: 'Setup token not configured. Set ADMIN_SETUP_TOKEN in environment.' },
+        { status: 500 }
+      )
+    }
+
+    if (!setupToken || setupToken !== expectedToken) {
+      console.warn('[init-team] Invalid setup token attempt')
       return NextResponse.json(
         { success: false, error: 'Invalid setup token' },
-        { status: 401 }
+        { status: 403 }
       )
     }
 
