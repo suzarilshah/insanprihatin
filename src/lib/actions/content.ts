@@ -524,6 +524,15 @@ export async function updateSiteSetting(key: string, value: unknown) {
     user: { id: user.id, email: user.email, name: user.name },
   })
 
+  // Revalidate relevant paths based on the setting key
+  if (key === 'contactSettings') {
+    revalidatePath('/contact')
+    revalidatePath('/en/contact')
+    revalidatePath('/ms/contact')
+  } else if (key === 'siteName' || key === 'siteTagline') {
+    revalidatePath('/')
+  }
+
   return { success: true }
 }
 
