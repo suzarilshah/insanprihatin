@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform } from 'framer-motion'
 import Image from 'next/image'
 import { Link } from '@/i18n/navigation'
 import { useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import { OrgChart } from '@/components/org-chart'
 import { type LocalizedString, type Locale, getLocalizedValue } from '@/i18n/config'
 
@@ -67,33 +68,6 @@ interface AboutContentProps {
   locale?: Locale
 }
 
-const timeline = [
-  {
-    year: 'Q1 2025',
-    title: 'The Foundation',
-    description: 'Officially established Yayasan Insan Prihatin to address systemic community needs.',
-    icon: '🌱',
-  },
-  {
-    year: 'Q2 2025',
-    title: 'First Initiative',
-    description: 'Launched our pilot education support program for underprivileged students.',
-    icon: '🎓',
-  },
-  {
-    year: 'Q3 2025',
-    title: 'Community Outreach',
-    description: 'Expanded operations to include healthcare access in rural areas.',
-    icon: '🏥',
-  },
-  {
-    year: 'Q4 2025',
-    title: 'Looking Ahead',
-    description: 'Planning nationwide expansion of our digital literacy programs.',
-    icon: '🚀',
-  },
-]
-
 const defaultImpactStats = [
   { value: 'New', label: 'Organization', description: 'Fresh perspective on charity' },
   { value: '100%', label: 'Commitment', description: 'Dedicated to transparency' },
@@ -102,6 +76,7 @@ const defaultImpactStats = [
 ]
 
 export default function AboutContent({ teamMembers, aboutData, impactStats, locale = 'en' }: AboutContentProps) {
+  const t = useTranslations('aboutPage')
   const heroRef = useRef<HTMLElement>(null)
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -133,6 +108,9 @@ export default function AboutContent({ teamMembers, aboutData, impactStats, loca
     : 'A Malaysia where every individual has equal opportunities to thrive, contribute to society, and live with dignity.')
   const values = (aboutData?.values as string[] | null) || ['Compassion', 'Integrity', 'Excellence', 'Collaboration', 'Innovation']
 
+  const timelineKeys = ['q1', 'q2', 'q3', 'q4'] as const
+  const timelineIcons = ['🌱', '🎓', '🏥', '🚀']
+
   return (
     <div>
       {/* Premium Hero Section */}
@@ -151,7 +129,7 @@ export default function AboutContent({ teamMembers, aboutData, impactStats, loca
 
         {/* Cinematic Gradient Overlay - Nav Safe */}
         <div className="absolute inset-0 bg-gradient-to-b from-foundation-charcoal/95 via-foundation-charcoal/80 to-foundation-charcoal/40" />
-        
+
         {/* Texture - CSS-based grain for performance */}
         <div className="absolute inset-0 opacity-[0.04] mix-blend-overlay pointer-events-none" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E\")" }} />
 
@@ -176,7 +154,7 @@ export default function AboutContent({ teamMembers, aboutData, impactStats, loca
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/10 mb-8"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              <span className="text-sm font-medium text-white/90 tracking-widest uppercase">Who We Are</span>
+              <span className="text-sm font-medium text-white/90 tracking-widest uppercase">{t('badge')}</span>
             </motion.div>
 
             <h1 className="heading-display text-white mb-8 leading-[1.1]">
@@ -186,7 +164,7 @@ export default function AboutContent({ teamMembers, aboutData, impactStats, loca
                 transition={{ delay: 0.3 }}
                 className="block"
               >
-                Architects of
+                {t('heroTitle')}
               </motion.span>
               <motion.span
                 initial={{ opacity: 0, y: 30 }}
@@ -194,7 +172,7 @@ export default function AboutContent({ teamMembers, aboutData, impactStats, loca
                 transition={{ delay: 0.4 }}
                 className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 animate-gradient-x"
               >
-                Sustainable Hope
+                {t('heroTitleHighlight')}
               </motion.span>
             </h1>
 
@@ -204,9 +182,7 @@ export default function AboutContent({ teamMembers, aboutData, impactStats, loca
               transition={{ delay: 0.5 }}
               className="body-large text-white/80 max-w-2xl border-l-2 border-amber-400/50 pl-6"
             >
-              We are a newly established foundation with a bold vision. We are a movement of dedicated professionals, 
-              partners, and volunteers committed to engineering long-term solutions 
-              for Malaysia&apos;s most pressing social challenges.
+              {t('heroDescription')}
             </motion.p>
           </motion.div>
         </motion.div>
@@ -223,7 +199,7 @@ export default function AboutContent({ teamMembers, aboutData, impactStats, loca
             transition={{ duration: 2, repeat: Infinity }}
             className="flex flex-col items-center gap-2"
           >
-            <span className="text-white/40 text-[10px] uppercase tracking-[0.2em]">Our Vision</span>
+            <span className="text-white/40 text-[10px] uppercase tracking-[0.2em]">{t('scrollIndicator')}</span>
             <div className="w-[1px] h-12 bg-gradient-to-b from-white/0 via-white/50 to-white/0" />
           </motion.div>
         </motion.div>
@@ -264,7 +240,7 @@ export default function AboutContent({ teamMembers, aboutData, impactStats, loca
         <div className="container-wide relative z-10">
           <div className="text-center mb-16">
             <h2 className="heading-section text-foundation-charcoal">
-              Our <span className="text-teal-600 italic font-serif">Compass</span>
+              {t('compass.title')} <span className="text-teal-600 italic font-serif">{t('compass.titleHighlight')}</span>
             </h2>
           </div>
 
@@ -284,7 +260,7 @@ export default function AboutContent({ teamMembers, aboutData, impactStats, loca
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
                   </div>
-                  <h3 className="font-display text-2xl font-bold text-foundation-charcoal">Our Mission</h3>
+                  <h3 className="font-display text-2xl font-bold text-foundation-charcoal">{t('mission.title')}</h3>
                 </div>
                 <p className="text-xl text-gray-600 leading-relaxed font-light">
                   {mission}
@@ -302,7 +278,7 @@ export default function AboutContent({ teamMembers, aboutData, impactStats, loca
             >
               <div className="absolute inset-0 bg-gradient-to-br from-foundation-charcoal to-gray-900" />
               <div className="absolute bottom-0 right-0 w-48 h-48 bg-amber-500/10 rounded-full translate-y-1/4 translate-x-1/4" />
-              
+
               <div className="relative z-10">
                 <div className="inline-flex items-center gap-3 mb-6">
                   <div className="w-12 h-12 bg-white/10 text-amber-400 rounded-xl flex items-center justify-center backdrop-blur-sm">
@@ -311,7 +287,7 @@ export default function AboutContent({ teamMembers, aboutData, impactStats, loca
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
                   </div>
-                  <h3 className="font-display text-2xl font-bold text-white">Our Vision</h3>
+                  <h3 className="font-display text-2xl font-bold text-white">{t('vision.title')}</h3>
                 </div>
                 <p className="text-lg text-gray-300 leading-relaxed">
                   {vision}
@@ -327,9 +303,9 @@ export default function AboutContent({ teamMembers, aboutData, impactStats, loca
               transition={{ delay: 0.2 }}
               className="lg:col-span-3 bg-white p-10 rounded-3xl shadow-lg border border-gray-100"
             >
-              <h3 className="font-display text-2xl font-bold text-foundation-charcoal mb-8 text-center">Core Values</h3>
+              <h3 className="font-display text-2xl font-bold text-foundation-charcoal mb-8 text-center">{t('values.title')}</h3>
               <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                {(Array.isArray(values) ? values : ['Compassion', 'Integrity', 'Excellence', 'Collaboration', 'Innovation']).map((value, i) => (
+                {(Array.isArray(values) ? values : ['Compassion', 'Integrity', 'Excellence', 'Collaboration', 'Innovation']).map((value) => (
                   <motion.div
                     key={String(value)}
                     whileHover={{ y: -5 }}
@@ -352,7 +328,7 @@ export default function AboutContent({ teamMembers, aboutData, impactStats, loca
         <div className="container-wide relative">
           <div className="text-center mb-20">
             <h2 className="heading-section text-foundation-charcoal">
-              Our <span className="text-teal-600 italic font-serif">Founding Roadmap</span>
+              {t('timeline.title')} <span className="text-teal-600 italic font-serif">{t('timeline.titleHighlight')}</span>
             </h2>
           </div>
 
@@ -361,9 +337,9 @@ export default function AboutContent({ teamMembers, aboutData, impactStats, loca
             <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-teal-200 via-teal-100 to-transparent -translate-x-1/2 hidden md:block" />
 
             <div className="space-y-12">
-              {timeline.map((item, index) => (
+              {timelineKeys.map((key, index) => (
                 <motion.div
-                  key={item.year}
+                  key={key}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -375,15 +351,15 @@ export default function AboutContent({ teamMembers, aboutData, impactStats, loca
                   {/* Content Side */}
                   <div className={`flex-1 ${index % 2 === 0 ? 'md:text-right md:pr-12' : 'md:text-left md:pl-12'}`}>
                     <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 inline-block hover:border-teal-200 transition-colors group">
-                      <div className="font-display text-3xl font-bold text-teal-600 mb-2 group-hover:text-amber-500 transition-colors">{item.year}</div>
-                      <h3 className="font-heading text-lg font-semibold text-foundation-charcoal mb-2">{item.title}</h3>
-                      <p className="text-gray-500 text-sm max-w-xs">{item.description}</p>
+                      <div className="font-display text-3xl font-bold text-teal-600 mb-2 group-hover:text-amber-500 transition-colors">{t(`timeline.${key}.year`)}</div>
+                      <h3 className="font-heading text-lg font-semibold text-foundation-charcoal mb-2">{t(`timeline.${key}.title`)}</h3>
+                      <p className="text-gray-500 text-sm max-w-xs">{t(`timeline.${key}.description`)}</p>
                     </div>
                   </div>
 
                   {/* Center Marker */}
                   <div className="relative z-10 flex items-center justify-center w-12 h-12 bg-white border-4 border-teal-50 rounded-full shadow-md">
-                    <span className="text-xl">{item.icon}</span>
+                    <span className="text-xl">{timelineIcons[index]}</span>
                   </div>
 
                   {/* Empty Side for Balance */}
@@ -408,14 +384,13 @@ export default function AboutContent({ teamMembers, aboutData, impactStats, loca
           >
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-gray-200 shadow-sm mx-auto mb-6">
               <span className="w-1.5 h-1.5 rounded-full bg-teal-500" />
-              <span className="text-sm font-medium text-teal-700 uppercase tracking-wide">The Stewards</span>
+              <span className="text-sm font-medium text-teal-700 uppercase tracking-wide">{t('leadership.badge')}</span>
             </div>
             <h2 className="heading-section text-foundation-charcoal mb-6">
-              Leadership & Governance
+              {t('leadership.title')}
             </h2>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              Guided by principles of integrity and excellence, our leadership ensures 
-              every resource is maximized for community benefit.
+              {t('leadership.description')}
             </p>
           </motion.div>
 
@@ -461,16 +436,14 @@ export default function AboutContent({ teamMembers, aboutData, impactStats, loca
             >
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-6">
                 <span className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
-                <span className="text-sm font-medium text-white/80 uppercase tracking-wide">Radical Transparency</span>
+                <span className="text-sm font-medium text-white/80 uppercase tracking-wide">{t('reports.badge')}</span>
               </div>
 
               <h2 className="heading-section text-white mb-6">
-                Accountability in Action
+                {t('reports.title')}
               </h2>
               <p className="text-gray-400 text-lg leading-relaxed mb-10">
-                Trust is our most valuable currency. We commit to publishing annual audits 
-                and impact reports to ensure every stakeholder knows exactly how their 
-                contributions are transforming lives.
+                {t('reports.description')}
               </p>
 
               <div className="space-y-4">
@@ -483,8 +456,8 @@ export default function AboutContent({ teamMembers, aboutData, impactStats, loca
                       </svg>
                     </div>
                     <div>
-                      <div className="text-white font-semibold text-lg">2025 Annual Report</div>
-                      <div className="text-gray-500 text-sm">Coming Early 2026</div>
+                      <div className="text-white font-semibold text-lg">{t('reports.annualReport')} 2025</div>
+                      <div className="text-gray-500 text-sm">{t('reports.comingSoon')}</div>
                     </div>
                   </div>
                 </div>
@@ -523,8 +496,8 @@ export default function AboutContent({ teamMembers, aboutData, impactStats, loca
                     >
                       100%
                     </motion.div>
-                    <div className="text-xl text-white/90 font-medium">Transparency</div>
-                    <div className="text-teal-300 text-sm mt-1">Audited Annually</div>
+                    <div className="text-xl text-white/90 font-medium">{t('reports.transparency')}</div>
+                    <div className="text-teal-300 text-sm mt-1">{t('reports.auditedAnnually')}</div>
                   </div>
                 </div>
 
@@ -534,14 +507,14 @@ export default function AboutContent({ teamMembers, aboutData, impactStats, loca
                   transition={{ duration: 4, repeat: Infinity }}
                   className="absolute top-4 right-4 bg-white/10 backdrop-blur-md border border-white/20 px-4 py-2 rounded-full"
                 >
-                  <span className="text-white/80 text-sm font-medium">ISO Pending</span>
+                  <span className="text-white/80 text-sm font-medium">{t('reports.isoPending')}</span>
                 </motion.div>
                 <motion.div
                   animate={{ y: [0, 10, 0] }}
                   transition={{ duration: 5, repeat: Infinity }}
                   className="absolute bottom-4 left-4 bg-white/10 backdrop-blur-md border border-white/20 px-4 py-2 rounded-full"
                 >
-                  <span className="text-white/80 text-sm font-medium">SSM Registered</span>
+                  <span className="text-white/80 text-sm font-medium">{t('reports.ssmRegistered')}</span>
                 </motion.div>
               </div>
             </motion.div>
@@ -580,15 +553,15 @@ export default function AboutContent({ teamMembers, aboutData, impactStats, loca
             </motion.span>
 
             <h2 className="heading-section text-white mb-6">
-              Ready to Make a Difference?
+              {t('cta.title')}
             </h2>
             <p className="text-white/80 text-xl mb-10 max-w-2xl mx-auto">
-              Join us in our mission to create lasting positive change for communities across Malaysia.
+              {t('cta.description')}
             </p>
 
             <div className="flex flex-wrap justify-center gap-4">
               <Link href="/donate" className="btn-secondary shadow-lg hover:shadow-glow-amber">
-                Donate Now
+                {t('cta.donate')}
                 <svg className="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
@@ -597,7 +570,7 @@ export default function AboutContent({ teamMembers, aboutData, impactStats, loca
                 href="/contact"
                 className="btn-outline border-white/40 text-white hover:bg-white hover:text-teal-900 hover:border-white"
               >
-                Contact Us
+                {t('cta.contact')}
               </Link>
             </div>
           </motion.div>

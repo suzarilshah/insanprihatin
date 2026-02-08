@@ -1,45 +1,33 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { useTranslations } from 'next-intl'
 
-const steps = [
-  {
-    id: '01',
-    title: "Identify",
-    description: "We work directly with local leaders to identify the most urgent needs in underserved areas.",
-    color: "from-blue-400 to-blue-600"
-  },
-  {
-    id: '02',
-    title: "Mobilize",
-    description: "Resources are gathered and volunteers are deployed with precision and speed.",
-    color: "from-teal-400 to-teal-600"
-  },
-  {
-    id: '03',
-    title: "Transform",
-    description: "Immediate aid transitions into long-term sustainable development programs.",
-    color: "from-amber-400 to-amber-600"
-  }
+const stepKeys = [
+  { id: '01', key: 'identify', color: 'from-blue-400 to-blue-600' },
+  { id: '02', key: 'mobilize', color: 'from-teal-400 to-teal-600' },
+  { id: '03', key: 'transform', color: 'from-amber-400 to-amber-600' },
 ]
 
 export default function HowItWorks() {
+  const t = useTranslations('howItWorks')
+
   return (
     <section className="section-padding bg-white relative overflow-hidden">
-      
+
       <div className="container-wide">
         <div className="text-center max-w-3xl mx-auto mb-20">
-          <motion.h2 
+          <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="heading-section text-foundation-charcoal mb-6"
           >
-            A Transparent Path to <br />
-            <span className="text-teal-600 italic font-serif">Real Change</span>
+            {t('title')} <br />
+            <span className="text-teal-600 italic font-serif">{t('titleHighlight')}</span>
           </motion.h2>
           <p className="body-large text-gray-600">
-            We&apos;ve removed the bureaucracy. Your help goes directly to where it&apos;s needed, faster and more effectively.
+            {t('description')}
           </p>
         </div>
 
@@ -47,7 +35,7 @@ export default function HowItWorks() {
           {/* Connecting Line (Desktop) */}
           <div className="absolute top-12 left-0 w-full h-[2px] bg-gray-100 hidden md:block -z-10" />
 
-          {steps.map((step, i) => (
+          {stepKeys.map((step, i) => (
             <motion.div
               key={step.id}
               initial={{ opacity: 0, y: 40 }}
@@ -66,10 +54,10 @@ export default function HowItWorks() {
 
               <div className="text-center px-4">
                 <h3 className="font-heading text-xl font-bold text-foundation-charcoal mb-3 group-hover:text-teal-600 transition-colors">
-                  {step.title}
+                  {t(`steps.${step.key}.title`)}
                 </h3>
                 <p className="text-gray-600 text-sm leading-relaxed">
-                  {step.description}
+                  {t(`steps.${step.key}.description`)}
                 </p>
               </div>
             </motion.div>

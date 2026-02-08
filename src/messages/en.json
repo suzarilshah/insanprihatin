@@ -467,5 +467,209 @@
     "siteName": "Yayasan Insan Prihatin",
     "siteDescription": "A prestigious Malaysian foundation dedicated to community service, education, and sustainable development.",
     "keywords": "charity, foundation, Malaysia, community service, education, sustainable development"
+  },
+  "problem": {
+    "badge": "The Reality",
+    "title": "The Silent Crisis in",
+    "titleHighlight": "Our Backyard",
+    "description": "While skylines rise, thousands are left in the shadows. The gap between survival and stability is widening, leaving vulnerable communities trapped in a cycle of poverty that is impossible to break without intervention.",
+    "stat": "2.4M",
+    "statDescription": "Families in Malaysia currently living below the relative poverty line.",
+    "imageAlt": "Community struggle during monsoon",
+    "barriers": {
+      "systemic": {
+        "title": "Systemic Barriers",
+        "description": "Lack of documentation and access prevents basic aid."
+      },
+      "health": {
+        "title": "Health Inequality",
+        "description": "Treatable conditions become life sentences without care."
+      },
+      "education": {
+        "title": "Education Gap",
+        "description": "Children inherit poverty instead of opportunity."
+      }
+    }
+  },
+  "howItWorks": {
+    "title": "A Transparent Path to",
+    "titleHighlight": "Real Change",
+    "description": "We've removed the bureaucracy. Your help goes directly to where it's needed, faster and more effectively.",
+    "steps": {
+      "identify": {
+        "title": "Identify",
+        "description": "We work directly with local leaders to identify the most urgent needs in underserved areas."
+      },
+      "mobilize": {
+        "title": "Mobilize",
+        "description": "Resources are gathered and volunteers are deployed with precision and speed."
+      },
+      "transform": {
+        "title": "Transform",
+        "description": "Immediate aid transitions into long-term sustainable development programs."
+      }
+    }
+  },
+  "projectsPage": {
+    "badge": "Our Impact Portfolio",
+    "heroTitle": "Engineering",
+    "heroTitleHighlight": "Sustainable Change",
+    "heroDescription": "We don't just provide aid; we build systems. From infrastructure to education, every project is designed for long-term community resilience and measurable outcomes.",
+    "stats": {
+      "activeProjects": "Active Projects",
+      "livesImpacted": "Lives Impacted",
+      "communitiesServed": "Communities Served"
+    },
+    "initiatives": {
+      "title": "Our",
+      "titleHighlight": "Initiatives",
+      "description": "Filter by category to see how we are addressing specific challenges across the nation."
+    },
+    "categories": {
+      "all": "All Projects",
+      "education": "Education",
+      "healthcare": "Healthcare",
+      "environment": "Environment",
+      "community": "Community"
+    },
+    "noProjects": {
+      "title": "No Projects Yet",
+      "description": "We're working on exciting new projects. Check back soon!",
+      "cta": "Get Involved"
+    },
+    "card": {
+      "beneficiaries": "beneficiaries",
+      "viewImpact": "View Impact"
+    },
+    "cta": {
+      "badge": "Scale Our Impact",
+      "title": "Scale Our Impact",
+      "description": "We have the roadmap, but we need fuel. Your contribution accelerates essential projects in communities that cannot wait.",
+      "donate": "Make a Donation",
+      "partner": "Partner With Us"
+    },
+    "impactStats": {
+      "targetFund": "Target Impact Fund",
+      "transparencyRate": "Transparency Rate",
+      "yearEstablished": "Year Established",
+      "hiddenCosts": "Hidden Costs"
+    }
+  },
+  "blogPage": {
+    "badge": "The Journal",
+    "heroTitle": "Chronicles of",
+    "heroTitleHighlight": "Transformation",
+    "heroDescription": "Voices from the ground, updates on our progress, and stories of the growing impact we are building together. This is where our journey finds its narrative.",
+    "editorsPick": "Editor's Pick",
+    "readTime": "read",
+    "readStory": "Read Story",
+    "read": "Read",
+    "latestUpdates": "Latest",
+    "latestUpdatesHighlight": "Updates",
+    "categories": {
+      "all": "All Posts",
+      "news": "News",
+      "stories": "Impact Stories",
+      "events": "Events",
+      "announcements": "Announcements"
+    },
+    "noPosts": {
+      "title": "No Blog Posts Yet",
+      "description": "We're working on great content. Check back soon!",
+      "cta": "Stay in Touch"
+    },
+    "newsletter": {
+      "title": "Join Our Community of Changemakers",
+      "description": "Get exclusive updates on our projects, inspiring stories from the field, and invitations to upcoming events.",
+      "placeholder": "Enter your email address",
+      "submit": "Subscribe Now",
+      "disclaimer": "We respect your inbox. Zero spam, just impact. Unsubscribe anytime."
+    }
+  },
+  "methodology": {
+    "badge": "Our Approach",
+    "title": "Built for",
+    "titleHighlight": "Longevity",
+    "description": "We move beyond temporary aid to establish systems of self-reliance.",
+    "steps": {
+      "assessment": {
+        "title": "Needs Assessment",
+        "description": "We work directly with local leaders to identify the most urgent gaps in education and infrastructure."
+      },
+      "planning": {
+        "title": "Strategic Planning",
+        "description": "Our experts design sustainable solutions that use local resources and empower community ownership."
+      },
+      "impact": {
+        "title": "Sustainable Impact",
+        "description": "We don't just build; we train, monitor, and ensure long-term success before handing over."
+      }
+    }
+  },
+  "aboutPage": {
+    "badge": "Who We Are",
+    "heroTitle": "Architects of",
+    "heroTitleHighlight": "Sustainable Hope",
+    "heroDescription": "We are a newly established foundation with a bold vision. We are a movement of dedicated professionals, partners, and volunteers committed to engineering long-term solutions for Malaysia's most pressing social challenges.",
+    "scrollIndicator": "Our Vision",
+    "compass": {
+      "title": "Our",
+      "titleHighlight": "Compass"
+    },
+    "mission": {
+      "title": "Our Mission"
+    },
+    "vision": {
+      "title": "Our Vision"
+    },
+    "values": {
+      "title": "Core Values"
+    },
+    "timeline": {
+      "title": "Our",
+      "titleHighlight": "Founding Roadmap",
+      "q1": {
+        "year": "Q1 2025",
+        "title": "The Foundation",
+        "description": "Officially established Yayasan Insan Prihatin to address systemic community needs."
+      },
+      "q2": {
+        "year": "Q2 2025",
+        "title": "First Initiative",
+        "description": "Launched our pilot education support program for underprivileged students."
+      },
+      "q3": {
+        "year": "Q3 2025",
+        "title": "Community Outreach",
+        "description": "Expanded operations to include healthcare access in rural areas."
+      },
+      "q4": {
+        "year": "Q4 2025",
+        "title": "Looking Ahead",
+        "description": "Planning nationwide expansion of our digital literacy programs."
+      }
+    },
+    "leadership": {
+      "badge": "The Stewards",
+      "title": "Leadership & Governance",
+      "description": "Guided by principles of integrity and excellence, our leadership ensures every resource is maximized for community benefit."
+    },
+    "reports": {
+      "badge": "Radical Transparency",
+      "title": "Accountability in Action",
+      "description": "Trust is our most valuable currency. We commit to publishing annual audits and impact reports to ensure every stakeholder knows exactly how their contributions are transforming lives.",
+      "annualReport": "Annual Report",
+      "comingSoon": "Coming Early 2026",
+      "transparency": "Transparency",
+      "auditedAnnually": "Audited Annually",
+      "isoPending": "ISO Pending",
+      "ssmRegistered": "SSM Registered"
+    },
+    "cta": {
+      "title": "Ready to Make a Difference?",
+      "description": "Join us in our mission to create lasting positive change for communities across Malaysia.",
+      "donate": "Donate Now",
+      "contact": "Contact Us"
+    }
   }
 }

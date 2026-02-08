@@ -467,5 +467,209 @@
     "siteName": "Yayasan Insan Prihatin",
     "siteDescription": "Sebuah yayasan Malaysia yang berprestij yang berdedikasi untuk perkhidmatan komuniti, pendidikan, dan pembangunan mampan.",
     "keywords": "amal, yayasan, Malaysia, perkhidmatan komuniti, pendidikan, pembangunan mampan"
+  },
+  "problem": {
+    "badge": "Realiti Semasa",
+    "title": "Krisis Senyap di",
+    "titleHighlight": "Halaman Sendiri",
+    "description": "Di sebalik kemegahan bangunan pencakar langit, ribuan rakyat masih terperangkap dalam bayang-bayang. Jurang antara kemiskinan dan kehidupan stabil semakin melebar, memerangkap komuniti terpinggir dalam lingkaran kemiskinan yang sukar diputuskan tanpa bantuan.",
+    "stat": "2.4 Juta",
+    "statDescription": "Keluarga di Malaysia kini hidup di bawah garis kemiskinan relatif.",
+    "imageAlt": "Perjuangan komuniti ketika musim tengkujuh",
+    "barriers": {
+      "systemic": {
+        "title": "Halangan Sistemik",
+        "description": "Ketiadaan dokumen dan akses menghalang bantuan asas."
+      },
+      "health": {
+        "title": "Ketidaksamaan Kesihatan",
+        "description": "Penyakit yang boleh dirawat menjadi hukuman seumur hidup tanpa rawatan."
+      },
+      "education": {
+        "title": "Jurang Pendidikan",
+        "description": "Anak-anak mewarisi kemiskinan, bukan peluang."
+      }
+    }
+  },
+  "howItWorks": {
+    "title": "Laluan Telus ke Arah",
+    "titleHighlight": "Perubahan Sebenar",
+    "description": "Kami telah hapuskan birokrasi. Bantuan anda terus sampai kepada yang memerlukan dengan lebih pantas dan berkesan.",
+    "steps": {
+      "identify": {
+        "title": "Kenalpasti",
+        "description": "Kami bekerjasama terus dengan pemimpin tempatan untuk mengenalpasti keperluan paling mendesak di kawasan terpinggir."
+      },
+      "mobilize": {
+        "title": "Gerakkan",
+        "description": "Sumber dikumpul dan sukarelawan dikerahkan dengan tepat dan pantas."
+      },
+      "transform": {
+        "title": "Transformasi",
+        "description": "Bantuan segera bertukar menjadi program pembangunan mampan jangka panjang."
+      }
+    }
+  },
+  "projectsPage": {
+    "badge": "Portfolio Impak Kami",
+    "heroTitle": "Merekayasa",
+    "heroTitleHighlight": "Perubahan Mampan",
+    "heroDescription": "Kami bukan sekadar memberi bantuan; kami membina sistem. Daripada infrastruktur hingga pendidikan, setiap projek direka untuk ketahanan komuniti jangka panjang dan hasil yang boleh diukur.",
+    "stats": {
+      "activeProjects": "Projek Aktif",
+      "livesImpacted": "Nyawa Tersentuh",
+      "communitiesServed": "Komuniti Dilayan"
+    },
+    "initiatives": {
+      "title": "",
+      "titleHighlight": "Inisiatif Kami",
+      "description": "Tapis mengikut kategori untuk melihat bagaimana kami menangani cabaran tertentu di seluruh negara."
+    },
+    "categories": {
+      "all": "Semua Projek",
+      "education": "Pendidikan",
+      "healthcare": "Kesihatan",
+      "environment": "Alam Sekitar",
+      "community": "Komuniti"
+    },
+    "noProjects": {
+      "title": "Belum Ada Projek",
+      "description": "Kami sedang menyiapkan projek-projek menarik. Nantikan!",
+      "cta": "Libatkan Diri"
+    },
+    "card": {
+      "beneficiaries": "penerima manfaat",
+      "viewImpact": "Lihat Impak"
+    },
+    "cta": {
+      "badge": "Perluaskan Impak Kami",
+      "title": "Perluaskan Impak Kami",
+      "description": "Kami ada peta jalan, tapi perlukan bahan bakar. Sumbangan anda mempercepatkan projek penting untuk komuniti yang tidak boleh menunggu.",
+      "donate": "Buat Sumbangan",
+      "partner": "Jadi Rakan Kongsi"
+    },
+    "impactStats": {
+      "targetFund": "Sasaran Dana Impak",
+      "transparencyRate": "Kadar Ketelusan",
+      "yearEstablished": "Tahun Ditubuhkan",
+      "hiddenCosts": "Kos Tersembunyi"
+    }
+  },
+  "blogPage": {
+    "badge": "Jurnal Kami",
+    "heroTitle": "Catatan",
+    "heroTitleHighlight": "Transformasi",
+    "heroDescription": "Suara dari lapangan, kemaskini kemajuan kami, dan kisah impak yang sedang kami bina bersama. Di sinilah perjalanan kami menemui naratifnya.",
+    "editorsPick": "Pilihan Editor",
+    "readTime": "bacaan",
+    "readStory": "Baca Kisah",
+    "read": "Baca",
+    "latestUpdates": "Kemaskini",
+    "latestUpdatesHighlight": "Terkini",
+    "categories": {
+      "all": "Semua Artikel",
+      "news": "Berita",
+      "stories": "Kisah Impak",
+      "events": "Acara",
+      "announcements": "Pengumuman"
+    },
+    "noPosts": {
+      "title": "Belum Ada Artikel",
+      "description": "Kami sedang menyiapkan kandungan menarik. Nantikan!",
+      "cta": "Terus Berhubung"
+    },
+    "newsletter": {
+      "title": "Sertai Komuniti Pembuat Perubahan",
+      "description": "Dapatkan kemaskini eksklusif tentang projek kami, kisah inspirasi dari lapangan, dan jemputan ke acara akan datang.",
+      "placeholder": "Masukkan alamat e-mel anda",
+      "submit": "Langgan Sekarang",
+      "disclaimer": "Kami menghormati peti masuk anda. Tiada spam, hanya impak. Berhenti langgan bila-bila masa."
+    }
+  },
+  "methodology": {
+    "badge": "Pendekatan Kami",
+    "title": "Dibina untuk",
+    "titleHighlight": "Jangka Panjang",
+    "description": "Kami melangkaui bantuan sementara untuk membina sistem berdikari.",
+    "steps": {
+      "assessment": {
+        "title": "Penilaian Keperluan",
+        "description": "Kami bekerjasama terus dengan pemimpin tempatan untuk mengenalpasti jurang paling mendesak dalam pendidikan dan infrastruktur."
+      },
+      "planning": {
+        "title": "Perancangan Strategik",
+        "description": "Pakar kami mereka bentuk penyelesaian mampan yang menggunakan sumber tempatan dan memperkasakan pemilikan komuniti."
+      },
+      "impact": {
+        "title": "Impak Mampan",
+        "description": "Kami bukan sekadar membina; kami melatih, memantau, dan memastikan kejayaan jangka panjang sebelum menyerahkan."
+      }
+    }
+  },
+  "aboutPage": {
+    "badge": "Siapa Kami",
+    "heroTitle": "Arkitek",
+    "heroTitleHighlight": "Harapan Mampan",
+    "heroDescription": "Kami adalah yayasan yang baru ditubuhkan dengan visi yang berani. Kami adalah gerakan profesional, rakan kongsi, dan sukarelawan yang berdedikasi untuk merekayasa penyelesaian jangka panjang bagi cabaran sosial paling mendesak di Malaysia.",
+    "scrollIndicator": "Visi Kami",
+    "compass": {
+      "title": "",
+      "titleHighlight": "Kompas Kami"
+    },
+    "mission": {
+      "title": "Misi Kami"
+    },
+    "vision": {
+      "title": "Visi Kami"
+    },
+    "values": {
+      "title": "Nilai Teras"
+    },
+    "timeline": {
+      "title": "Peta Jalan",
+      "titleHighlight": "Penubuhan Kami",
+      "q1": {
+        "year": "S1 2025",
+        "title": "Penubuhan",
+        "description": "Penubuhan rasmi Yayasan Insan Prihatin untuk menangani keperluan komuniti secara sistematik."
+      },
+      "q2": {
+        "year": "S2 2025",
+        "title": "Inisiatif Pertama",
+        "description": "Melancarkan program sokongan pendidikan perintis untuk pelajar kurang bernasib baik."
+      },
+      "q3": {
+        "year": "S3 2025",
+        "title": "Jangkauan Komuniti",
+        "description": "Memperluaskan operasi untuk merangkumi akses penjagaan kesihatan di kawasan luar bandar."
+      },
+      "q4": {
+        "year": "S4 2025",
+        "title": "Melihat ke Hadapan",
+        "description": "Merancang pengembangan program literasi digital di seluruh negara."
+      }
+    },
+    "leadership": {
+      "badge": "Pemegang Amanah",
+      "title": "Kepimpinan & Tadbir Urus",
+      "description": "Dipandu oleh prinsip integriti dan kecemerlangan, kepimpinan kami memastikan setiap sumber dimaksimumkan untuk manfaat komuniti."
+    },
+    "reports": {
+      "badge": "Ketelusan Menyeluruh",
+      "title": "Akauntabiliti dalam Tindakan",
+      "description": "Kepercayaan adalah mata wang paling berharga kami. Kami komited untuk menerbitkan audit tahunan dan laporan impak supaya setiap pemegang kepentingan tahu dengan tepat bagaimana sumbangan mereka mengubah kehidupan.",
+      "annualReport": "Laporan Tahunan",
+      "comingSoon": "Akan Datang Awal 2026",
+      "transparency": "Ketelusan",
+      "auditedAnnually": "Diaudit Setiap Tahun",
+      "isoPending": "ISO Dalam Proses",
+      "ssmRegistered": "Berdaftar SSM"
+    },
+    "cta": {
+      "title": "Bersedia Membuat Perbezaan?",
+      "description": "Sertai kami dalam misi untuk mencipta perubahan positif yang berkekalan untuk komuniti di seluruh Malaysia.",
+      "donate": "Derma Sekarang",
+      "contact": "Hubungi Kami"
+    }
   }
 }

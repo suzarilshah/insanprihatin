@@ -4,15 +4,9 @@ import { useState, useRef } from 'react'
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 import Methodology from '@/components/sections/Methodology'
-import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
-
-// Helper to get string from LocalizedString (default to English)
-const l = (value: LocalizedString | string | null | undefined): string => {
-  if (!value) return ''
-  if (typeof value === 'string') return value
-  return getLocalizedValue(value, 'en')
-}
+import { type LocalizedString, getLocalizedValue, type Locale } from '@/i18n/config'
 
 type Project = {
   id: string
@@ -39,15 +33,8 @@ type Project = {
 
 interface ProjectsContentProps {
   projects: Project[]
+  locale?: Locale
 }
-
-const defaultCategories = [
-  { id: 'all', name: 'All Projects', icon: '🎯' },
-  { id: 'education', name: 'Education', icon: '🎓' },
-  { id: 'healthcare', name: 'Healthcare', icon: '🏥' },
-  { id: 'environment', name: 'Environment', icon: '🌳' },
-  { id: 'community', name: 'Community', icon: '🏘️' },
-]
 
 const statusConfig: Record<string, { bg: string; text: string; dot: string }> = {
   ongoing: { bg: 'bg-emerald-100', text: 'text-emerald-700', dot: 'bg-emerald-500' },
@@ -57,7 +44,8 @@ const statusConfig: Record<string, { bg: string; text: string; dot: string }> = 
 
 const defaultImage = 'https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?q=80&w=2670'
 
-export default function ProjectsContent({ projects }: ProjectsContentProps) {
+export default function ProjectsContent({ projects, locale = 'en' }: ProjectsContentProps) {
+  const t = useTranslations('projectsPage')
   const [activeCategory, setActiveCategory] = useState('all')
   const heroRef = useRef<HTMLElement>(null)
   const { scrollYProgress } = useScroll({
@@ -67,18 +55,36 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
   const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1])
 
+  // Helper to get string from LocalizedString
+  const l = (value: LocalizedString | string | null | undefined): string => {
+    if (!value) return ''
+    if (typeof value === 'string') return value
+    return getLocalizedValue(value, locale)
+  }
+
+  const categoryKeys = ['all', 'education', 'healthcare', 'environment', 'community'] as const
+  const categoryIcons: Record<string, string> = {
+    all: '🎯',
+    education: '🎓',
+    healthcare: '🏥',
+    environment: '🌳',
+    community: '🏘️',
+  }
+
   // Get unique categories from projects and merge with defaults
   const projectCategories = [...new Set(projects.map(p => p.category).filter(Boolean))]
-  const categories = defaultCategories.map(cat => ({
-    ...cat,
-    count: cat.id === 'all'
+  const categories: Array<{ id: string; name: string; icon: string; count: number }> = categoryKeys.map(cat => ({
+    id: cat,
+    name: t(`categories.${cat}`),
+    icon: categoryIcons[cat] || '📁',
+    count: cat === 'all'
       ? projects.length
-      : projects.filter(p => p.category === cat.id).length
+      : projects.filter(p => p.category === cat).length
   })).filter(cat => cat.id === 'all' || cat.count > 0 || projectCategories.includes(cat.id))
 
   // Add any custom categories from projects that aren't in defaults
   projectCategories.forEach(cat => {
-    if (cat && !defaultCategories.find(d => d.id === cat)) {
+    if (cat && !(categoryKeys as readonly string[]).includes(cat)) {
       categories.push({
         id: cat,
         name: cat.charAt(0).toUpperCase() + cat.slice(1),
@@ -137,7 +143,7 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/10 mb-8"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              <span className="text-sm font-medium tracking-wide text-white uppercase">Our Impact Portfolio</span>
+              <span className="text-sm font-medium tracking-wide text-white uppercase">{t('badge')}</span>
             </motion.div>
 
             <h1 className="heading-display text-white mb-6">
@@ -147,7 +153,7 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
                 transition={{ delay: 0.3 }}
                 className="block"
               >
-                Engineering
+                {t('heroTitle')}
               </motion.span>
               <motion.span
                 initial={{ opacity: 0, y: 30 }}
@@ -155,7 +161,7 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
                 transition={{ delay: 0.4 }}
                 className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 animate-gradient-x"
               >
-                Sustainable Change
+                {t('heroTitleHighlight')}
               </motion.span>
             </h1>
 
@@ -165,8 +171,7 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
               transition={{ delay: 0.5 }}
               className="body-large text-white/80 max-w-2xl border-l-2 border-amber-400/50 pl-6"
             >
-              We don&apos;t just provide aid; we build systems. From infrastructure to education,
-              every project is designed for long-term community resilience and measurable outcomes.
+              {t('heroDescription')}
             </motion.p>
           </motion.div>
 
@@ -179,9 +184,9 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
           >
             <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl inline-flex gap-8 md:gap-12 p-6">
               {[
-                { value: `${totalProjects}+`, label: 'Active Projects' },
-                { value: totalBeneficiaries > 0 ? `${(totalBeneficiaries / 1000).toFixed(0)}K+` : '0', label: 'Lives Impacted' },
-                { value: `${uniqueLocations || 1}+`, label: 'Communities Served' },
+                { value: `${totalProjects}+`, label: t('stats.activeProjects') },
+                { value: totalBeneficiaries > 0 ? `${(totalBeneficiaries / 1000).toFixed(0)}K+` : '0', label: t('stats.livesImpacted') },
+                { value: `${uniqueLocations || 1}+`, label: t('stats.communitiesServed') },
               ].map((stat, index) => (
                 <div key={index} className="text-center">
                   <div className="font-display text-2xl lg:text-3xl font-bold text-white">
@@ -207,10 +212,10 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
         <div className="relative container-wide">
           <div className="text-center mb-16">
              <h2 className="heading-section text-foundation-charcoal mb-4">
-               Our <span className="text-teal-600 italic font-serif">Initiatives</span>
+               {t('initiatives.title')} <span className="text-teal-600 italic font-serif">{t('initiatives.titleHighlight')}</span>
              </h2>
              <p className="text-gray-500 max-w-xl mx-auto">
-               Filter by category to see how we are addressing specific challenges across the nation.
+               {t('initiatives.description')}
              </p>
           </div>
 
@@ -337,14 +342,14 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                 </svg>
                                 <span className="font-medium">{project.beneficiaries.toLocaleString()}</span>
-                                <span className="text-gray-400">beneficiaries</span>
+                                <span className="text-gray-400">{t('card.beneficiaries')}</span>
                               </div>
                             ) : (
                               <div />
                             )}
 
                             <div className="flex items-center gap-1 text-teal-600 font-bold text-sm uppercase tracking-wider group-hover:gap-2 transition-all">
-                              View Impact
+                              {t('card.viewImpact')}
                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                               </svg>
@@ -359,13 +364,13 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
                 <div className="col-span-full text-center py-20 bg-white rounded-3xl border border-gray-100 border-dashed">
                   <div className="text-6xl mb-4">📦</div>
                   <h3 className="font-heading text-xl font-semibold text-foundation-charcoal mb-2">
-                    No Projects Yet
+                    {t('noProjects.title')}
                   </h3>
                   <p className="text-gray-500 mb-6">
-                    We&apos;re working on exciting new projects. Check back soon!
+                    {t('noProjects.description')}
                   </p>
                   <Link href="/contact" className="btn-primary">
-                    Get Involved
+                    {t('noProjects.cta')}
                   </Link>
                 </div>
               )}
@@ -402,16 +407,15 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
                   </motion.span>
 
                   <h2 className="heading-subsection text-white mb-4">
-                    Scale Our Impact
+                    {t('cta.title')}
                   </h2>
                   <p className="text-white/80 text-lg mb-8 leading-relaxed">
-                    We have the roadmap, but we need fuel. Your contribution accelerates
-                    essential projects in communities that cannot wait.
+                    {t('cta.description')}
                   </p>
 
                   <div className="flex flex-wrap gap-4">
                     <Link href="/donate" className="btn-secondary shadow-lg hover:shadow-glow-amber">
-                      Make a Donation
+                      {t('cta.donate')}
                       <svg className="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                       </svg>
@@ -420,7 +424,7 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
                       href="/contact"
                       className="btn-outline border-white/40 text-white hover:bg-white hover:text-teal-900"
                     >
-                      Partner With Us
+                      {t('cta.partner')}
                     </Link>
                   </div>
                 </div>
@@ -428,10 +432,10 @@ export default function ProjectsContent({ projects }: ProjectsContentProps) {
                 <div className="hidden lg:block">
                   <div className="grid grid-cols-2 gap-4">
                     {[
-                      { value: 'RM 2.5M', label: 'Target Impact Fund' },
-                      { value: '100%', label: 'Transparency Rate' },
-                      { value: '2025', label: 'Year Established' },
-                      { value: 'Zero', label: 'Hidden Costs' },
+                      { value: 'RM 2.5M', label: t('impactStats.targetFund') },
+                      { value: '100%', label: t('impactStats.transparencyRate') },
+                      { value: '2025', label: t('impactStats.yearEstablished') },
+                      { value: locale === 'ms' ? 'Sifar' : 'Zero', label: t('impactStats.hiddenCosts') },
                     ].map((stat, i) => (
                       <motion.div
                         key={i}
