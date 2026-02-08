@@ -11,6 +11,9 @@ import {
   type StockPhotoSettings,
   type StockPhotoLocation,
   type StockPhotoCategory,
+  type StockPhotoItem,
+  getPhotographerUrl,
+  getUnsplashUrl,
 } from '@/lib/stock-photo-config'
 
 // Map locations to suggested categories
@@ -28,7 +31,6 @@ export default function StockPhotosPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [selectedLocation, setSelectedLocation] = useState<StockPhotoLocation | null>(null)
-  const [customUrl, setCustomUrl] = useState('')
 
   useEffect(() => {
     async function loadSettings() {
@@ -44,11 +46,10 @@ export default function StockPhotosPage() {
     loadSettings()
   }, [])
 
-  const handleSelectPhoto = (location: StockPhotoLocation, url: string) => {
+  const handleSelectPhoto = (location: StockPhotoLocation, photo: StockPhotoItem) => {
     if (!settings) return
-    setSettings({ ...settings, [location]: url })
+    setSettings({ ...settings, [location]: photo })
     setSelectedLocation(null)
-    setCustomUrl('')
   }
 
   const handleSave = () => {
@@ -101,7 +102,7 @@ export default function StockPhotosPage() {
             Stock Photo Settings
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            Manage default stock images used across the website
+            Manage default stock images with proper Unsplash attribution
           </p>
         </div>
         <button
@@ -142,7 +143,7 @@ export default function StockPhotosPage() {
       <div className="grid gap-6">
         {(Object.keys(STOCK_PHOTO_LOCATIONS) as StockPhotoLocation[]).map((location) => {
           const config = STOCK_PHOTO_LOCATIONS[location]
-          const currentUrl = settings[location]
+          const currentPhoto = settings[location]
 
           return (
             <motion.div
@@ -154,15 +155,40 @@ export default function StockPhotosPage() {
               <div className="flex flex-col lg:flex-row gap-6">
                 {/* Current Image Preview */}
                 <div className="lg:w-64 flex-shrink-0">
-                  <div className="aspect-video relative rounded-xl overflow-hidden bg-gray-100">
-                    {currentUrl ? (
-                      <Image
-                        src={currentUrl}
-                        alt={config.label}
-                        fill
-                        className="object-cover"
-                        unoptimized
-                      />
+                  <div className="aspect-video relative rounded-xl overflow-hidden bg-gray-100 group">
+                    {currentPhoto?.url ? (
+                      <>
+                        <Image
+                          src={currentPhoto.url}
+                          alt={config.label}
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                        {/* Attribution overlay on hover */}
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                          <p className="text-[10px] text-white">
+                            Photo by{' '}
+                            <a
+                              href={getPhotographerUrl(currentPhoto.photographerUsername)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="underline"
+                            >
+                              {currentPhoto.photographerName}
+                            </a>{' '}
+                            on{' '}
+                            <a
+                              href={getUnsplashUrl()}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="underline"
+                            >
+                              Unsplash
+                            </a>
+                          </p>
+                        </div>
+                      </>
                     ) : (
                       <div className="flex items-center justify-center h-full text-gray-400">
                         <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -171,6 +197,12 @@ export default function StockPhotosPage() {
                       </div>
                     )}
                   </div>
+                  {/* Current Photo Attribution */}
+                  {currentPhoto && (
+                    <p className="text-[10px] text-gray-400 mt-2 text-center">
+                      by {currentPhoto.photographerName}
+                    </p>
+                  )}
                 </div>
 
                 {/* Info and Controls */}
@@ -192,17 +224,16 @@ export default function StockPhotosPage() {
                     Component: <code className="bg-gray-100 px-1.5 py-0.5 rounded">{config.component}</code>
                   </p>
 
-                  {/* Current URL */}
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Current URL</label>
-                    <input
-                      type="text"
-                      value={currentUrl}
-                      onChange={(e) => setSettings({ ...settings, [location]: e.target.value })}
-                      className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
-                      placeholder="Enter image URL or select from below"
-                    />
-                  </div>
+                  {/* Current Photo Info */}
+                  {currentPhoto && (
+                    <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                      <div className="text-xs text-gray-500 mb-1">Current Photo</div>
+                      <div className="text-sm font-medium text-gray-700 truncate">{currentPhoto.url}</div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        Photographer: {currentPhoto.photographerName} (@{currentPhoto.photographerUsername})
+                      </div>
+                    </div>
+                  )}
 
                   <button
                     onClick={() => setSelectedLocation(selectedLocation === location ? null : location)}
@@ -220,7 +251,7 @@ export default function StockPhotosPage() {
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
-                        Show Stock Photo Suggestions
+                        Change Stock Photo
                       </>
                     )}
                   </button>
@@ -242,9 +273,14 @@ export default function StockPhotosPage() {
                             {CURATED_STOCK_PHOTOS[LOCATION_CATEGORIES[location]].map((photo, index) => (
                               <button
                                 key={index}
-                                onClick={() => handleSelectPhoto(location, photo.url)}
-                                className={`relative aspect-video rounded-lg overflow-hidden border-2 transition-all hover:scale-105 ${
-                                  currentUrl === photo.url
+                                onClick={() => handleSelectPhoto(location, {
+                                  url: photo.url,
+                                  photographerName: photo.photographerName,
+                                  photographerUsername: photo.photographerUsername,
+                                  photoId: photo.photoId,
+                                })}
+                                className={`relative aspect-video rounded-lg overflow-hidden border-2 transition-all hover:scale-105 group ${
+                                  currentPhoto?.url === photo.url
                                     ? 'border-teal-500 ring-2 ring-teal-500/20'
                                     : 'border-transparent hover:border-gray-300'
                                 }`}
@@ -256,7 +292,7 @@ export default function StockPhotosPage() {
                                   className="object-cover"
                                   unoptimized
                                 />
-                                {currentUrl === photo.url && (
+                                {currentPhoto?.url === photo.url && (
                                   <div className="absolute inset-0 bg-teal-500/20 flex items-center justify-center">
                                     <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center">
                                       <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -265,8 +301,9 @@ export default function StockPhotosPage() {
                                     </div>
                                   </div>
                                 )}
-                                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
-                                  <span className="text-xs text-white truncate block">{photo.label}</span>
+                                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                                  <span className="text-[10px] text-white block truncate">{photo.label}</span>
+                                  <span className="text-[9px] text-white/70 block truncate">by {photo.photographerName}</span>
                                 </div>
                               </button>
                             ))}
@@ -289,9 +326,14 @@ export default function StockPhotosPage() {
                                       {CURATED_STOCK_PHOTOS[category].map((photo, index) => (
                                         <button
                                           key={index}
-                                          onClick={() => handleSelectPhoto(location, photo.url)}
-                                          className={`relative aspect-video rounded-lg overflow-hidden border transition-all hover:scale-105 ${
-                                            currentUrl === photo.url
+                                          onClick={() => handleSelectPhoto(location, {
+                                            url: photo.url,
+                                            photographerName: photo.photographerName,
+                                            photographerUsername: photo.photographerUsername,
+                                            photoId: photo.photoId,
+                                          })}
+                                          className={`relative aspect-video rounded-lg overflow-hidden border transition-all hover:scale-105 group ${
+                                            currentPhoto?.url === photo.url
                                               ? 'border-teal-500'
                                               : 'border-gray-200 hover:border-gray-300'
                                           }`}
@@ -303,6 +345,9 @@ export default function StockPhotosPage() {
                                             className="object-cover"
                                             unoptimized
                                           />
+                                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1">
+                                            <span className="text-[8px] text-white truncate">{photo.photographerName}</span>
+                                          </div>
                                         </button>
                                       ))}
                                     </div>
@@ -327,13 +372,13 @@ export default function StockPhotosPage() {
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          Tips
+          Unsplash Attribution
         </h3>
         <ul className="text-sm text-amber-700 space-y-1">
-          <li>Use high-quality images for better visual impact</li>
-          <li>Unsplash images are free to use and optimized for web</li>
-          <li>You can also use custom URLs from your Media Library</li>
-          <li>Changes will apply to fallback images only - if content has specific images set, those take priority</li>
+          <li>All stock photos include photographer attribution as required by Unsplash</li>
+          <li>Attribution is automatically displayed on the website with proper links</li>
+          <li>Photo downloads are tracked to comply with Unsplash API guidelines</li>
+          <li>Changes apply to fallback images only - content with specific images takes priority</li>
         </ul>
       </div>
     </div>
