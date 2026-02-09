@@ -172,5 +172,5 @@ This project is proprietary to Yayasan Insan Prihatin.
 ## Contact
 
 For inquiries about this project:
-- Email: info@insanprihatin.org
+- Email: admin@insanprihatin.org
 - Website: https://insanprihatin.org

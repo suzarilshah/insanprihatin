@@ -191,10 +191,10 @@ export default function DonationFailedContent() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center text-sm">
               <a
-                href="mailto:info@insanprihatin.org"
+                href="mailto:admin@insanprihatin.org"
                 className="text-amber-700 hover:text-amber-900 underline"
               >
-                info@insanprihatin.org
+                admin@insanprihatin.org
               </a>
               <span className="text-amber-600 hidden sm:inline">|</span>
               <a

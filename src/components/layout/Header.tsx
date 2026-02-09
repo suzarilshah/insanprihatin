@@ -416,7 +416,7 @@ export default function Header() {
                 {/* Contact Info */}
                 <div className="mt-8 space-y-4 text-sm text-gray-500">
                   <a
-                    href="mailto:info@insanprihatin.org"
+                    href="mailto:admin@insanprihatin.org"
                     className="flex items-center gap-3 hover:text-teal-500 transition-colors"
                   >
                     <svg
@@ -432,7 +432,7 @@ export default function Header() {
                         d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                       />
                     </svg>
-                    info@insanprihatin.org
+                    admin@insanprihatin.org
                   </a>
                   <a
                     href="tel:+60123456789"

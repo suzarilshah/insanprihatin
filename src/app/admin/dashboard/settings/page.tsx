@@ -27,7 +27,7 @@ const DEFAULT_CONTACT_SETTINGS: ContactSettings = {
     ],
   },
   emails: [
-    { type: 'general', label: 'General Inquiries', address: 'info@insanprihatin.org' },
+    { type: 'general', label: 'General Inquiries', address: 'admin@insanprihatin.org' },
   ],
   phones: [
     { type: 'main', label: 'Main Office', number: '+60 12-345 6789' },
@@ -49,7 +49,7 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState({
     siteName: 'Yayasan Insan Prihatin',
     siteTagline: 'Empowering Communities Through Compassion',
-    contactEmail: 'info@insanprihatin.org',
+    contactEmail: 'admin@insanprihatin.org',
     contactPhone: '+60 3-1234 5678',
     address: 'Kuala Lumpur, Malaysia',
     socialFacebook: '',

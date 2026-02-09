@@ -53,7 +53,7 @@ export const DEFAULT_CONTACT_SETTINGS: ContactSettings = {
     ],
   },
   emails: [
-    { type: 'general', label: 'General Inquiries', address: 'info@insanprihatin.org' },
+    { type: 'general', label: 'General Inquiries', address: 'admin@insanprihatin.org' },
   ],
   phones: [
     { type: 'main', label: 'Main Office', number: '+60 12-345 6789' },

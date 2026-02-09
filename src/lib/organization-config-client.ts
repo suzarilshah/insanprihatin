@@ -25,7 +25,7 @@ export const DEFAULT_ORG_CONFIG: OrganizationConfig = {
     'Melaka, Malaysia',
   ],
   phone: '+60 12-345 6789',
-  email: 'info@insanprihatin.org',
+  email: 'admin@insanprihatin.org',
   website: 'www.insanprihatin.org',
   logoUrl: '/images/logo-light.png',
   // Three main objectives from Trust Deed

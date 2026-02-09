@@ -679,8 +679,8 @@ export default function DonationSuccessContent() {
             className="text-center mt-8 text-sm text-gray-500"
           >
             Questions? Contact us at{' '}
-            <a href="mailto:info@insanprihatin.org" className="text-teal-600 hover:underline">
-              info@insanprihatin.org
+            <a href="mailto:admin@insanprihatin.org" className="text-teal-600 hover:underline">
+              admin@insanprihatin.org
             </a>
           </motion.div>
         </motion.div>
