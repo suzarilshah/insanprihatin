@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createApi } from 'unsplash-js'
 import { Client, Storage, ID } from 'appwrite'
+import { requireAuth } from '@/lib/auth/server'
+import { RateLimiters } from '@/lib/api-rate-limit'
 
 // Initialize Unsplash client
 const unsplash = createApi({
@@ -20,6 +22,19 @@ function getFileUrl(fileId: string): string {
 }
 
 export async function POST(request: NextRequest) {
+  // SECURITY: Require admin authentication to prevent unauthorized uploads
+  try {
+    await requireAuth()
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // SECURITY: Rate limit to prevent abuse
+  const rateLimitResponse = RateLimiters.testEndpoint(request)
+  if (rateLimitResponse) {
+    return rateLimitResponse
+  }
+
   try {
     const body = await request.json()
     const { photoId, downloadLocation, imageUrl } = body

@@ -6,10 +6,13 @@ import { getReceiptData } from '@/lib/receipt'
 import { ReceiptPDF } from '@/lib/receipt-pdf'
 import { renderToBuffer } from '@react-pdf/renderer'
 import React from 'react'
+import { requireAuth } from '@/lib/auth/server'
+import { RateLimiters } from '@/lib/api-rate-limit'
 
 /**
  * Resend Receipt Email API
  *
+ * SECURITY: Requires admin authentication to prevent email abuse.
  * Resends the donation receipt email to the donor.
  * Only works for completed donations with a receipt number.
  */
@@ -18,6 +21,22 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ reference: string }> }
 ) {
+  // SECURITY: Require admin authentication to prevent email abuse
+  try {
+    await requireAuth()
+  } catch {
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    )
+  }
+
+  // SECURITY: Rate limit to prevent abuse
+  const rateLimitResponse = RateLimiters.testEndpoint(request)
+  if (rateLimitResponse) {
+    return rateLimitResponse
+  }
+
   try {
     const { reference } = await params
 

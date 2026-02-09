@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { translateText, type TranslateLanguage } from '@/lib/google-translate'
+import { requireAuth } from '@/lib/auth/server'
+import { RateLimiters } from '@/lib/api-rate-limit'
 
 /**
  * POST /api/translate
  * Translates text from one language to another using Google Cloud Translation API
+ *
+ * SECURITY: Requires admin authentication to prevent API abuse
  *
  * Request body:
  * {
@@ -19,6 +23,19 @@ import { translateText, type TranslateLanguage } from '@/lib/google-translate'
  * }
  */
 export async function POST(request: NextRequest) {
+  // SECURITY: Require admin authentication to prevent API abuse
+  try {
+    await requireAuth()
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // SECURITY: Rate limit to prevent abuse
+  const rateLimitResponse = RateLimiters.testEndpoint(request)
+  if (rateLimitResponse) {
+    return rateLimitResponse
+  }
+
   try {
     const body = await request.json()
     const { text, targetLang, sourceLang } = body
@@ -87,8 +104,17 @@ export async function POST(request: NextRequest) {
 /**
  * GET /api/translate
  * Check if the translation service is configured
+ *
+ * SECURITY: Requires admin authentication
  */
 export async function GET() {
+  // SECURITY: Require admin authentication
+  try {
+    await requireAuth()
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const isConfigured = Boolean(process.env.AZURE_TRANSLATOR_KEY)
 
   return NextResponse.json({

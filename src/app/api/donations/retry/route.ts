@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db, donations, projects, donationLogs } from '@/db'
-import { eq, sql } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { ToyyibPayService, ToyyibPayError } from '@/lib/toyyibpay'
 import { headers } from 'next/headers'
+import { RateLimiters } from '@/lib/api-rate-limit'
 
 /**
  * Payment Retry API
  *
+ * SECURITY: Rate limited to prevent payment gateway abuse.
  * Allows users to retry a failed payment without re-entering all their information.
  * Creates a new ToyyibPay bill with the same donation details.
  */
@@ -27,6 +29,12 @@ function getBaseUrl(request?: NextRequest): string {
 }
 
 export async function POST(request: NextRequest) {
+  // SECURITY: Rate limit retry attempts to prevent payment gateway abuse
+  const rateLimitResponse = RateLimiters.donationCreate(request)
+  if (rateLimitResponse) {
+    return rateLimitResponse
+  }
+
   try {
     const body = await request.json()
     const { reference } = body

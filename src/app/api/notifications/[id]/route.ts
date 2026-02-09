@@ -4,6 +4,7 @@ import {
   dismissNotification,
   deleteNotification,
 } from '@/lib/actions/notifications'
+import { requireAuth } from '@/lib/auth/server'
 
 interface RouteContext {
   params: Promise<{ id: string }>
@@ -14,6 +15,13 @@ export async function PATCH(
   request: NextRequest,
   context: RouteContext
 ) {
+  // SECURITY: Require admin authentication
+  try {
+    await requireAuth()
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     const { id } = await context.params
     const body = await request.json()
@@ -59,6 +67,13 @@ export async function DELETE(
   request: NextRequest,
   context: RouteContext
 ) {
+  // SECURITY: Require admin authentication
+  try {
+    await requireAuth()
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     const { id } = await context.params
     const result = await deleteNotification(id)

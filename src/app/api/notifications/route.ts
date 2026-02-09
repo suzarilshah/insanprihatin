@@ -5,9 +5,17 @@ import {
   markAllNotificationsAsRead,
   dismissAllNotifications,
 } from '@/lib/actions/notifications'
+import { requireAuth } from '@/lib/auth/server'
 
 // GET /api/notifications - Get notifications with optional filters
 export async function GET(request: NextRequest) {
+  // SECURITY: Require admin authentication
+  try {
+    await requireAuth()
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams
     const unreadOnly = searchParams.get('unreadOnly') === 'true'
@@ -47,6 +55,13 @@ export async function GET(request: NextRequest) {
 
 // PATCH /api/notifications - Bulk actions (mark all read, dismiss all)
 export async function PATCH(request: NextRequest) {
+  // SECURITY: Require admin authentication
+  try {
+    await requireAuth()
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     const body = await request.json()
     const { action } = body

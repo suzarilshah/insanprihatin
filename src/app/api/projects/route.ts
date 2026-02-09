@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db, projects } from '@/db'
 import { eq, desc, and } from 'drizzle-orm'
+import { getSession } from '@/lib/auth/server'
 
 // GET - List projects with filtering
+// SECURITY: Public endpoint but only returns published projects for unauthenticated users
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -12,13 +14,19 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status')
     const limit = searchParams.get('limit')
 
+    // Check if user is authenticated (admin)
+    const session = await getSession()
+    const isAdmin = !!session
+
     const conditions = []
 
     if (donationEnabled === 'true') {
       conditions.push(eq(projects.donationEnabled, true))
     }
 
-    if (published === 'true') {
+    // SECURITY: Force published filter for unauthenticated users
+    // Admins can see unpublished projects, public users cannot
+    if (published === 'true' || !isAdmin) {
       conditions.push(eq(projects.isPublished, true))
     }
 

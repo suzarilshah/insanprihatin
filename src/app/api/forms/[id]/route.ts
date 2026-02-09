@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getForm, updateForm, deleteForm, FormField, getFormWithDetails } from '@/lib/actions/forms'
-import { auth } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth/server'
 
 interface RouteContext {
   params: Promise<{ id: string }>
@@ -10,6 +10,13 @@ export async function GET(
   request: NextRequest,
   context: RouteContext
 ) {
+  // SECURITY: Require admin authentication for viewing form details
+  try {
+    await requireAuth()
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     const { id } = await context.params
     const searchParams = request.nextUrl.searchParams
@@ -49,14 +56,14 @@ export async function PUT(
   request: NextRequest,
   context: RouteContext
 ) {
+  // SECURITY: Require admin authentication with group verification
   try {
-    const session = await auth()
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+    await requireAuth()
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
 
     const { id } = await context.params
     const body = await request.json()
@@ -107,15 +114,14 @@ export async function DELETE(
   request: NextRequest,
   context: RouteContext
 ) {
+  // SECURITY: Require admin authentication with group verification
   try {
-    const session = await auth()
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+    await requireAuth()
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
+  try {
     const { id } = await context.params
     const result = await deleteForm(id)
 

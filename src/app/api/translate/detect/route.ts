@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { detectLanguage } from '@/lib/google-translate'
+import { requireAuth } from '@/lib/auth/server'
+import { RateLimiters } from '@/lib/api-rate-limit'
 
 /**
  * POST /api/translate/detect
  * Detects the language of the provided text
+ *
+ * SECURITY: Requires admin authentication to prevent API abuse
  *
  * Request body:
  * {
@@ -17,6 +21,19 @@ import { detectLanguage } from '@/lib/google-translate'
  * }
  */
 export async function POST(request: NextRequest) {
+  // SECURITY: Require admin authentication to prevent API abuse
+  try {
+    await requireAuth()
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // SECURITY: Rate limit to prevent abuse
+  const rateLimitResponse = RateLimiters.testEndpoint(request)
+  if (rateLimitResponse) {
+    return rateLimitResponse
+  }
+
   try {
     const body = await request.json()
     const { text } = body

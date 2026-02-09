@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSession } from '@/lib/auth/server'
+import { requireAuth } from '@/lib/auth/server'
 import { db, contentVersions } from '@/db'
 import { eq, desc } from 'drizzle-orm'
 import {
@@ -11,12 +11,14 @@ import {
 
 // GET /api/versions - Get version history or activity log
 export async function GET(request: NextRequest) {
+  // SECURITY: Require admin authentication with group verification
   try {
-    // Verify authentication
-    const session = await getSession()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    await requireAuth()
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
 
     const { searchParams } = new URL(request.url)
     const contentType = searchParams.get('contentType') as ContentType | null
