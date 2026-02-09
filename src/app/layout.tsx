@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Playfair_Display, Cormorant_Garamond, Outfit, JetBrains_Mono, Inter } from 'next/font/google'
 import Script from 'next/script'
 import { SessionProvider } from '@/components/providers/SessionProvider'
+import { Analytics } from '@vercel/analytics/next'
 import '@/styles/globals.css'
 
 const playfair = Playfair_Display({
@@ -172,6 +173,7 @@ export default function RootLayout({
         <SessionProvider>
           {children}
         </SessionProvider>
+        <Analytics />
       </body>
     </html>
   )
