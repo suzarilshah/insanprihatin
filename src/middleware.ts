@@ -56,17 +56,18 @@ export default auth((req) => {
       return addSecurityHeaders(NextResponse.redirect(loginUrl))
     }
 
-    // Double-check group membership in middleware (defense in depth)
-    const groups = (req.auth as { groups?: string[] }).groups || []
-    const webadminGroupId = process.env.WEBADMIN_GROUP_ID
+    // Double-check email allowlist in middleware (defense in depth)
+    const userEmail = req.auth.user?.email?.toLowerCase()
+    const allowedEmails = (process.env.ALLOWED_ADMIN_EMAILS || '')
+      .split(',')
+      .map(e => e.trim().toLowerCase())
+      .filter(Boolean)
 
-    if (!webadminGroupId || !groups.includes(webadminGroupId)) {
-      console.warn(`[AUTH:MIDDLEWARE] UNAUTHORIZED - User not in webadmin group`, JSON.stringify({
+    if (!userEmail || !allowedEmails.includes(userEmail)) {
+      console.warn(`[AUTH:MIDDLEWARE] UNAUTHORIZED - User email not in allowed list`, JSON.stringify({
         email: req.auth.user?.email,
         pathname,
         clientIP,
-        hasGroupId: !!webadminGroupId,
-        userGroupCount: groups.length,
         timestamp: new Date().toISOString(),
       }))
       return addSecurityHeaders(NextResponse.redirect(new URL('/admin?error=unauthorized', req.url)))
@@ -81,13 +82,16 @@ export default auth((req) => {
     return addSecurityHeaders(NextResponse.next())
   }
 
-  // Admin login page - redirect to dashboard if already authenticated with valid group
+  // Admin login page - redirect to dashboard if already authenticated with valid email
   if (pathname === '/admin') {
     if (req.auth) {
-      const groups = (req.auth as { groups?: string[] }).groups || []
-      const webadminGroupId = process.env.WEBADMIN_GROUP_ID
+      const userEmail = req.auth.user?.email?.toLowerCase()
+      const allowedEmails = (process.env.ALLOWED_ADMIN_EMAILS || '')
+        .split(',')
+        .map(e => e.trim().toLowerCase())
+        .filter(Boolean)
 
-      if (webadminGroupId && groups.includes(webadminGroupId)) {
+      if (userEmail && allowedEmails.includes(userEmail)) {
         const redirect = req.nextUrl.searchParams.get('redirect')
         console.log(`[AUTH:MIDDLEWARE] Already authenticated, redirecting to dashboard`, JSON.stringify({
           email: req.auth.user?.email,

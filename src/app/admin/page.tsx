@@ -26,7 +26,7 @@ function MicrosoftLogo() {
  */
 const errorMessages: Record<string, string> = {
   unauthorized:
-    'You are not authorized to access the admin portal. Only members of the webadmin group can sign in.',
+    'You are not authorized to access the admin portal. Please contact IT support if you need access.',
   configuration: 'System configuration error. Please contact IT support.',
   OAuthSignin: 'Error starting the sign-in process. Please try again.',
   OAuthCallback: 'Error during authentication callback. Please try again.',

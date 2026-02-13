@@ -28,6 +28,23 @@ export async function getSession() {
 }
 
 /**
+ * Get list of allowed admin emails from environment variable
+ */
+function getAllowedAdminEmails(): string[] {
+  const emails = process.env.ALLOWED_ADMIN_EMAILS || ''
+  return emails.split(',').map(email => email.trim().toLowerCase()).filter(Boolean)
+}
+
+/**
+ * Check if an email is in the allowed admin list
+ */
+function isEmailAllowed(email: string | null | undefined): boolean {
+  if (!email) return false
+  const allowedEmails = getAllowedAdminEmails()
+  return allowedEmails.includes(email.toLowerCase())
+}
+
+/**
  * Require authentication for server actions
  * Throws an error if the user is not authenticated
  *
@@ -44,14 +61,11 @@ export async function requireAuth(): Promise<AuthUser> {
     throw new Error('Unauthorized')
   }
 
-  // Verify user has the required group (defense in depth)
-  const groups = (session as { groups?: string[] }).groups || []
-  const webadminGroupId = process.env.WEBADMIN_GROUP_ID
-
-  if (!webadminGroupId || !groups.includes(webadminGroupId)) {
+  // Verify user email is in allowed list (defense in depth)
+  if (!isEmailAllowed(session.user.email)) {
     authLogger.security('UNAUTHORIZED_SERVER_ACTION', {
       email: session.user.email,
-      reason: 'User not in webadmin group',
+      reason: 'User email not in allowed admin list',
       timestamp: new Date().toISOString(),
     })
     throw new Error('Forbidden')
@@ -62,6 +76,6 @@ export async function requireAuth(): Promise<AuthUser> {
     id: session.user.id || session.user.email || 'unknown',
     email: session.user.email || '',
     name: session.user.name || 'Unknown',
-    role: 'admin', // All webadmin group members are admins
+    role: 'admin', // All allowed admin emails are admins
   }
 }
