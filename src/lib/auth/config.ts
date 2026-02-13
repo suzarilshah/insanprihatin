@@ -1,50 +1,27 @@
 /**
  * NextAuth.js Configuration
- * Microsoft Entra ID (Azure AD) SSO with group-based access control
+ * Microsoft Entra ID (Azure AD) SSO with email-based access control
+ * (Business Basic doesn't support security groups, so we use allowed email list)
  */
 
 import NextAuth from 'next-auth'
 import MicrosoftEntraID from 'next-auth/providers/microsoft-entra-id'
 import { authLogger } from './logger'
 
-// Extend types for group claims
+// Extend types for session
 declare module 'next-auth' {
   interface Profile {
-    groups?: string[]
     oid?: string
   }
 
   interface Session {
-    groups?: string[]
     accessToken?: string
   }
 }
 
 declare module '@auth/core/jwt' {
   interface JWT {
-    groups?: string[]
     accessToken?: string
-  }
-}
-
-/**
- * Decode a JWT token to extract its payload
- * Note: This only decodes, it does NOT verify the signature
- * (NextAuth already verifies the token)
- */
-function decodeJwtPayload(token: string): Record<string, unknown> | null {
-  try {
-    const parts = token.split('.')
-    if (parts.length !== 3) return null
-
-    const payload = parts[1]
-    // Base64url decode
-    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/')
-    const jsonPayload = Buffer.from(base64, 'base64').toString('utf8')
-    return JSON.parse(jsonPayload)
-  } catch (error) {
-    authLogger.error('Failed to decode JWT payload', { error: String(error) })
-    return null
   }
 }
 
@@ -54,7 +31,7 @@ function validateConfig() {
     'AZURE_AD_CLIENT_ID',
     'AZURE_AD_CLIENT_SECRET',
     'AZURE_AD_TENANT_ID',
-    'WEBADMIN_GROUP_ID',
+    'ALLOWED_ADMIN_EMAILS',
   ]
 
   const missing = required.filter((key) => !process.env[key])
@@ -63,6 +40,23 @@ function validateConfig() {
     authLogger.error('Missing required environment variables', { missing })
     throw new Error(`Missing required auth config: ${missing.join(', ')}`)
   }
+}
+
+/**
+ * Get list of allowed admin emails from environment variable
+ */
+function getAllowedAdminEmails(): string[] {
+  const emails = process.env.ALLOWED_ADMIN_EMAILS || ''
+  return emails.split(',').map(email => email.trim().toLowerCase()).filter(Boolean)
+}
+
+/**
+ * Check if an email is in the allowed admin list
+ */
+function isEmailAllowed(email: string | null | undefined): boolean {
+  if (!email) return false
+  const allowedEmails = getAllowedAdminEmails()
+  return allowedEmails.includes(email.toLowerCase())
 }
 
 // Only validate in server context
@@ -98,96 +92,44 @@ export const {
 
   callbacks: {
     async jwt({ token, account, profile }) {
-      // On initial sign in, extract group claims from the ID token
+      // On initial sign in, store access token and email
       if (account && profile) {
         token.accessToken = account.access_token
-
-        // Groups are in the ID token, not the userinfo profile
-        // We need to decode the id_token to get them
-        let groups: string[] = []
-
-        if (account.id_token) {
-          const idTokenPayload = decodeJwtPayload(account.id_token)
-          if (idTokenPayload && Array.isArray(idTokenPayload.groups)) {
-            groups = idTokenPayload.groups as string[]
-          }
-
-          authLogger.info('JWT callback - decoded ID token', {
-            email: profile.email,
-            hasGroups: !!idTokenPayload?.groups,
-            groupCount: groups.length,
-            groups: groups,
-          })
-        } else {
-          authLogger.warn('JWT callback - no id_token in account', {
-            email: profile.email,
-          })
-        }
-
-        token.groups = groups
+        token.email = profile.email
 
         authLogger.info('JWT callback - processing sign-in', {
           email: profile.email,
           oid: profile.oid,
-          groupCount: token.groups.length,
-          hasWebadminGroup: token.groups.includes(process.env.WEBADMIN_GROUP_ID || ''),
+          isAllowedAdmin: isEmailAllowed(profile.email),
         })
       }
       return token
     },
 
     async session({ session, token }) {
-      // Make groups available in session for client-side checks if needed
-      session.groups = token.groups
+      // Make access token available in session if needed
       session.accessToken = token.accessToken
       return session
     },
 
-    async signIn({ user, account }) {
-      const webadminGroupId = process.env.WEBADMIN_GROUP_ID
-
+    async signIn({ user }) {
       // Validate environment configuration
-      if (!webadminGroupId) {
-        authLogger.error('WEBADMIN_GROUP_ID not configured', {
+      const allowedEmails = getAllowedAdminEmails()
+      if (allowedEmails.length === 0) {
+        authLogger.error('ALLOWED_ADMIN_EMAILS not configured', {
           email: user.email,
         })
         return '/admin?error=configuration'
       }
 
-      // Extract groups from the ID token (same as jwt callback)
-      let groups: string[] = []
-
-      if (account?.id_token) {
-        const idTokenPayload = decodeJwtPayload(account.id_token)
-        if (idTokenPayload) {
-          authLogger.info('DEBUG - Full ID token payload', {
-            email: user.email,
-            payloadKeys: Object.keys(idTokenPayload),
-            groups: idTokenPayload.groups,
-            hasgroups: idTokenPayload.hasgroups,
-            _claim_names: idTokenPayload._claim_names,
-          })
-
-          if (Array.isArray(idTokenPayload.groups)) {
-            groups = idTokenPayload.groups as string[]
-          }
-        }
-      } else {
-        authLogger.warn('signIn callback - no id_token available', {
-          email: user.email,
-          accountProvider: account?.provider,
-        })
-      }
-
-      const isAuthorized = groups.includes(webadminGroupId)
+      // Check if user's email is in the allowed list
+      const isAuthorized = isEmailAllowed(user.email)
 
       authLogger.info('Sign-in attempt', {
         email: user.email,
         name: user.name,
         isAuthorized,
-        groupCount: groups.length,
-        groups: groups,
-        requiredGroupId: webadminGroupId,
+        allowedEmailsCount: allowedEmails.length,
         timestamp: new Date().toISOString(),
       })
 
@@ -195,9 +137,7 @@ export const {
         authLogger.security('UNAUTHORIZED_ACCESS_ATTEMPT', {
           email: user.email,
           name: user.name,
-          reason: 'User not in webadmin group',
-          userGroupCount: groups.length,
-          requiredGroup: webadminGroupId,
+          reason: 'User email not in allowed admin list',
           timestamp: new Date().toISOString(),
         })
         return '/admin?error=unauthorized'
