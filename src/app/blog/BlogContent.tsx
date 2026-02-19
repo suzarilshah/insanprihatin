@@ -4,8 +4,9 @@ import { useState, useRef } from 'react'
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useLocale, useTranslations } from 'next-intl'
 import { formatDate } from '@/lib/utils'
-import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
+import { type LocalizedString, getLocalizedValue, type Locale } from '@/i18n/config'
 
 type BlogPost = {
   id: string
@@ -25,24 +26,9 @@ type BlogPost = {
   updatedAt: Date
 }
 
-// Helper to get string from LocalizedString (default to English)
-const l = (value: LocalizedString | string | null | undefined): string => {
-  if (!value) return ''
-  if (typeof value === 'string') return value
-  return getLocalizedValue(value, 'en')
-}
-
 interface BlogContentProps {
   posts: BlogPost[]
 }
-
-const defaultCategories = [
-  { id: 'all', name: 'All Posts', icon: '📰' },
-  { id: 'news', name: 'News', icon: '📢' },
-  { id: 'stories', name: 'Impact Stories', icon: '💫' },
-  { id: 'events', name: 'Events', icon: '🎉' },
-  { id: 'announcements', name: 'Announcements', icon: '📣' },
-]
 
 const categoryColors: Record<string, string> = {
   news: 'bg-blue-100 text-blue-700',
@@ -55,6 +41,25 @@ const defaultImage = 'https://images.unsplash.com/photo-1504711434969-e33886168f
 const defaultAuthorImage = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face'
 
 export default function BlogContent({ posts }: BlogContentProps) {
+  const locale = useLocale() as Locale
+  const t = useTranslations('blog')
+
+  // Helper to get localized string based on current locale
+  const l = (value: LocalizedString | string | null | undefined): string => {
+    if (!value) return ''
+    if (typeof value === 'string') return value
+    return getLocalizedValue(value, locale)
+  }
+
+  // Categories with translations
+  const defaultCategories = [
+    { id: 'all', name: t('categories.all'), icon: '📰' },
+    { id: 'news', name: t('categories.news'), icon: '📢' },
+    { id: 'stories', name: t('categories.stories'), icon: '💫' },
+    { id: 'events', name: t('categories.events'), icon: '🎉' },
+    { id: 'announcements', name: t('categories.announcements'), icon: '📣' },
+  ]
+
   const [activeCategory, setActiveCategory] = useState('all')
   const heroRef = useRef<HTMLElement>(null)
   const { scrollYProgress } = useScroll({
@@ -140,7 +145,7 @@ export default function BlogContent({ posts }: BlogContentProps) {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/10 mb-8"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              <span className="text-sm font-medium tracking-wide text-white uppercase">The Journal</span>
+              <span className="text-sm font-medium tracking-wide text-white uppercase">{t('heroBadge')}</span>
             </motion.div>
 
             <h1 className="heading-display text-white mb-6">
@@ -150,7 +155,7 @@ export default function BlogContent({ posts }: BlogContentProps) {
                 transition={{ delay: 0.3 }}
                 className="block"
               >
-                Chronicles of
+                {t('heroTitle')}
               </motion.span>
               <motion.span
                 initial={{ opacity: 0, y: 30 }}
@@ -158,7 +163,7 @@ export default function BlogContent({ posts }: BlogContentProps) {
                 transition={{ delay: 0.4 }}
                 className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 animate-gradient-x"
               >
-                Transformation
+                {t('heroTitleHighlight')}
               </motion.span>
             </h1>
 
@@ -168,8 +173,7 @@ export default function BlogContent({ posts }: BlogContentProps) {
               transition={{ delay: 0.5 }}
               className="body-large text-white/80 max-w-2xl mx-auto"
             >
-              Voices from the ground, updates on our progress, and stories of the growing
-              impact we are building together. This is where our journey finds its narrative.
+              {t('heroDescription')}
             </motion.p>
           </motion.div>
         </motion.div>
@@ -202,7 +206,7 @@ export default function BlogContent({ posts }: BlogContentProps) {
                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                         </svg>
-                        <span className="text-xs font-bold uppercase tracking-wide">Editor&apos;s Pick</span>
+                        <span className="text-xs font-bold uppercase tracking-wide">{t('editorsPick')}</span>
                       </span>
                     </div>
                   </div>
@@ -222,7 +226,7 @@ export default function BlogContent({ posts }: BlogContentProps) {
                           </span>
                         )}
                         <span className="text-gray-300">|</span>
-                        <span className="text-gray-500 text-sm font-medium">{getReadTime(l(featuredPost.content))} read</span>
+                        <span className="text-gray-500 text-sm font-medium">{getReadTime(l(featuredPost.content))} {t('readTime')}</span>
                       </div>
 
                       <h2 className="font-display text-3xl lg:text-5xl font-bold text-foundation-charcoal mb-6 group-hover:text-teal-600 transition-colors leading-tight">
@@ -245,7 +249,7 @@ export default function BlogContent({ posts }: BlogContentProps) {
                           </div>
                           <div>
                             <div className="font-bold text-foundation-charcoal text-sm">
-                              Yayasan Team
+                              {t('author')}
                             </div>
                             <div className="text-gray-500 text-xs">
                               {featuredPost.publishedAt ? formatDate(featuredPost.publishedAt) : formatDate(featuredPost.createdAt)}
@@ -254,7 +258,7 @@ export default function BlogContent({ posts }: BlogContentProps) {
                         </div>
 
                         <div className="flex items-center gap-2 text-teal-600 font-bold text-sm uppercase tracking-wider group-hover:gap-3 transition-all">
-                          Read Story
+                          {t('readStory')}
                           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                           </svg>
@@ -278,7 +282,7 @@ export default function BlogContent({ posts }: BlogContentProps) {
         <div className="relative container-wide">
           <div className="text-center mb-16">
              <h2 className="heading-section text-foundation-charcoal mb-4">
-               Latest <span className="text-teal-600 italic font-serif">Updates</span>
+               {t('latestUpdates')} <span className="text-teal-600 italic font-serif">{t('latestUpdatesHighlight')}</span>
              </h2>
           </div>
 
@@ -361,7 +365,7 @@ export default function BlogContent({ posts }: BlogContentProps) {
                         {/* Read time */}
                         <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
                           <span className="px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-sm text-xs font-medium text-gray-700">
-                            {getReadTime(l(post.content))} read
+                            {getReadTime(l(post.content))} {t('readTime')}
                           </span>
                         </div>
                       </div>
@@ -389,7 +393,7 @@ export default function BlogContent({ posts }: BlogContentProps) {
                             </div>
                             <div className="text-xs">
                               <div className="font-bold text-foundation-charcoal">
-                                Team
+                                {t('team')}
                               </div>
                               <div className="text-gray-400">
                                 {post.publishedAt ? formatDate(post.publishedAt) : formatDate(post.createdAt)}
@@ -398,7 +402,7 @@ export default function BlogContent({ posts }: BlogContentProps) {
                           </div>
 
                           <div className="flex items-center gap-1 text-teal-600 font-bold text-xs uppercase tracking-wider group-hover:gap-2 transition-all">
-                            Read
+                            {t('read')}
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>
@@ -412,13 +416,13 @@ export default function BlogContent({ posts }: BlogContentProps) {
                 <div className="col-span-full text-center py-16 bg-white rounded-3xl border border-dashed border-gray-200">
                   <div className="text-6xl mb-4">📝</div>
                   <h3 className="font-heading text-xl font-semibold text-foundation-charcoal mb-2">
-                    No Blog Posts Yet
+                    {t('noPosts')}
                   </h3>
                   <p className="text-gray-500 mb-6">
-                    We&apos;re working on great content. Check back soon!
+                    {t('noPostsDescription')}
                   </p>
                   <Link href="/contact" className="btn-primary">
-                    Stay in Touch
+                    {t('stayInTouch')}
                   </Link>
                 </div>
               ) : null}
@@ -455,26 +459,25 @@ export default function BlogContent({ posts }: BlogContentProps) {
                 </motion.span>
 
                 <h2 className="heading-subsection text-white mb-4">
-                  Join Our Community of Changemakers
+                  {t('newsletter.title')}
                 </h2>
                 <p className="text-white/80 text-lg mb-10">
-                  Get exclusive updates on our projects, inspiring stories from the field, 
-                  and invitations to upcoming events.
+                  {t('newsletter.description')}
                 </p>
 
                 <form className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto">
                   <input
                     type="email"
-                    placeholder="Enter your email address"
+                    placeholder={t('newsletter.placeholder')}
                     className="flex-1 px-6 py-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all"
                   />
                   <button type="submit" className="btn-secondary whitespace-nowrap shadow-lg hover:shadow-glow-amber">
-                    Subscribe Now
+                    {t('newsletter.subscribe')}
                   </button>
                 </form>
 
                 <p className="text-white/40 text-xs mt-6">
-                  We respect your inbox. Zero spam, just impact. Unsubscribe anytime.
+                  {t('newsletter.disclaimer')}
                 </p>
               </div>
             </div>

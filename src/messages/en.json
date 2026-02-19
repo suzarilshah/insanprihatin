@@ -94,20 +94,39 @@
   },
   "blog": {
     "pageTitle": "Blog & News",
-    "heroTitle": "Stories of",
-    "heroTitleHighlight": "Impact & Hope",
-    "heroDescription": "Read about our journey, success stories, and the latest updates from our community.",
+    "heroBadge": "The Journal",
+    "heroTitle": "Chronicles of",
+    "heroTitleHighlight": "Transformation",
+    "heroDescription": "Voices from the ground, updates on our progress, and stories of the growing impact we are building together. This is where our journey finds its narrative.",
+    "editorsPick": "Editor's Pick",
+    "readTime": "read",
+    "readStory": "Read Story",
+    "read": "Read",
+    "author": "Yayasan Team",
+    "team": "Team",
+    "latestUpdates": "Latest",
+    "latestUpdatesHighlight": "Updates",
+    "noPosts": "No Blog Posts Yet",
+    "noPostsDescription": "We're working on great content. Check back soon!",
+    "stayInTouch": "Stay in Touch",
     "readMore": "Read More",
     "publishedOn": "Published on",
     "byAuthor": "By",
-    "noPosts": "No blog posts found",
     "filterAll": "All Posts",
     "categories": {
+      "all": "All Posts",
       "news": "News",
       "updates": "Updates",
       "stories": "Impact Stories",
       "events": "Events",
       "announcements": "Announcements"
+    },
+    "newsletter": {
+      "title": "Join Our Community of Changemakers",
+      "description": "Get exclusive updates on our projects, inspiring stories from the field, and invitations to upcoming events.",
+      "placeholder": "Enter your email address",
+      "subscribe": "Subscribe Now",
+      "disclaimer": "We respect your inbox. Zero spam, just impact. Unsubscribe anytime."
     }
   },
   "contact": {

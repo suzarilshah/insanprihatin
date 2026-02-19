@@ -94,20 +94,39 @@
   },
   "blog": {
     "pageTitle": "Blog & Berita",
-    "heroTitle": "Kisah",
-    "heroTitleHighlight": "Impak & Harapan",
-    "heroDescription": "Baca tentang perjalanan kami, kisah kejayaan, dan perkembangan terkini dari komuniti kami.",
+    "heroBadge": "Jurnal",
+    "heroTitle": "Kronik",
+    "heroTitleHighlight": "Transformasi",
+    "heroDescription": "Suara dari lapangan, kemaskini kemajuan kami, dan kisah impak yang semakin berkembang yang kami bina bersama. Di sinilah perjalanan kami menemui naratifnya.",
+    "editorsPick": "Pilihan Editor",
+    "readTime": "bacaan",
+    "readStory": "Baca Kisah",
+    "read": "Baca",
+    "author": "Pasukan Yayasan",
+    "team": "Pasukan",
+    "latestUpdates": "Terkini",
+    "latestUpdatesHighlight": "Kemaskini",
+    "noPosts": "Tiada Artikel Blog Lagi",
+    "noPostsDescription": "Kami sedang mengerjakan kandungan yang hebat. Sila kembali semula!",
+    "stayInTouch": "Kekal Berhubung",
     "readMore": "Baca Lagi",
     "publishedOn": "Diterbitkan pada",
     "byAuthor": "Oleh",
-    "noPosts": "Tiada artikel dijumpai",
     "filterAll": "Semua Artikel",
     "categories": {
+      "all": "Semua Artikel",
       "news": "Berita",
       "updates": "Kemaskini",
       "stories": "Kisah Impak",
       "events": "Acara",
       "announcements": "Pengumuman"
+    },
+    "newsletter": {
+      "title": "Sertai Komuniti Pembawa Perubahan Kami",
+      "description": "Dapatkan kemaskini eksklusif tentang projek kami, kisah inspirasi dari lapangan, dan jemputan ke acara akan datang.",
+      "placeholder": "Masukkan alamat email anda",
+      "subscribe": "Langgan Sekarang",
+      "disclaimer": "Kami menghormati peti masuk anda. Tiada spam, hanya impak. Berhenti langganan bila-bila masa."
     }
   },
   "contact": {
