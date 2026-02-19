@@ -5,12 +5,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useRef, useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { PhotoAttributionOverlay } from '@/components/ui/PhotoAttribution'
-import { useUnsplashTracking } from '@/hooks/useUnsplashTracking'
-import { type StockPhotoItem, DEFAULT_STOCK_PHOTOS } from '@/lib/stock-photo-config'
-
-// Accept both string URLs (for custom uploaded images) and StockPhotoItem (for stock photos with attribution)
-type ImageProp = string | StockPhotoItem | null | undefined
 
 interface HeroProps {
   title?: string
@@ -18,25 +12,12 @@ interface HeroProps {
   description?: string
   ctaText?: string
   ctaLink?: string
-  backgroundImage?: ImageProp
-  communityImage?: ImageProp
+  backgroundImage?: string | null
+  communityImage?: string | null
 }
 
-// Helper to normalize image prop to StockPhotoItem or extract URL
-function normalizeImageProp(
-  prop: ImageProp,
-  defaultPhoto: StockPhotoItem
-): { url: string; photo: StockPhotoItem | null; isStock: boolean } {
-  if (!prop) {
-    return { url: defaultPhoto.url, photo: defaultPhoto, isStock: true }
-  }
-  if (typeof prop === 'string') {
-    // Custom uploaded image - no attribution needed
-    return { url: prop, photo: null, isStock: false }
-  }
-  // StockPhotoItem
-  return { url: prop.url, photo: prop, isStock: true }
-}
+const DEFAULT_BACKGROUND = 'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?q=85&w=3840&auto=format&fit=crop'
+const DEFAULT_COMMUNITY = 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=85&w=1600&auto=format&fit=crop'
 
 export default function Hero({
   title,
@@ -55,13 +36,7 @@ export default function Hero({
   const displayDescription = description || t('defaultDescription')
   const displayCtaText = ctaText || t('defaultCta')
 
-  // Handle both custom images (string) and stock photos (StockPhotoItem)
-  const bg = normalizeImageProp(backgroundImage, DEFAULT_STOCK_PHOTOS.heroBackground)
-  const community = normalizeImageProp(communityImage, DEFAULT_STOCK_PHOTOS.heroCommunity)
-
-  // Track Unsplash photo views (only for stock photos)
-  useUnsplashTracking(bg.isStock && bg.photo ? bg.photo.photoId : null)
-  useUnsplashTracking(community.isStock && community.photo ? community.photo.photoId : null)
+  const bgImage = backgroundImage || DEFAULT_BACKGROUND
   const containerRef = useRef<HTMLElement>(null)
   // Delay heavy animations until after initial render for better LCP
   const [isHydrated, setIsHydrated] = useState(false)
@@ -86,7 +61,7 @@ export default function Hero({
       <div className="absolute inset-0 z-0">
         <motion.div style={{ scale: isHydrated ? heroScale : 1 }} className="absolute inset-0">
           <Image
-            src={bg.url}
+            src={bgImage}
             alt="Impact Background"
             fill
             sizes="100vw"
@@ -100,9 +75,9 @@ export default function Hero({
         {/* Cinematic Gradient Overlay - Critical for Nav Visibility */}
         <div className="absolute inset-0 bg-gradient-to-b from-teal-950/90 via-teal-900/70 to-teal-900/40" />
 
-        {/* Noise Texture for Film Grain Effect - CSS-based for performance */}
+        {/* Noise Texture for Film Grain Effect - Deferred */}
         {isHydrated && (
-          <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E\")" }} />
+          <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay pointer-events-none" />
         )}
       </div>
 
@@ -163,7 +138,7 @@ export default function Hero({
               </p>
 
               <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 sm:gap-5">
-                <Link href={ctaLink} className="group relative px-6 md:px-8 py-3 md:py-4 bg-teal-700 text-white rounded-full font-bold tracking-wide overflow-hidden transition-all hover:shadow-[0_0_40px_-10px_rgba(42,173,173,0.5)] text-center sm:text-left">
+                <Link href={ctaLink} className="group relative px-6 md:px-8 py-3 md:py-4 bg-teal-500 text-white rounded-full font-bold tracking-wide overflow-hidden transition-all hover:shadow-[0_0_40px_-10px_rgba(42,173,173,0.5)] text-center sm:text-left">
                   <span className="relative z-10 flex items-center justify-center sm:justify-start gap-2">
                     {displayCtaText}
                     <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -234,7 +209,7 @@ export default function Hero({
                 {/* Central Image/Graphic - Lazy loaded */}
                 <div className="relative w-full aspect-[4/5] rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl group">
                   <Image
-                    src={community.url}
+                    src={communityImage || DEFAULT_COMMUNITY}
                     alt="Community Joy"
                     fill
                     sizes="(max-width: 1024px) 0vw, 40vw"
@@ -243,15 +218,6 @@ export default function Hero({
                     quality={75}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-teal-900/60 to-transparent" />
-                  {/* Unsplash Attribution (only for stock photos) */}
-                  {community.isStock && community.photo && (
-                    <PhotoAttributionOverlay
-                      photographerName={community.photo.photographerName}
-                      photographerUsername={community.photo.photographerUsername}
-                      position="bottom-left"
-                      showOnHover={true}
-                    />
-                  )}
                 </div>
               </motion.div>
             )}
@@ -271,20 +237,6 @@ export default function Hero({
           <span className="text-[10px] uppercase tracking-[0.2em] text-white/40">{t('scrollToExplore')}</span>
           <div className="w-[1px] h-12 bg-gradient-to-b from-white/0 via-white/50 to-white/0" />
         </motion.div>
-      )}
-
-      {/* Background Image Attribution - Subtle placement (only for stock photos) */}
-      {bg.isStock && bg.photo && (
-        <div className="absolute bottom-2 left-4 z-10 hidden md:block">
-          <PhotoAttributionOverlay
-            photographerName={bg.photo.photographerName}
-            photographerUsername={bg.photo.photographerUsername}
-            position="bottom-left"
-            showOnHover={false}
-            size="sm"
-            className="!relative !bottom-0 !left-0"
-          />
-        </div>
       )}
     </section>
   )

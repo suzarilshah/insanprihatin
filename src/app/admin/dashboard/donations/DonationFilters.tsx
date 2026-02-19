@@ -99,19 +99,19 @@ export default function DonationFilters({
         {hasSandboxDonations && (
           <div className="relative">
             <select
-              value={currentParams.environment || 'all'}
+              value={currentParams.environment || 'production'}
               onChange={(e) => updateFilters({ environment: e.target.value })}
               className={`appearance-none px-4 py-2.5 pr-10 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white font-medium transition-all cursor-pointer ${
                 currentParams.environment === 'sandbox'
                   ? 'border-amber-300 bg-amber-50 text-amber-700'
-                  : currentParams.environment === 'production'
-                    ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
-                    : 'border-gray-200 text-gray-700'
+                  : currentParams.environment === 'all'
+                    ? 'border-gray-200 text-gray-700'
+                    : 'border-emerald-300 bg-emerald-50 text-emerald-700'
               }`}
             >
-              <option value="all">All Environments</option>
-              <option value="production">Production</option>
-              <option value="sandbox">Sandbox (Test)</option>
+              <option value="production">Production Only</option>
+              <option value="sandbox">Sandbox Mode (Test)</option>
+              <option value="all">All (Include Tests)</option>
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3">
               <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

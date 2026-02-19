@@ -142,7 +142,7 @@ export default function DonateContent() {
         </motion.div>
         {/* Cinematic Overlay - ensuring nav visibility and text contrast */}
         <div className="absolute inset-0 bg-gradient-to-b from-foundation-charcoal/80 via-foundation-charcoal/60 to-foundation-pearl" />
-        <div className="absolute inset-0 opacity-[0.05] mix-blend-overlay pointer-events-none" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E\")" }} />
+        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.05] mix-blend-overlay" />
       </section>
 
       <motion.div style={{ opacity: heroOpacity }} className="relative z-10 container-wide pt-40 pb-20">
@@ -443,7 +443,7 @@ export default function DonateContent() {
           >
             {/* Dynamic Impact Card */}
             <div className="bg-gradient-to-br from-amber-400 to-orange-500 rounded-[2rem] p-1 shadow-2xl text-white relative overflow-hidden group">
-              <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E\")" }} />
+              <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20" />
               <div className="relative bg-white/10 backdrop-blur-md rounded-[1.8rem] p-8 h-full border border-white/20">
                 <div className="text-amber-100 text-sm font-semibold uppercase tracking-wider mb-2">{t('impact.title')}</div>
                 <div className="text-5xl mb-4 transform group-hover:scale-110 transition-transform duration-500">{currentImpact.emoji}</div>

@@ -190,7 +190,8 @@ export default async function DonationsManagement({
   const projectsForFilter = await getProjectsForFilter()
 
   // Determine which stats to show based on environment filter
-  const currentEnv = params.environment || 'all'
+  // Default to 'production' to hide sandbox donations by default
+  const currentEnv = params.environment || 'production'
   const stats = currentEnv === 'production'
     ? envStats.production
     : currentEnv === 'sandbox'

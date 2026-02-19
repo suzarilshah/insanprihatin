@@ -153,6 +153,11 @@ export async function sendTestEmail(toEmail: string): Promise<EmailResult> {
 
 /**
  * Generate HTML email content for contact notifications
+ * Uses Yayasan Insan Prihatin brand colors:
+ * - Teal: #009CA6 (primary)
+ * - Amber: #F6A800 (accent)
+ * - Charcoal: #2D3436 (text)
+ * - Pearl: #FAFBFC (background)
  */
 function generateContactEmailHtml(
   submission: ContactSubmission,
@@ -164,58 +169,79 @@ function generateContactEmailHtml(
     timeStyle: 'short',
   })
 
+  const org = getDefaultOrganizationConfig()
+  const websiteUrl = org.website.startsWith('http') ? org.website : `https://${org.website}`
+
+  // Brand colors
+  const colors = {
+    teal: '#009CA6',
+    tealDark: '#00796B',
+    tealLight: '#E0F2F1',
+    amber: '#F6A800',
+    amberLight: '#FFF9C4',
+    charcoal: '#2D3436',
+    slate: '#636E72',
+    pearl: '#FAFBFC',
+  }
+
   return `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>New Contact Form Submission</title>
+  <title>New Contact Form Submission - ${escapeHtml(org.name)}</title>
 </head>
-<body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-  <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-    <!-- Header -->
-    <div style="background: linear-gradient(135deg, #0d9488 0%, #0e7490 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
-      <h1 style="color: white; margin: 0; font-size: 24px; font-weight: 600;">
-        New Contact Form Submission
+<body style="margin: 0; padding: 0; background-color: ${colors.pearl}; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 24px;">
+
+    <!-- Logo Header -->
+    <div style="text-align: center; padding: 32px 20px; background: white; border-radius: 24px 24px 0 0; border: 1px solid #E5E7EB; border-bottom: none;">
+      <img src="${websiteUrl}/images/logo.png" alt="${escapeHtml(org.name)}" style="height: 64px; width: auto; margin-bottom: 16px;" />
+      <h1 style="color: ${colors.charcoal}; margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">
+        New Message Received
       </h1>
-      <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0; font-size: 14px;">
+      <p style="color: ${colors.slate}; margin: 8px 0 0; font-size: 14px;">
         ${submissionTime}
       </p>
     </div>
 
+    <!-- Accent Bar -->
+    <div style="height: 4px; background: linear-gradient(90deg, ${colors.teal} 0%, ${colors.amber} 50%, ${colors.teal} 100%);"></div>
+
     <!-- Content -->
-    <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none;">
+    <div style="background: white; padding: 32px; border: 1px solid #E5E7EB; border-top: none;">
+
       <!-- Inquiry Type Badge -->
-      <div style="margin-bottom: 20px;">
-        <span style="display: inline-block; background: #f0fdfa; color: #0d9488; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: 500;">
-          ${subjectLabel}
+      <div style="margin-bottom: 24px; text-align: center;">
+        <span style="display: inline-block; background: linear-gradient(135deg, ${colors.amberLight} 0%, #FFF3E0 100%); color: ${colors.charcoal}; padding: 10px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid rgba(246, 168, 0, 0.3);">
+          📬 ${subjectLabel}
         </span>
       </div>
 
-      <!-- Sender Info -->
-      <div style="background: #f9fafb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-        <h2 style="color: #1f2937; font-size: 16px; margin: 0 0 15px; font-weight: 600;">
+      <!-- Sender Info Card -->
+      <div style="background: linear-gradient(135deg, ${colors.tealLight} 0%, #F0FDFA 100%); border-radius: 16px; padding: 24px; margin-bottom: 24px; border: 1px solid rgba(0, 156, 166, 0.2);">
+        <h2 style="color: ${colors.teal}; font-size: 12px; margin: 0 0 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
           Contact Information
         </h2>
         <table style="width: 100%; border-collapse: collapse;">
           <tr>
-            <td style="padding: 8px 0; color: #6b7280; font-size: 14px; width: 100px;">Name:</td>
-            <td style="padding: 8px 0; color: #1f2937; font-size: 14px; font-weight: 500;">${escapeHtml(submission.name)}</td>
+            <td style="padding: 10px 0; color: ${colors.slate}; font-size: 13px; width: 80px; vertical-align: top;">Name</td>
+            <td style="padding: 10px 0; color: ${colors.charcoal}; font-size: 15px; font-weight: 600;">${escapeHtml(submission.name)}</td>
           </tr>
           <tr>
-            <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Email:</td>
-            <td style="padding: 8px 0;">
-              <a href="mailto:${escapeHtml(submission.email)}" style="color: #0d9488; text-decoration: none; font-size: 14px;">
+            <td style="padding: 10px 0; color: ${colors.slate}; font-size: 13px; vertical-align: top;">Email</td>
+            <td style="padding: 10px 0;">
+              <a href="mailto:${escapeHtml(submission.email)}" style="color: ${colors.teal}; text-decoration: none; font-size: 15px; font-weight: 500;">
                 ${escapeHtml(submission.email)}
               </a>
             </td>
           </tr>
           ${submission.phone ? `
           <tr>
-            <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Phone:</td>
-            <td style="padding: 8px 0;">
-              <a href="tel:${escapeHtml(submission.phone)}" style="color: #0d9488; text-decoration: none; font-size: 14px;">
+            <td style="padding: 10px 0; color: ${colors.slate}; font-size: 13px; vertical-align: top;">Phone</td>
+            <td style="padding: 10px 0;">
+              <a href="tel:${escapeHtml(submission.phone)}" style="color: ${colors.teal}; text-decoration: none; font-size: 15px; font-weight: 500;">
                 ${escapeHtml(submission.phone)}
               </a>
             </td>
@@ -224,36 +250,45 @@ function generateContactEmailHtml(
         </table>
       </div>
 
-      <!-- Message -->
-      <div style="margin-bottom: 20px;">
-        <h2 style="color: #1f2937; font-size: 16px; margin: 0 0 15px; font-weight: 600;">
+      <!-- Message Card -->
+      <div style="margin-bottom: 28px;">
+        <h2 style="color: ${colors.charcoal}; font-size: 12px; margin: 0 0 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
           Message
         </h2>
-        <div style="background: #f9fafb; border-radius: 8px; padding: 20px; border-left: 4px solid #0d9488;">
-          <p style="color: #374151; font-size: 15px; line-height: 1.7; margin: 0; white-space: pre-wrap;">${escapeHtml(submission.message)}</p>
+        <div style="background: ${colors.pearl}; border-radius: 16px; padding: 24px; border-left: 4px solid ${colors.amber};">
+          <p style="color: ${colors.charcoal}; font-size: 15px; line-height: 1.8; margin: 0; white-space: pre-wrap;">${escapeHtml(submission.message)}</p>
         </div>
       </div>
 
       <!-- Action Buttons -->
-      <div style="text-align: center; margin-top: 30px;">
+      <div style="text-align: center;">
         <a href="mailto:${escapeHtml(submission.email)}?subject=Re: ${encodeURIComponent(subjectLabel)}"
-           style="display: inline-block; background: linear-gradient(135deg, #0d9488 0%, #0e7490 100%); color: white; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: 500; font-size: 14px;">
-          Reply to ${escapeHtml(submission.name.split(' ')[0])}
+           style="display: inline-block; background: linear-gradient(135deg, ${colors.teal} 0%, ${colors.tealDark} 100%); color: white; padding: 16px 40px; border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 14px; box-shadow: 0 4px 14px rgba(0, 156, 166, 0.4);">
+          ✉️ Reply to ${escapeHtml(submission.name.split(' ')[0])}
         </a>
       </div>
     </div>
 
     <!-- Footer -->
-    <div style="padding: 20px; text-align: center; border-radius: 0 0 12px 12px; background: #f9fafb; border: 1px solid #e5e7eb; border-top: none;">
-      <p style="color: #6b7280; font-size: 12px; margin: 0;">
-        This email was sent from the contact form on<br>
-        <a href="https://insanprihatin.org" style="color: #0d9488; text-decoration: none;">
-          insanprihatin.org
-        </a>
+    <div style="padding: 28px; text-align: center; border-radius: 0 0 24px 24px; background: ${colors.charcoal}; border: 1px solid ${colors.charcoal}; border-top: none;">
+      <p style="color: white; font-size: 16px; font-weight: 600; margin: 0 0 4px;">
+        ${escapeHtml(org.name)}
       </p>
+      <p style="color: rgba(255,255,255,0.7); font-size: 13px; margin: 0 0 16px;">
+        ${escapeHtml(org.tagline)}
+      </p>
+      <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px; margin-top: 8px;">
+        <a href="${websiteUrl}" style="color: ${colors.amber}; text-decoration: none; font-size: 13px; font-weight: 500;">
+          ${escapeHtml(org.website)}
+        </a>
+        <span style="color: rgba(255,255,255,0.3); margin: 0 8px;">•</span>
+        <a href="mailto:${escapeHtml(org.email)}" style="color: ${colors.amber}; text-decoration: none; font-size: 13px; font-weight: 500;">
+          ${escapeHtml(org.email)}
+        </a>
+      </div>
       ${submission.id ? `
-      <p style="color: #9ca3af; font-size: 11px; margin: 10px 0 0;">
-        Reference ID: ${submission.id}
+      <p style="color: rgba(255,255,255,0.4); font-size: 11px; margin: 16px 0 0;">
+        Reference: ${submission.id}
       </p>
       ` : ''}
     </div>
@@ -462,7 +497,7 @@ function generateFormEmailHtml(notification: FormNotificationData): string {
 // DONATION RECEIPT EMAIL
 // ============================================
 
-import { type OrganizationConfig, getDefaultOrganizationConfig } from './organization-config'
+import { type OrganizationConfig, getDefaultOrganizationConfig } from './organization-config-client'
 
 interface DonationReceiptData {
   receiptNumber: string
