@@ -52,8 +52,8 @@ export default async function HomePage({
           description={localizedHero?.description || undefined}
           ctaText={localizedHero?.ctaText || undefined}
           ctaLink={localizedHero?.ctaLink ?? undefined}
-          backgroundImage={localizedHero?.backgroundImage || stockPhotos.heroBackground}
-          communityImage={stockPhotos.heroCommunity}
+          backgroundImage={localizedHero?.backgroundImage || stockPhotos.heroBackground?.url}
+          communityImage={stockPhotos.heroCommunity?.url}
         />
         <Problem />
         <Solution

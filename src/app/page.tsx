@@ -45,8 +45,8 @@ export default async function HomePage() {
           description={l(heroContent?.description)}
           ctaText={l(heroContent?.ctaText)}
           ctaLink={heroContent?.ctaLink ?? undefined}
-          backgroundImage={heroContent?.backgroundImage || stockPhotos.heroBackground}
-          communityImage={stockPhotos.heroCommunity}
+          backgroundImage={heroContent?.backgroundImage || stockPhotos.heroBackground?.url}
+          communityImage={stockPhotos.heroCommunity?.url}
         />
         <Problem />
         <Solution
