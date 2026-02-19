@@ -689,6 +689,19 @@
       "description": "Sertai kami dalam misi untuk mencipta perubahan positif yang berkekalan untuk komuniti di seluruh Malaysia.",
       "donate": "Derma Sekarang",
       "contact": "Hubungi Kami"
+    },
+    "notFound": {
+      "title": "Halaman Tidak Dijumpai",
+      "message": "Nampaknya anda sedikit sesat",
+      "goHome": "Kembali ke laman utama",
+      "backToHome": "Kembali ke Laman Utama",
+      "needHelp": "Perlukan bantuan?",
+      "links": {
+        "about": "Tentang Kami",
+        "projects": "Projek",
+        "contact": "Hubungi",
+        "donate": "Derma"
+      }
     }
   }
 }

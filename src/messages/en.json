@@ -689,6 +689,19 @@
       "description": "Join us in our mission to create lasting positive change for communities across Malaysia.",
       "donate": "Donate Now",
       "contact": "Contact Us"
+    },
+    "notFound": {
+      "title": "Page Not Found",
+      "message": "It seems you got a little bit lost",
+      "goHome": "Go back to homepage",
+      "backToHome": "Back to Home",
+      "needHelp": "Need assistance?",
+      "links": {
+        "about": "About",
+        "projects": "Projects",
+        "contact": "Contact",
+        "donate": "Donate"
+      }
     }
   }
 }
