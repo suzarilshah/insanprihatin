@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
-import { uploadFile, getFileUrl, deleteFile } from '@/lib/appwrite'
+import { deleteFile } from '@/lib/appwrite'
 import StockPhotoSelector from './StockPhotoSelector'
 
 interface ImageUploadProps {
@@ -76,7 +76,7 @@ export default function ImageUpload({
     setIsUploading(true)
     setUploadProgress(0)
 
-    // Simulate progress for UX (Appwrite doesn't provide progress events in web SDK)
+    // Simulate progress for UX
     const progressInterval = setInterval(() => {
       setUploadProgress((prev) => {
         if (prev >= 90) {
@@ -88,8 +88,20 @@ export default function ImageUpload({
     }, 150)
 
     try {
-      const fileId = await uploadFile(file)
-      const fileUrl = getFileUrl(fileId)
+      // Use server-side API for upload (avoids CORS/permission issues)
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Upload failed')
+      }
 
       // If there was a previous image, try to delete it
       const previousFileId = extractFileId(value)
@@ -104,7 +116,7 @@ export default function ImageUpload({
 
       clearInterval(progressInterval)
       setUploadProgress(100)
-      onChange(fileUrl)
+      onChange(data.fileUrl)
 
       setTimeout(() => {
         setIsUploading(false)
@@ -115,7 +127,7 @@ export default function ImageUpload({
       setIsUploading(false)
       setUploadProgress(0)
       console.error('Upload failed:', err)
-      setError('Upload failed. Please try again.')
+      setError(err instanceof Error ? err.message : 'Upload failed. Please try again.')
     }
   }
 
