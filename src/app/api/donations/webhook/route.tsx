@@ -70,6 +70,18 @@ export async function POST(request: NextRequest) {
   console.log(`[Webhook ${requestId}] ToyyibPay callback received`)
   console.log(`${'='.repeat(60)}`)
 
+  const configuredWebhookSecret = process.env.TOYYIBPAY_WEBHOOK_SECRET
+  if (configuredWebhookSecret) {
+    const queryToken = request.nextUrl.searchParams.get('token')
+    const headerToken = request.headers.get('x-yip-webhook-secret')
+    const providedToken = queryToken || headerToken
+
+    if (!providedToken || providedToken !== configuredWebhookSecret) {
+      console.warn(`[Webhook ${requestId}] Invalid webhook token`)
+      return NextResponse.json({ error: 'Unauthorized webhook request' }, { status: 401 })
+    }
+  }
+
   try {
     // ===== PARSE WEBHOOK PAYLOAD =====
 

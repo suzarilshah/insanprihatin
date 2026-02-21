@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Client, Storage, ID } from 'node-appwrite'
+import { requireAuth } from '@/lib/auth/server'
+import { enforceTrustedOrigin } from '@/lib/security/request'
 
 // Server-side Appwrite client with API key
 const getClient = () => {
@@ -17,6 +19,15 @@ const getClient = () => {
 const BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID!
 
 export async function POST(request: NextRequest) {
+  const originCheck = enforceTrustedOrigin(request)
+  if (originCheck) return originCheck
+
+  try {
+    await requireAuth()
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     // Check if API key is configured
     if (!process.env.APPWRITE_API_KEY) {

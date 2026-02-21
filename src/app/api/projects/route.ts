@@ -2,10 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db, projects } from '@/db'
 import { eq, desc, and } from 'drizzle-orm'
 import { getSession } from '@/lib/auth/server'
+import { RateLimiters } from '@/lib/api-rate-limit'
 
 // GET - List projects with filtering
 // SECURITY: Public endpoint but only returns published projects for unauthenticated users
 export async function GET(request: NextRequest) {
+  const rateLimitResponse = await RateLimiters.general(request)
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const { searchParams } = new URL(request.url)
     const donationEnabled = searchParams.get('donationEnabled')

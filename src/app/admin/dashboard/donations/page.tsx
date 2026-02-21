@@ -3,8 +3,11 @@ import { db, donations, projects } from '@/db'
 import { desc, sql, eq, and, gte, lte } from 'drizzle-orm'
 import DonationsTable from './DonationsTable'
 import DonationFilters from './DonationFilters'
+import DonationToggle from './DonationToggle'
 import EnvironmentBanner from './EnvironmentBanner'
+import ExportButton from './ExportButton'
 import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
+import { getSiteSetting } from '@/lib/actions/content'
 
 interface SearchParams {
   status?: string
@@ -185,9 +188,17 @@ export default async function DonationsManagement({
   searchParams: Promise<SearchParams>
 }) {
   const params = await searchParams
-  const envStats = await getDonationStats()
-  const donationsList = await getDonations(params)
-  const projectsForFilter = await getProjectsForFilter()
+  const [envStats, donationsList, projectsForFilter, donationClosedSetting] = await Promise.all([
+    getDonationStats(),
+    getDonations(params),
+    getProjectsForFilter(),
+    getSiteSetting('donationsClosed') as Promise<{
+      closed: boolean
+      reason: { en: string; ms: string } | null
+      closedAt: string | null
+      closedBy: string | null
+    } | null>,
+  ])
 
   // Determine which stats to show based on environment filter
   // Default to 'production' to hide sandbox donations by default
@@ -241,14 +252,17 @@ export default async function DonationsManagement({
           </p>
         </div>
 
-        {/* Quick Export Button */}
-        <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Export CSV
-          </button>
+        {/* Actions: Toggle + Export */}
+        <div className="flex flex-col items-end gap-3">
+          <div className="flex items-center gap-3">
+            <DonationToggle
+              initialClosed={donationClosedSetting?.closed ?? false}
+              initialReason={donationClosedSetting?.reason ?? null}
+              closedAt={donationClosedSetting?.closedAt ?? null}
+              closedBy={donationClosedSetting?.closedBy ?? null}
+            />
+            <ExportButton environment={currentEnv} />
+          </div>
         </div>
       </div>
 

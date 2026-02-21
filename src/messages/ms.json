@@ -349,6 +349,13 @@
       "emailRequired": "E-mel diperlukan untuk menghantar resit sumbangan anda",
       "minimumAmount": "Jumlah sumbangan minimum adalah RM 1"
     },
+    "closed": {
+      "title": "Sumbangan Tidak Dibuka Buat Masa Ini",
+      "description": "Kami tidak menerima sumbangan pada masa ini. Terima kasih atas kemurahan hati dan pemahaman anda. Sila semak semula kemudian atau hubungi kami untuk maklumat lanjut.",
+      "contactUs": "Hubungi Kami",
+      "returnHome": "Kembali ke Utama",
+      "badge": "Tidak Tersedia Buat Sementara"
+    },
     "success": {
       "title": "Terima Kasih Atas Kemurahan Hati Anda!",
       "description": "Pembayaran anda telah diterima dengan jayanya.",

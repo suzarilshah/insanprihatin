@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 
@@ -365,7 +366,15 @@ function DonorForm({
 }
 
 // Main Donate Content Component
-export default function DonateContent() {
+interface DonateContentProps {
+  donationsClosed?: boolean
+  closureReason?: { en: string; ms: string } | null
+}
+
+export default function DonateContent({
+  donationsClosed = false,
+  closureReason = null,
+}: DonateContentProps) {
   const t = useTranslations('donate')
   const locale = useLocale()
   const router = useRouter()
@@ -562,6 +571,98 @@ export default function DonateContent() {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
 
+            {donationsClosed ? (
+              /* ========== DONATION CLOSED STATE ========== */
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden"
+              >
+                <div className="p-8 md:p-12 text-center">
+                  {/* Status Badge */}
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.4 }}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-50 border border-amber-200 mb-8"
+                  >
+                    <span className="relative flex h-2 w-2">
+                      <span className="absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
+                    </span>
+                    <span className="text-sm font-medium text-amber-700">{t('closed.badge')}</span>
+                  </motion.div>
+
+                  {/* Icon */}
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.5 }}
+                    className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-amber-100 to-orange-100 rounded-full flex items-center justify-center"
+                  >
+                    <svg className="w-10 h-10 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                    </svg>
+                  </motion.div>
+
+                  {/* Title */}
+                  <motion.h2
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 }}
+                    className="text-2xl md:text-3xl font-bold text-gray-900 mb-4"
+                  >
+                    {t('closed.title')}
+                  </motion.h2>
+
+                  {/* Reason or default description */}
+                  <motion.p
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.7 }}
+                    className="text-lg text-gray-600 mb-8 max-w-lg mx-auto leading-relaxed"
+                  >
+                    {closureReason
+                      ? (locale === 'ms' ? closureReason.ms || closureReason.en : closureReason.en)
+                      : t('closed.description')
+                    }
+                  </motion.p>
+
+                  {/* Divider */}
+                  <div className="w-16 h-1 bg-gradient-to-r from-amber-300 to-orange-300 rounded-full mx-auto mb-8" />
+
+                  {/* CTAs */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.8 }}
+                    className="flex flex-col sm:flex-row gap-3 justify-center"
+                  >
+                    <Link
+                      href={`/${locale}/contact`}
+                      className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-teal-700 hover:to-emerald-700 transition-all shadow-lg shadow-teal-500/20 hover:shadow-xl hover:shadow-teal-500/30"
+                    >
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      {t('closed.contactUs')}
+                    </Link>
+                    <Link
+                      href={`/${locale}`}
+                      className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all"
+                    >
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                      </svg>
+                      {t('closed.returnHome')}
+                    </Link>
+                  </motion.div>
+                </div>
+              </motion.div>
+            ) : (
+            /* ========== NORMAL DONATION FORM ========== */
+            <>
             {/* Progress Steps */}
             <div className="flex items-center justify-center gap-2 mb-10">
               {progressSteps.map((s, i) => (
@@ -726,7 +827,7 @@ export default function DonateContent() {
                     </div>
 
                     {/* Preset Amounts */}
-                    <div className="grid grid-cols-3 gap-3 mb-8">
+                    <div className="grid grid-cols-3 gap-3 mb-6">
                       {PRESET_AMOUNTS.map((val) => (
                         <button
                           key={val}
@@ -741,6 +842,42 @@ export default function DonateContent() {
                         </button>
                       ))}
                     </div>
+
+                    {/* Impact Messaging */}
+                    {displayAmount >= 10 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200 mb-8"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <svg className="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="font-semibold text-amber-900 mb-1">{t('impact.title')}</p>
+                            <p className="text-sm text-amber-800">
+                              {displayAmount >= 2500
+                                ? t('impact.yourInvestment', { amount: displayAmount.toLocaleString(), description: locale === 'ms' ? 'biasiswa penuh untuk seorang pelajar' : 'a full scholarship for one student' })
+                                : displayAmount >= 1000
+                                ? t('impact.yourInvestment', { amount: displayAmount.toLocaleString(), description: locale === 'ms' ? 'bekalan makanan untuk 50 keluarga' : 'food supplies for 50 families' })
+                                : displayAmount >= 500
+                                ? t('impact.yourInvestment', { amount: displayAmount.toLocaleString(), description: locale === 'ms' ? 'peralatan sekolah untuk 25 pelajar' : 'school supplies for 25 students' })
+                                : displayAmount >= 250
+                                ? t('impact.yourInvestment', { amount: displayAmount.toLocaleString(), description: locale === 'ms' ? 'bekalan perubatan untuk sebulan' : 'medical supplies for one month' })
+                                : displayAmount >= 100
+                                ? t('impact.yourInvestment', { amount: displayAmount.toLocaleString(), description: locale === 'ms' ? 'makanan untuk 10 keluarga' : 'meals for 10 families' })
+                                : displayAmount >= 50
+                                ? t('impact.yourInvestment', { amount: displayAmount.toLocaleString(), description: locale === 'ms' ? 'buku untuk 5 pelajar' : 'books for 5 students' })
+                                : t('impact.yourInvestment', { amount: displayAmount.toLocaleString(), description: locale === 'ms' ? 'bantuan untuk komuniti' : 'community support' })
+                              }
+                            </p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
 
                     {/* Project Funding Progress (if applicable) */}
                     {selectedProject && selectedProject.donationGoal && selectedProject.donationGoal > 0 && (
@@ -825,6 +962,8 @@ export default function DonateContent() {
 
               </AnimatePresence>
             </motion.div>
+            </>
+            )}
 
             {/* Trust Section */}
             <motion.div

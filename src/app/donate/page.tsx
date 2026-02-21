@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 import { Suspense } from 'react'
 import { Header, Footer } from '@/components/layout'
 import DonateContent from './DonateContent'
+import { getSiteSetting } from '@/lib/actions/content'
 
 // Force dynamic to prevent prerender errors during build
 export const dynamic = 'force-dynamic'
@@ -24,13 +25,21 @@ function DonateLoading() {
   )
 }
 
-export default function DonatePage() {
+export default async function DonatePage() {
+  const donationClosedSetting = await getSiteSetting('donationsClosed') as {
+    closed: boolean
+    reason: { en: string; ms: string } | null
+  } | null
+
   return (
     <>
       <Header />
       <main>
         <Suspense fallback={<DonateLoading />}>
-          <DonateContent />
+          <DonateContent
+            donationsClosed={donationClosedSetting?.closed ?? false}
+            closureReason={donationClosedSetting?.reason ?? null}
+          />
         </Suspense>
       </main>
       <Footer />

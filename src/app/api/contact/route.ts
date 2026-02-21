@@ -3,10 +3,14 @@ import { db, contactSubmissions } from '@/db'
 import { sendContactNotificationEmail } from '@/lib/email'
 import { notifyContactMessage } from '@/lib/actions/notifications'
 import { RateLimiters } from '@/lib/api-rate-limit'
+import { enforceTrustedOrigin } from '@/lib/security/request'
 
 export async function POST(request: NextRequest) {
+  const originCheck = enforceTrustedOrigin(request)
+  if (originCheck) return originCheck
+
   // SECURITY: Rate limit contact form submissions to prevent spam
-  const rateLimitResponse = RateLimiters.contactForm(request)
+  const rateLimitResponse = await RateLimiters.contactForm(request)
   if (rateLimitResponse) {
     return rateLimitResponse
   }

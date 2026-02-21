@@ -31,42 +31,37 @@ export default function Problem() {
   ]
 
   return (
-    <section ref={containerRef} className="py-32 bg-foundation-pearl text-foundation-charcoal relative overflow-hidden">
+    <section ref={containerRef} className="py-28 md:py-32 bg-foundation-pearl text-foundation-charcoal relative overflow-hidden">
+      {/* Context-setting problem statement */}
+      <div className="absolute inset-0 bg-grid opacity-60" />
 
       <div className="container-wide relative z-10">
-        <div className="grid lg:grid-cols-2 gap-20 items-center">
-
-          {/* Visual Side */}
+        <div className="grid lg:grid-cols-2 gap-16 items-center">
+          {/* Visual narrative */}
           <div className="relative order-2 lg:order-1">
-             <motion.div style={{ y }} className="relative z-10">
-               <div className="relative aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl border-8 border-white">
-                 <Image
-                   src="https://images.unsplash.com/photo-1547082688-9077fe60b8f9?q=80&w=2000"
-                   alt={t('imageAlt')}
-                   fill
-                   className="object-cover"
-                 />
-                 <div className="absolute inset-0 bg-teal-900/20 mix-blend-multiply" />
-               </div>
+            <motion.div style={{ y }} className="relative z-10">
+              <div className="relative aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl border-8 border-white">
+                <Image
+                  src="https://images.unsplash.com/photo-1547082688-9077fe60b8f9?q=80&w=2000&auto=format&fit=crop"
+                  alt={t('imageAlt')}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-teal-900/20 mix-blend-multiply" />
+              </div>
 
-               {/* Floating Statistic */}
-               <motion.div
-                 initial={{ opacity: 0, x: -20 }}
-                 whileInView={{ opacity: 1, x: 0 }}
-                 viewport={{ once: true }}
-                 transition={{ delay: 0.3 }}
-                 className="absolute -bottom-12 -right-12 bg-white p-8 rounded-2xl shadow-xl max-w-xs hidden md:block"
-               >
-                 <div className="text-4xl font-display font-bold text-teal-600 mb-2">{t('stat')}</div>
-                 <p className="text-sm text-gray-600 leading-relaxed">{t('statDescription')}</p>
-               </motion.div>
-             </motion.div>
+              <div className="absolute -bottom-10 left-6 right-6 bg-white/95 p-6 rounded-2xl shadow-xl border border-white/70 hidden md:block">
+                <div className="text-xs uppercase tracking-[0.2em] text-teal-700 mb-2">{t('urgencyTitle')}</div>
+                <p className="text-sm text-gray-600 leading-relaxed">{t('urgencyDescription')}</p>
+              </div>
+            </motion.div>
 
-             {/* Background decorative blob */}
-             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-teal-50 rounded-full blur-[100px] -z-10" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-teal-50 rounded-full blur-[100px] -z-10" />
           </div>
 
-          {/* Text Content */}
+          {/* Problem copy and barriers */}
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -111,7 +106,6 @@ export default function Problem() {
               ))}
             </div>
           </motion.div>
-
         </div>
       </div>
     </section>

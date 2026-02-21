@@ -4,6 +4,7 @@ import { sendFormNotificationEmail } from '@/lib/email'
 import { notifyFormSubmission } from '@/lib/actions/notifications'
 import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
 import { RateLimiters } from '@/lib/api-rate-limit'
+import { enforceTrustedOrigin } from '@/lib/security/request'
 
 // Helper to get string from LocalizedString
 const getTitle = (title: LocalizedString | string | null | undefined): string => {
@@ -13,8 +14,11 @@ const getTitle = (title: LocalizedString | string | null | undefined): string =>
 }
 
 export async function POST(request: NextRequest) {
+  const originCheck = enforceTrustedOrigin(request)
+  if (originCheck) return originCheck
+
   // SECURITY: Rate limit form submissions to prevent spam/abuse
-  const rateLimitResponse = RateLimiters.formSubmission(request)
+  const rateLimitResponse = await RateLimiters.formSubmission(request)
   if (rateLimitResponse) {
     return rateLimitResponse
   }

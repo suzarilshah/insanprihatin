@@ -349,6 +349,13 @@
       "emailRequired": "Email is required for sending your donation receipt",
       "minimumAmount": "Minimum donation amount is RM 1"
     },
+    "closed": {
+      "title": "Donations Are Currently Closed",
+      "description": "We are not accepting donations at this time. Thank you for your generosity and understanding. Please check back later or contact us for more information.",
+      "contactUs": "Contact Us",
+      "returnHome": "Return Home",
+      "badge": "Temporarily Unavailable"
+    },
     "success": {
       "title": "Thank You for Your Generosity!",
       "description": "Your payment has been received successfully.",

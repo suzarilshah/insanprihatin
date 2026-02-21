@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db, donations, projects, donationLogs } from '@/db'
+import { db, donations, projects, donationLogs, siteSettings } from '@/db'
 import { eq, desc, sql } from 'drizzle-orm'
 import { notifyDonationReceived } from '@/lib/actions/notifications'
 import { ToyyibPayService, ToyyibPayError } from '@/lib/toyyibpay'
@@ -61,6 +61,20 @@ function generatePaymentReference(): string {
   const timestamp = Date.now()
   const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase()
   return `YIP-${timestamp}-${randomPart}`
+}
+
+// Check if donations are closed
+async function isDonationsClosed(): Promise<boolean> {
+  try {
+    const setting = await db.query.siteSettings.findFirst({
+      where: eq(siteSettings.key, 'donationsClosed'),
+    })
+    if (!setting?.value) return false
+    const value = setting.value as { closed?: boolean }
+    return value.closed === true
+  } catch {
+    return false // Default to open if query fails
+  }
 }
 
 // Log donation event
@@ -194,6 +208,14 @@ export async function POST(request: NextRequest) {
   const rateLimitResponse = await RateLimiters.donationCreate(request)
   if (rateLimitResponse) {
     return rateLimitResponse
+  }
+
+  // Check if donations are closed by admin
+  if (await isDonationsClosed()) {
+    return NextResponse.json(
+      { error: 'Donations are currently closed. Please check back later.', code: 'DONATIONS_CLOSED' },
+      { status: 403 }
+    )
   }
 
   const requestId = `donation_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`

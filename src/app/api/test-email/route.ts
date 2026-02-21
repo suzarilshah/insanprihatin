@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
   }
 
   // SECURITY: Rate limit test emails
-  const rateLimitResponse = RateLimiters.testEndpoint(request)
+  const rateLimitResponse = await RateLimiters.testEndpoint(request)
   if (rateLimitResponse) {
     return rateLimitResponse
   }

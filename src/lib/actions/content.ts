@@ -531,6 +531,10 @@ export async function updateSiteSetting(key: string, value: unknown) {
     revalidatePath('/ms/contact')
   } else if (key === 'siteName' || key === 'siteTagline') {
     revalidatePath('/')
+  } else if (key === 'donationsClosed') {
+    revalidatePath('/donate')
+    revalidatePath('/en/donate')
+    revalidatePath('/ms/donate')
   }
 
   return { success: true }
@@ -610,4 +614,22 @@ export async function updatePageSEO(slug: string, data: {
 
   revalidatePath(`/${slug}`)
   return { success: true }
+}
+
+// Donation Closure Actions
+export async function toggleDonationsClosed(data: {
+  closed: boolean
+  reason?: { en: string; ms: string } | null
+}) {
+  const user = await requireAuth()
+
+  const value = {
+    closed: data.closed,
+    reason: data.closed ? (data.reason || null) : null,
+    closedAt: data.closed ? new Date().toISOString() : null,
+    closedBy: data.closed ? user.email : null,
+  }
+
+  const result = await updateSiteSetting('donationsClosed', value)
+  return result
 }

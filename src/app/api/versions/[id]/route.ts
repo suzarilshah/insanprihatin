@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSession } from '@/lib/auth/server'
+import { requireAuth } from '@/lib/auth/server'
 import { db, blogPosts, projects, teamMembers, heroContent, aboutContent, impactStats, partners, testimonials, faqs, pages } from '@/db'
 import { eq } from 'drizzle-orm'
+import { enforceTrustedOrigin } from '@/lib/security/request'
 import {
   getVersion,
   createVersion,
@@ -30,12 +31,12 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Verify authentication
-    const session = await getSession()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    await requireAuth()
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
+  try {
     const { id } = await params
     const version = await getVersion(id)
 
@@ -58,13 +59,17 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    // Verify authentication
-    const session = await getSession()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+  const originCheck = enforceTrustedOrigin(request)
+  if (originCheck) return originCheck
 
+  let authUser
+  try {
+    authUser = await requireAuth()
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
     const { id } = await params
     const version = await getVersion(id)
 
@@ -125,9 +130,9 @@ export async function POST(
 
     // Create a new version for the restoration
     const user = {
-      id: session.user?.id || session.user?.email || 'unknown',
-      email: session.user?.email || '',
-      name: session.user?.name || 'Unknown',
+      id: authUser.id || 'unknown',
+      email: authUser.email || '',
+      name: authUser.name || 'Unknown',
     }
 
     await createVersion(

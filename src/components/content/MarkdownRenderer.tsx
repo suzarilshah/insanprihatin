@@ -1,9 +1,8 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import rehypeRaw from 'rehype-raw'
 import rehypeSanitize from 'rehype-sanitize'
 import EmbeddedForm from './EmbeddedForm'
 import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
@@ -132,7 +131,7 @@ export default function MarkdownRenderer({
           <ReactMarkdown
             key={`markdown-${index}`}
             remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeRaw, rehypeSanitize]}
+            rehypePlugins={[rehypeSanitize]}
             components={{
               // Custom styling for markdown elements
               h1: ({ children }) => (

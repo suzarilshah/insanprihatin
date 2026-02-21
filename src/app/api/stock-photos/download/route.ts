@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
   }
 
   // SECURITY: Rate limit to prevent abuse
-  const rateLimitResponse = RateLimiters.testEndpoint(request)
+  const rateLimitResponse = await RateLimiters.testEndpoint(request)
   if (rateLimitResponse) {
     return rateLimitResponse
   }

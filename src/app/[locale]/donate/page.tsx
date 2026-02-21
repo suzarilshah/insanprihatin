@@ -4,6 +4,7 @@ import { setRequestLocale, getTranslations } from 'next-intl/server'
 import { Header, Footer } from '@/components/layout'
 import DonateContent from './DonateContent'
 import { type Locale } from '@/i18n/config'
+import { getSiteSetting } from '@/lib/actions/content'
 
 export async function generateMetadata({
   params,
@@ -55,12 +56,20 @@ export default async function DonatePage({
   const { locale } = await params
   setRequestLocale(locale)
 
+  const donationClosedSetting = await getSiteSetting('donationsClosed') as {
+    closed: boolean
+    reason: { en: string; ms: string } | null
+  } | null
+
   return (
     <>
       <Header />
       <main>
         <Suspense fallback={<DonateLoading />}>
-          <DonateContent />
+          <DonateContent
+            donationsClosed={donationClosedSetting?.closed ?? false}
+            closureReason={donationClosedSetting?.reason ?? null}
+          />
         </Suspense>
       </main>
       <Footer />

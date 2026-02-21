@@ -2,12 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db, blogPosts } from '@/db'
 import { eq, and } from 'drizzle-orm'
 import { getSession } from '@/lib/auth/server'
+import { RateLimiters } from '@/lib/api-rate-limit'
 
 // SECURITY: Public endpoint but only returns published posts for unauthenticated users
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const rateLimitResponse = await RateLimiters.general(request)
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const { id } = await params
 

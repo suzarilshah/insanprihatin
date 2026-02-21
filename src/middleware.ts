@@ -3,14 +3,33 @@ import type { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
 import createIntlMiddleware from 'next-intl/middleware'
 import { routing } from '@/i18n/navigation'
+import { enforceTrustedOrigin } from '@/lib/security/request'
 
 // Security headers for all responses
+const isDev = process.env.NODE_ENV !== 'production'
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval' " : ''}https://bam.nr-data.net https://js-agent.newrelic.com`,
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "img-src 'self' data: blob: https://images.unsplash.com https://sgp.cloud.appwrite.io https://*.appwrite.global",
+  "font-src 'self' data: https://fonts.gstatic.com",
+  "connect-src 'self' https://bam.nr-data.net https://*.nr-data.net https://sgp.cloud.appwrite.io https://*.appwrite.global https://toyyibpay.com https://dev.toyyibpay.com",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "object-src 'none'",
+  ...(isDev ? [] : ['upgrade-insecure-requests', 'block-all-mixed-content']),
+].join('; ')
+
 const securityHeaders = {
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'DENY',
   'X-XSS-Protection': '1; mode=block',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+  'Content-Security-Policy': contentSecurityPolicy,
+  'Cross-Origin-Opener-Policy': 'same-origin',
+  'Cross-Origin-Resource-Policy': 'same-site',
 }
 
 // Create the internationalization middleware
@@ -28,6 +47,21 @@ function addSecurityHeaders(response: NextResponse) {
 export default auth((req) => {
   const { pathname } = req.nextUrl
   const host = req.headers.get('host') || ''
+
+  // Centralized CSRF/origin enforcement for mutating API routes
+  const isMutationMethod = req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH' || req.method === 'DELETE'
+  if (pathname.startsWith('/api') && isMutationMethod) {
+    const shouldSkipOriginCheck =
+      pathname.startsWith('/api/auth') ||
+      pathname.startsWith('/api/donations/webhook')
+
+    if (!shouldSkipOriginCheck) {
+      const originCheck = enforceTrustedOrigin(req as NextRequest)
+      if (originCheck) {
+        return addSecurityHeaders(originCheck)
+      }
+    }
+  }
 
   // Redirect non-www to www (fixes CORS preflight issues)
   // Production only - skip localhost and preview deployments

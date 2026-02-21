@@ -9,6 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import Redis from 'ioredis'
 
 interface RateLimitConfig {
   maxRequests: number      // Maximum requests allowed
@@ -23,7 +24,7 @@ interface RateLimitEntry {
 
 // In-memory store for rate limiting
 // Note: This resets on server restart and doesn't work across multiple instances
-// For production scale, use Redis or similar
+// For production scale, use Redis or similar (see optional REDIS_URL support below)
 const rateLimitStore = new Map<string, RateLimitEntry>()
 
 // Clean up old entries periodically (every 5 minutes)
@@ -64,14 +65,94 @@ export function getClientIdentifier(request: NextRequest): string {
   return 'unknown-client'
 }
 
+let redisClient: Redis | null = null
+let redisDisabled = false
+
+function getRedisClient(): Redis | null {
+  if (redisDisabled) return null
+  const redisUrl = process.env.REDIS_URL
+  if (!redisUrl) return null
+
+  if (!redisClient) {
+    try {
+      redisClient = new Redis(redisUrl, {
+        maxRetriesPerRequest: 1,
+        enableReadyCheck: false,
+      })
+    } catch (error) {
+      console.error('[RateLimit] Failed to initialize Redis client', error)
+      redisDisabled = true
+      return null
+    }
+  }
+
+  return redisClient
+}
+
+async function checkRateLimitRedis(
+  request: NextRequest,
+  config: RateLimitConfig
+): Promise<NextResponse | null | undefined> {
+  const redis = getRedisClient()
+  if (!redis) return undefined
+
+  const { maxRequests, windowMs, message } = config
+  const clientId = getClientIdentifier(request)
+  const key = `rate:${clientId}:${maxRequests}:${windowMs}`
+
+  const script = `
+    local current = redis.call('INCR', KEYS[1])
+    if tonumber(current) == 1 then
+      redis.call('PEXPIRE', KEYS[1], ARGV[1])
+    end
+    local ttl = redis.call('PTTL', KEYS[1])
+    return {current, ttl}
+  `
+
+  try {
+    const result = await redis.eval(script, 1, key, windowMs) as [number, number]
+    const count = Number(result[0])
+    const ttl = Number(result[1])
+
+    if (count > maxRequests) {
+      const retryAfter = ttl > 0 ? Math.ceil(ttl / 1000) : Math.ceil(windowMs / 1000)
+      return NextResponse.json(
+        {
+          error: message || 'Too many requests. Please try again later.',
+          retryAfter,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': retryAfter.toString(),
+            'X-RateLimit-Limit': maxRequests.toString(),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': new Date(Date.now() + retryAfter * 1000).toISOString(),
+          },
+        }
+      )
+    }
+
+    return null
+  } catch (error) {
+    console.error('[RateLimit] Redis check failed, falling back to memory', error)
+    return undefined
+  }
+}
+
 /**
  * Check rate limit for a request
  * @returns null if allowed, NextResponse if rate limited
  */
-export function checkRateLimit(
+export async function checkRateLimit(
   request: NextRequest,
   config: RateLimitConfig
-): NextResponse | null {
+): Promise<NextResponse | null> {
+  const redisResult = await checkRateLimitRedis(request, config)
+  if (redisResult !== undefined) {
+    return redisResult
+  }
+
   const { maxRequests, windowMs, message } = config
   const clientId = getClientIdentifier(request)
   const now = Date.now()
