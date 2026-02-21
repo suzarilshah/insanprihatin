@@ -8,14 +8,21 @@
     "donate": "Derma Sekarang"
   },
   "hero": {
-    "defaultTitle": "Memulihkan Maruah, Membina Semula Kehidupan",
+    "defaultTitle": "Bantu Komuniti Berkembang di Malaysia",
     "defaultSubtitle": "Yayasan Insan Prihatin",
-    "defaultDescription": "Intervensi langsung dan mampan untuk golongan kurang bernasib baik di Malaysia. Sertai gerakan yang mengubah ihsan menjadi perubahan nyata.",
-    "defaultCta": "Mulakan Impak Anda",
+    "defaultDescription": "Sokong projek dipimpin komuniti dan ikuti kemas kini jelas tentang ke mana bantuan anda pergi.",
+    "defaultCta": "Teroka Projek",
+    "secondaryCta": "Baca Kemas Kini",
     "donationCta": "Buat Sumbangan",
+    "donationHint": "Ingin menyumbang sekarang?",
     "scrollToExplore": "Tatal untuk Meneroka",
-    "donationTransparency": "Ketelusan Derma",
-    "livesImpacted": "Nyawa Terkesan"
+    "tagline": "Yayasan Perkhidmatan Komuniti",
+    "trustPointOne": "Kemas kini telus",
+    "trustPointTwo": "Projek dipimpin komuniti",
+    "trustPointThree": "Pasukan sukarelawan sedia",
+    "visualAlt": "Sukarelawan menyokong komuniti",
+    "visualCaptionTitle": "Ikuti usaha",
+    "visualCaption": "Projek dan cerita yang menunjukkan bantuan sampai kepada insan."
   },
   "about": {
     "pageTitle": "Tentang Kami",
@@ -213,18 +220,44 @@
   },
   "donate": {
     "pageTitle": "Buat Sumbangan",
-    "badge": "Dana Impak 2025 Dibuka",
+    "badge": "Dana Impak 2026 Dibuka",
     "heroTitle": "Laburkan untuk",
-    "heroTitleHighlight": "Masa Depan",
-    "heroTitleEnd": "Mampan.",
-    "heroDescription": "Sertai komuniti yang bervisioner. 100% sumbangan anda disalurkan terus kepada program yang disahkan.",
+    "heroTitleHighlight": "Masa Depan Mampan",
+    "heroDescription": "100% sumbangan anda disalurkan terus kepada program yang disahkan. Pilih projek atau sokong dana am kami.",
+    "steps": {
+      "select": "Pilih",
+      "amount": "Jumlah",
+      "details": "Maklumat"
+    },
+    "selectProject": {
+      "title": "Ke mana anda ingin sumbangan anda disalurkan?",
+      "description": "Pilih projek tertentu atau sumbang kepada Dana Am untuk fleksibiliti maksimum."
+    },
+    "generalFund": {
+      "title": "Dana Am",
+      "description": "Sokong keperluan paling mendesak kami dengan fleksibiliti maksimum. Kami agihkan dana ke tempat yang paling diperlukan.",
+      "flexible": "Peruntukan fleksibel"
+    },
+    "of": "daripada",
+    "remaining": "masih diperlukan",
+    "donatingTo": "Menderma kepada",
+    "change": "Tukar",
+    "amount": {
+      "label": "Masukkan Jumlah",
+      "currency": "RM",
+      "enter": "Masukkan jumlah sumbangan anda",
+      "thankYou": "Terima kasih atas kemurahan hati anda!"
+    },
+    "fundingProgress": "Kemajuan Pembiayaan Projek",
+    "funded": "dibiayai",
+    "raised": "terkumpul",
+    "goalOf": "Sasaran:",
+    "continue": "Teruskan",
+    "back": "Kembali",
+    "continueToDetails": "Teruskan ke Maklumat",
     "frequency": {
       "oneTime": "Sekali",
       "monthly": "Bulanan"
-    },
-    "amount": {
-      "label": "Masukkan Jumlah",
-      "currency": "RM"
     },
     "allocatedFund": "Dana Diperuntukkan",
     "programs": {
@@ -245,19 +278,28 @@
         "description": "Latihan kemahiran & pembangunan"
       }
     },
-    "continue": "Teruskan",
     "form": {
-      "title": "Maklumat Anda",
+      "title": "Lengkapkan Sumbangan Anda",
       "editAmount": "Ubah Jumlah",
+      "donatingTo": "Menderma kepada",
+      "amount": "Jumlah",
       "name": "Nama Penuh",
       "namePlaceholder": "Ahmad Abdullah",
       "email": "Alamat E-mel",
       "emailPlaceholder": "ahmad@contoh.com",
+      "emailNote": "Kami akan hantar resit cukai anda ke e-mel ini",
+      "receiptEmail": "Kami akan hantar resit cukai ke e-mel ini (identiti anda kekal peribadi)",
       "phone": "Telefon (Pilihan)",
       "phonePlaceholder": "+60 12 345 6789",
-      "anonymous": "Jadikan derma ini tanpa nama",
-      "anonymousDescription": "Nama anda tidak akan dipaparkan di senarai awam",
-      "reviewDonation": "Semak Derma"
+      "anonymous": "Derma secara tanpa nama",
+      "anonymousDescription": "Nama anda tidak akan dipaparkan secara awam, tetapi kami masih perlukan e-mel untuk resit",
+      "reviewDonation": "Semak Derma",
+      "paySecurely": "Lengkapkan Sumbangan",
+      "processing": "Memproses..."
+    },
+    "paymentCancelled": {
+      "title": "Pembayaran dibatalkan",
+      "description": "Jangan risau! Anda boleh cuba lagi bila-bila masa anda sedia."
     },
     "confirm": {
       "title": "Pembayaran Selamat",
@@ -270,6 +312,17 @@
       "paySecurely": "Bayar RM {amount} dengan Selamat",
       "processing": "Memproses...",
       "backToDetails": "Kembali ke maklumat"
+    },
+    "trust": {
+      "secure": "SSL 256-bit",
+      "cards": "Kad Kredit",
+      "receipt": "Resit Cukai",
+      "secureTitle": "Selamat & Dilindungi",
+      "secureDescription": "Pembayaran anda dilindungi dengan penyulitan SSL 256-bit tahap bank.",
+      "transparentTitle": "100% Telus",
+      "transparentDescription": "Jejaki ke mana sumbangan anda pergi dengan laporan impak terperinci kami.",
+      "taxTitle": "Potongan Cukai",
+      "taxDescription": "Terima resit rasmi untuk tujuan potongan cukai."
     },
     "impact": {
       "title": "Impak Dijangka",
@@ -289,6 +342,12 @@
       "encryption": "Penyulitan",
       "taxReceipt": "Resit Cukai",
       "receipt": "Rasmi"
+    },
+    "errors": {
+      "invalidAmount": "Sila masukkan jumlah sumbangan yang sah (minimum RM 1)",
+      "missingInfo": "Sila berikan nama dan alamat e-mel anda",
+      "emailRequired": "E-mel diperlukan untuk menghantar resit sumbangan anda",
+      "minimumAmount": "Jumlah sumbangan minimum adalah RM 1"
     },
     "success": {
       "title": "Terima Kasih Atas Kemurahan Hati Anda!",
@@ -413,29 +472,37 @@
   },
   "solution": {
     "title": "Pendekatan Kami",
-    "subtitle": "Penyelesaian Holistik untuk",
-    "subtitleHighlight": "Impak Berkekalan",
-    "description": "Kami percaya kepada penyelesaian mampan yang menangani punca masalah, bukan hanya gejala.",
+    "subtitle": "Penyelesaian Dipimpin Komuniti",
+    "subtitleHighlight": "Yang Memulihkan Kestabilan",
+    "description": "Kami bekerjasama dengan pemimpin setempat, merangka program praktikal, dan menerbitkan kemas kini jelas supaya penyokong dapat mengikuti kemajuan sebenar.",
     "viewAllProjects": "Lihat Semua Projek",
     "featured": "Utama",
     "readStory": "Baca Kisah",
-    "totalImpact": "Jumlah Impak",
-    "livesChanged": "Nyawa Berubah",
+    "totalImpact": "Kemas Kini Impak",
+    "livesChanged": "Insan Disokong",
     "ourMission": "Misi Kami",
-    "defaultMission": "Memperkasakan komuniti melalui pembangunan mampan dan intervensi bantuan langsung.",
+    "defaultMission": "Mengukuhkan komuniti melalui sokongan praktikal, akses pendidikan, dan pembangunan jangka panjang.",
     "readMore": "Baca Lagi",
-    "pillars": {
-      "education": {
-        "title": "Pendidikan",
-        "description": "Memperkasa melalui pengetahuan dan pembangunan kemahiran"
-      },
-      "healthcare": {
-        "title": "Kesihatan",
-        "description": "Memastikan akses kepada perkhidmatan perubatan penting"
+    "impactStatementTitle": "Akauntabiliti Diutamakan",
+    "impactStatementDescription": "Kami menerbitkan kemas kini kemajuan supaya penyokong boleh menjejak usaha.",
+    "projectsEmptyTitle": "Projek Sedang Disiapkan",
+    "projectsEmptyDescription": "Inisiatif baharu sedang disediakan. Kembali semula untuk projek yang diterbitkan.",
+    "benefits": {
+      "clarity": {
+        "title": "Lihat ke mana bantuan pergi",
+        "description": "Kemas kini menghubungkan sokongan anda kepada hasil sebenar."
       },
       "community": {
-        "title": "Komuniti",
-        "description": "Membina komuniti yang lebih kuat dan lebih berdaya tahan"
+        "title": "Dipimpin rakan setempat",
+        "description": "Program berasaskan keperluan yang disuarakan penduduk."
+      },
+      "continuity": {
+        "title": "Bantuan kepada ketahanan",
+        "description": "Bantuan segera digabungkan dengan penyelesaian berterusan."
+      },
+      "storytelling": {
+        "title": "Cerita yang boleh diikuti",
+        "description": "Catatan blog dan projek memastikan anda sentiasa dimaklumkan."
       }
     }
   },
@@ -472,14 +539,18 @@
     }
   },
   "homeCta": {
-    "title": "Bersedia untuk Membuat",
-    "titleHighlight": "Impak Segera?",
-    "description": "Sertai ribuan pembuat perubahan. Sumbangan anda memberikan bantuan segera dan penyelesaian mampan untuk keluarga yang memerlukan.",
+    "title": "Bersedia Mengikuti Usaha Kami?",
+    "titleHighlight": "Mulakan Di Sini",
+    "description": "Teroka projek, baca kemas kini, dan sokong program yang penting untuk anda.",
+    "primaryCta": "Teroka Projek",
+    "secondaryCta": "Baca Kemas Kini",
+    "donatePrompt": "Ingin menyokong sekarang?",
     "donateNow": "Derma Sekarang",
-    "volunteerWithUs": "Sukarelawan Bersama Kami",
-    "quickDonation": "Derma Pantas",
-    "secureAndTaxDeductible": "Selamat & Boleh Ditolak Cukai",
-    "customAmount": "Jumlah Lain",
+    "donationTitle": "Sokong Program",
+    "donationDescription": "Sumbangan anda membantu inisiatif komuniti yang aktif.",
+    "amountLabel": "Jumlah sumbangan (RM)",
+    "amountPlaceholder": "Masukkan jumlah",
+    "amountHint": "Anda boleh masukkan sebarang jumlah.",
     "proceedToPayment": "Teruskan ke Pembayaran"
   },
   "metadata": {
@@ -488,44 +559,44 @@
     "keywords": "amal, yayasan, Malaysia, perkhidmatan komuniti, pendidikan, pembangunan mampan"
   },
   "problem": {
-    "badge": "Realiti Semasa",
-    "title": "Krisis Senyap di",
-    "titleHighlight": "Halaman Sendiri",
-    "description": "Di sebalik kemegahan bangunan pencakar langit, ribuan rakyat masih terperangkap dalam bayang-bayang. Jurang antara kemiskinan dan kehidupan stabil semakin melebar, memerangkap komuniti terpinggir dalam lingkaran kemiskinan yang sukar diputuskan tanpa bantuan.",
-    "stat": "2.4 Juta",
-    "statDescription": "Keluarga di Malaysia kini hidup di bawah garis kemiskinan relatif.",
-    "imageAlt": "Perjuangan komuniti ketika musim tengkujuh",
+    "badge": "Mengapa Ia Penting",
+    "title": "Keperluan Meningkat Lebih Pantas",
+    "titleHighlight": "Daripada Sokongan",
+    "description": "Kos hidup dan akses tidak seimbang memaksa keluarga memilih antara keperluan asas. Apabila bantuan lewat, krisis sementara menjadi cabaran jangka panjang.",
+    "imageAlt": "Ahli komuniti saling membantu",
+    "urgencyTitle": "Kelewatan menambah beban",
+    "urgencyDescription": "Sokongan awal mengelakkan kesukaran yang lebih besar dan berpanjangan.",
     "barriers": {
       "systemic": {
-        "title": "Halangan Sistemik",
-        "description": "Ketiadaan dokumen dan akses menghalang bantuan asas."
+        "title": "Akses Terhad",
+        "description": "Perkhidmatan asas sukar dicapai tanpa bimbingan."
       },
       "health": {
-        "title": "Ketidaksamaan Kesihatan",
-        "description": "Penyakit yang boleh dirawat menjadi hukuman seumur hidup tanpa rawatan."
+        "title": "Jurang Kesihatan",
+        "description": "Isu kecil membesar tanpa rawatan tepat waktu."
       },
       "education": {
-        "title": "Jurang Pendidikan",
-        "description": "Anak-anak mewarisi kemiskinan, bukan peluang."
+        "title": "Pembelajaran Terganggu",
+        "description": "Gangguan sekolah mengehadkan peluang masa depan."
       }
     }
   },
   "howItWorks": {
-    "title": "Laluan Telus ke Arah",
-    "titleHighlight": "Perubahan Sebenar",
-    "description": "Kami telah hapuskan birokrasi. Bantuan anda terus sampai kepada yang memerlukan dengan lebih pantas dan berkesan.",
+    "title": "Bagaimana Sokongan Menjadi Perubahan",
+    "titleHighlight": "Dalam Tiga Langkah",
+    "description": "Laluan ringkas dan telus daripada keperluan komuniti kepada kemajuan yang boleh diikuti.",
     "steps": {
       "identify": {
-        "title": "Kenalpasti",
-        "description": "Kami bekerjasama terus dengan pemimpin tempatan untuk mengenalpasti keperluan paling mendesak di kawasan terpinggir."
+        "title": "Dengar",
+        "description": "Kami bertemu pemimpin setempat untuk memahami keperluan mendesak."
       },
       "mobilize": {
-        "title": "Gerakkan",
-        "description": "Sumber dikumpul dan sukarelawan dikerahkan dengan tepat dan pantas."
+        "title": "Bertindak",
+        "description": "Pasukan dan sumber bergerak pantas ke lokasi bantuan."
       },
       "transform": {
-        "title": "Transformasi",
-        "description": "Bantuan segera bertukar menjadi program pembangunan mampan jangka panjang."
+        "title": "Bina",
+        "description": "Bantuan jangka pendek berkembang menjadi program komuniti berpanjangan."
       }
     }
   },

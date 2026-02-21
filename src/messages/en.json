@@ -8,14 +8,21 @@
     "donate": "Donate Now"
   },
   "hero": {
-    "defaultTitle": "Restoring Dignity, Rebuilding Lives",
+    "defaultTitle": "Help Communities Thrive Across Malaysia",
     "defaultSubtitle": "Yayasan Insan Prihatin",
-    "defaultDescription": "Direct, sustainable intervention for Malaysia's underserved. Join a movement that turns compassion into tangible change.",
-    "defaultCta": "Start Your Impact",
+    "defaultDescription": "Support local-led projects and follow clear updates that show where your help goes.",
+    "defaultCta": "Explore Projects",
+    "secondaryCta": "Read Updates",
     "donationCta": "Make a Donation",
+    "donationHint": "Prefer to give now?",
     "scrollToExplore": "Scroll to Explore",
-    "donationTransparency": "Donation Transparency",
-    "livesImpacted": "Lives Impacted"
+    "tagline": "Community Service Foundation",
+    "trustPointOne": "Transparent updates",
+    "trustPointTwo": "Community-led projects",
+    "trustPointThree": "Volunteer-ready teams",
+    "visualAlt": "Volunteers supporting a community",
+    "visualCaptionTitle": "Follow the work",
+    "visualCaption": "Projects and stories that show how support reaches people."
   },
   "about": {
     "pageTitle": "About Us",
@@ -213,18 +220,44 @@
   },
   "donate": {
     "pageTitle": "Make a Donation",
-    "badge": "2025 Impact Fund Open",
+    "badge": "2026 Impact Fund Open",
     "heroTitle": "Invest in",
-    "heroTitleHighlight": "Sustainable",
-    "heroTitleEnd": "Futures.",
-    "heroDescription": "Join a community of visionaries. 100% of your donation goes directly to verified programs.",
+    "heroTitleHighlight": "Sustainable Futures",
+    "heroDescription": "100% of your donation goes directly to verified programs. Choose a project or support our general fund.",
+    "steps": {
+      "select": "Choose",
+      "amount": "Amount",
+      "details": "Details"
+    },
+    "selectProject": {
+      "title": "Where would you like your donation to go?",
+      "description": "Select a specific project or contribute to our General Fund for maximum flexibility."
+    },
+    "generalFund": {
+      "title": "General Fund",
+      "description": "Support our most urgent needs with maximum flexibility. We allocate funds where they're needed most.",
+      "flexible": "Flexible allocation"
+    },
+    "of": "of",
+    "remaining": "still needed",
+    "donatingTo": "Donating to",
+    "change": "Change",
+    "amount": {
+      "label": "Enter Amount",
+      "currency": "RM",
+      "enter": "Enter your donation amount",
+      "thankYou": "Thank you for your generosity!"
+    },
+    "fundingProgress": "Project Funding Progress",
+    "funded": "funded",
+    "raised": "raised",
+    "goalOf": "Goal:",
+    "continue": "Continue",
+    "back": "Back",
+    "continueToDetails": "Continue to Details",
     "frequency": {
       "oneTime": "One-Time",
       "monthly": "Monthly"
-    },
-    "amount": {
-      "label": "Enter Amount",
-      "currency": "RM"
     },
     "allocatedFund": "Allocated Fund",
     "programs": {
@@ -245,19 +278,28 @@
         "description": "Skills training & development"
       }
     },
-    "continue": "Continue",
     "form": {
-      "title": "Your Details",
+      "title": "Complete Your Donation",
       "editAmount": "Edit Amount",
+      "donatingTo": "Donating to",
+      "amount": "Amount",
       "name": "Full Name",
       "namePlaceholder": "Jane Doe",
       "email": "Email Address",
       "emailPlaceholder": "jane@example.com",
+      "emailNote": "We'll send your tax receipt to this email",
+      "receiptEmail": "We'll send your tax receipt to this email (your identity remains private)",
       "phone": "Phone (Optional)",
       "phonePlaceholder": "+60 12 345 6789",
-      "anonymous": "Make this donation anonymous",
-      "anonymousDescription": "Your name won't appear on public lists",
-      "reviewDonation": "Review Donation"
+      "anonymous": "Donate anonymously",
+      "anonymousDescription": "Your name won't appear publicly, but we still need your email for the receipt",
+      "reviewDonation": "Review Donation",
+      "paySecurely": "Complete Donation",
+      "processing": "Processing..."
+    },
+    "paymentCancelled": {
+      "title": "Payment was cancelled",
+      "description": "No worries! You can try again whenever you're ready."
     },
     "confirm": {
       "title": "Secure Checkout",
@@ -270,6 +312,17 @@
       "paySecurely": "Pay RM {amount} Securely",
       "processing": "Processing...",
       "backToDetails": "Back to details"
+    },
+    "trust": {
+      "secure": "256-bit SSL",
+      "cards": "Credit Cards",
+      "receipt": "Tax Receipt",
+      "secureTitle": "Secure & Protected",
+      "secureDescription": "Your payment is protected with bank-level 256-bit SSL encryption.",
+      "transparentTitle": "100% Transparent",
+      "transparentDescription": "Track exactly where your donation goes with our detailed impact reports.",
+      "taxTitle": "Tax Deductible",
+      "taxDescription": "Receive an official receipt for tax deduction purposes."
     },
     "impact": {
       "title": "Projected Impact",
@@ -289,6 +342,12 @@
       "encryption": "Encryption",
       "taxReceipt": "Official Tax",
       "receipt": "Receipt"
+    },
+    "errors": {
+      "invalidAmount": "Please enter a valid donation amount (minimum RM 1)",
+      "missingInfo": "Please provide your name and email address",
+      "emailRequired": "Email is required for sending your donation receipt",
+      "minimumAmount": "Minimum donation amount is RM 1"
     },
     "success": {
       "title": "Thank You for Your Generosity!",
@@ -413,29 +472,37 @@
   },
   "solution": {
     "title": "Our Approach",
-    "subtitle": "Holistic Solutions for",
-    "subtitleHighlight": "Lasting Impact",
-    "description": "We believe in sustainable solutions that address root causes, not just symptoms.",
+    "subtitle": "Community-Led Solutions",
+    "subtitleHighlight": "That Restore Stability",
+    "description": "We partner with local leaders, design practical programs, and publish clear updates so supporters can follow real progress.",
     "viewAllProjects": "View All Projects",
     "featured": "Featured",
     "readStory": "Read Story",
-    "totalImpact": "Total Impact",
-    "livesChanged": "Lives Changed",
+    "totalImpact": "Impact Updates",
+    "livesChanged": "Lives Supported",
     "ourMission": "Our Mission",
-    "defaultMission": "Empowering communities through sustainable development and direct aid intervention.",
+    "defaultMission": "Strengthen communities through practical support, education access, and long-term development.",
     "readMore": "Read More",
-    "pillars": {
-      "education": {
-        "title": "Education",
-        "description": "Empowering through knowledge and skills development"
-      },
-      "healthcare": {
-        "title": "Healthcare",
-        "description": "Ensuring access to essential medical services"
+    "impactStatementTitle": "Accountability First",
+    "impactStatementDescription": "We publish progress updates so supporters can track the work.",
+    "projectsEmptyTitle": "Projects in Progress",
+    "projectsEmptyDescription": "New initiatives are being prepared. Check back soon for published projects.",
+    "benefits": {
+      "clarity": {
+        "title": "See where help goes",
+        "description": "Updates connect your support to real outcomes."
       },
       "community": {
-        "title": "Community",
-        "description": "Building stronger, more resilient communities"
+        "title": "Led by local partners",
+        "description": "Programs reflect the needs voiced by residents."
+      },
+      "continuity": {
+        "title": "Relief to resilience",
+        "description": "Immediate aid is paired with lasting solutions."
+      },
+      "storytelling": {
+        "title": "Stories you can follow",
+        "description": "Blog and project posts keep you informed."
       }
     }
   },
@@ -472,14 +539,18 @@
     }
   },
   "homeCta": {
-    "title": "Ready to Make an",
-    "titleHighlight": "Immediate Impact?",
-    "description": "Join thousands of changemakers. Your contribution provides immediate relief and sustainable solutions for families in need.",
+    "title": "Ready to Follow the Work?",
+    "titleHighlight": "Start Here",
+    "description": "Explore projects, read updates, and support the programs that matter to you.",
+    "primaryCta": "Explore Projects",
+    "secondaryCta": "Read Updates",
+    "donatePrompt": "Want to support now?",
     "donateNow": "Donate Now",
-    "volunteerWithUs": "Volunteer With Us",
-    "quickDonation": "Quick Donation",
-    "secureAndTaxDeductible": "Secure & Tax Deductible",
-    "customAmount": "Custom Amount",
+    "donationTitle": "Support a Program",
+    "donationDescription": "Your contribution helps active community initiatives.",
+    "amountLabel": "Donation amount (RM)",
+    "amountPlaceholder": "Enter amount",
+    "amountHint": "You can enter any amount.",
     "proceedToPayment": "Proceed to Payment"
   },
   "metadata": {
@@ -488,44 +559,44 @@
     "keywords": "charity, foundation, Malaysia, community service, education, sustainable development"
   },
   "problem": {
-    "badge": "The Reality",
-    "title": "The Silent Crisis in",
-    "titleHighlight": "Our Backyard",
-    "description": "While skylines rise, thousands are left in the shadows. The gap between survival and stability is widening, leaving vulnerable communities trapped in a cycle of poverty that is impossible to break without intervention.",
-    "stat": "2.4M",
-    "statDescription": "Families in Malaysia currently living below the relative poverty line.",
-    "imageAlt": "Community struggle during monsoon",
+    "badge": "Why It Matters",
+    "title": "Needs Grow Faster Than",
+    "titleHighlight": "Support",
+    "description": "Rising costs and uneven access leave families choosing between essentials. When help arrives late, short-term crises become long-term setbacks.",
+    "imageAlt": "Community members supporting one another",
+    "urgencyTitle": "Delay deepens hardship",
+    "urgencyDescription": "Early support prevents larger, longer struggles.",
     "barriers": {
       "systemic": {
-        "title": "Systemic Barriers",
-        "description": "Lack of documentation and access prevents basic aid."
+        "title": "Limited Access",
+        "description": "Essential services can be out of reach without guidance."
       },
       "health": {
-        "title": "Health Inequality",
-        "description": "Treatable conditions become life sentences without care."
+        "title": "Health Gaps",
+        "description": "Small issues escalate without timely care."
       },
       "education": {
-        "title": "Education Gap",
-        "description": "Children inherit poverty instead of opportunity."
+        "title": "Learning Disrupted",
+        "description": "Interrupted schooling limits future opportunities."
       }
     }
   },
   "howItWorks": {
-    "title": "A Transparent Path to",
-    "titleHighlight": "Real Change",
-    "description": "We've removed the bureaucracy. Your help goes directly to where it's needed, faster and more effectively.",
+    "title": "How Support Becomes Change",
+    "titleHighlight": "In Three Steps",
+    "description": "A simple, transparent path from community needs to measurable progress.",
     "steps": {
       "identify": {
-        "title": "Identify",
-        "description": "We work directly with local leaders to identify the most urgent needs in underserved areas."
+        "title": "Listen",
+        "description": "We meet local leaders to understand urgent needs."
       },
       "mobilize": {
-        "title": "Mobilize",
-        "description": "Resources are gathered and volunteers are deployed with precision and speed."
+        "title": "Act",
+        "description": "Teams and resources move quickly to where help is needed."
       },
       "transform": {
-        "title": "Transform",
-        "description": "Immediate aid transitions into long-term sustainable development programs."
+        "title": "Build",
+        "description": "Short-term relief grows into lasting community programs."
       }
     }
   },

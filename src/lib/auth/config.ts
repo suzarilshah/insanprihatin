@@ -17,16 +17,6 @@ declare module 'next-auth' {
     email_verified?: boolean | null
     hd?: string // Google Workspace domain
   }
-
-  interface Session {
-    accessToken?: string
-  }
-}
-
-declare module '@auth/core/jwt' {
-  interface JWT {
-    accessToken?: string
-  }
 }
 
 // Allowed Google Workspace domain
@@ -130,9 +120,8 @@ export const {
 
   callbacks: {
     async jwt({ token, account, profile }) {
-      // On initial sign in, store access token and email
+      // Keep JWT minimal to reduce cookie size and sensitive surface.
       if (account && profile) {
-        token.accessToken = account.access_token
         token.email = profile.email
 
         authLogger.info('JWT callback - processing sign-in', {
@@ -146,9 +135,7 @@ export const {
       return token
     },
 
-    async session({ session, token }) {
-      // Make access token available in session if needed
-      session.accessToken = token.accessToken
+    async session({ session }) {
       return session
     },
 
@@ -270,4 +257,40 @@ export const {
 
   // Trust the host header in production
   trustHost: true,
+
+  useSecureCookies: process.env.NODE_ENV === 'production',
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === 'production'
+        ? '__Secure-authjs.session-token'
+        : 'authjs.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+    callbackUrl: {
+      name: process.env.NODE_ENV === 'production'
+        ? '__Secure-authjs.callback-url'
+        : 'authjs.callback-url',
+      options: {
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+    csrfToken: {
+      name: process.env.NODE_ENV === 'production'
+        ? '__Host-authjs.csrf-token'
+        : 'authjs.csrf-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+  },
 })

@@ -1,76 +1,443 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
+import { useState, useEffect, useMemo } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 
-// Configuration
+// Types
+interface Project {
+  id: string
+  slug: string
+  title: { en: string; ms: string } | string
+  description: { en: string; ms: string } | string
+  featuredImage: string | null
+  category: string | null
+  donationEnabled: boolean
+  donationGoal: number | null
+  donationRaised: number
+}
+
+// Preset amounts optimized for conversion (research-backed)
 const PRESET_AMOUNTS = [50, 100, 250, 500, 1000, 2500]
 
-const IMPACT_TIERS = [
-  { threshold: 50, labelKey: 'schoolSupplies', descKey: 'equipsStudent', emoji: '📚' },
-  { threshold: 100, labelKey: 'medicalCheckup', descKey: 'screeningVillagers', emoji: '🩺' },
-  { threshold: 250, labelKey: 'skillsTraining', descKey: 'vocationalCourse', emoji: '🛠️' },
-  { threshold: 500, labelKey: 'reforestation', descKey: 'plantsTrees', emoji: '🌱' },
-  { threshold: 1000, labelKey: 'scholarship', descKey: 'semesterSupport', emoji: '🎓' },
-  { threshold: 2500, labelKey: 'classroomTech', descKey: 'smartEquipment', emoji: '💻' },
-]
+// Get localized string
+function getLocalizedString(value: { en: string; ms: string } | string, locale: string): string {
+  if (typeof value === 'string') return value
+  return locale === 'ms' ? value.ms : value.en
+}
 
-export default function DonateContent() {
+// Format currency
+function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('ms-MY', {
+    style: 'currency',
+    currency: 'MYR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount)
+}
+
+// Calculate funding progress percentage
+function calculateProgress(raised: number, goal: number): number {
+  if (!goal || goal <= 0) return 0
+  return Math.min((raised / goal) * 100, 100)
+}
+
+// Project Card Component
+function ProjectCard({
+  project,
+  isSelected,
+  onSelect,
+  locale,
+}: {
+  project: Project | null // null = General Fund
+  isSelected: boolean
+  onSelect: () => void
+  locale: string
+}) {
   const t = useTranslations('donate')
 
-  // Programs with translations
-  const PROGRAMS = [
-    { id: 'general', name: t('programs.general.name'), description: t('programs.general.description'), icon: '🌍', color: 'from-teal-400 to-teal-500' },
-    { id: 'education', name: t('programs.education.name'), description: t('programs.education.description'), icon: '🎓', color: 'from-blue-400 to-blue-500' },
-    { id: 'healthcare', name: t('programs.healthcare.name'), description: t('programs.healthcare.description'), icon: '🩺', color: 'from-rose-400 to-rose-500' },
-    { id: 'community', name: t('programs.community.name'), description: t('programs.community.description'), icon: '🤝', color: 'from-amber-400 to-amber-500' },
-  ]
+  const isGeneralFund = !project
+  const title = isGeneralFund
+    ? t('generalFund.title')
+    : getLocalizedString(project.title, locale)
+  const description = isGeneralFund
+    ? t('generalFund.description')
+    : getLocalizedString(project.description, locale)
+
+  const goal = project?.donationGoal ? project.donationGoal / 100 : 0
+  const raised = project?.donationRaised ? project.donationRaised / 100 : 0
+  const progress = calculateProgress(raised, goal)
+  const remaining = Math.max(goal - raised, 0)
+
+  return (
+    <motion.button
+      onClick={onSelect}
+      whileHover={{ scale: 1.01 }}
+      whileTap={{ scale: 0.99 }}
+      className={`relative w-full text-left rounded-2xl overflow-hidden transition-all duration-300 ${
+        isSelected
+          ? 'ring-2 ring-teal-500 ring-offset-2 shadow-lg shadow-teal-500/10'
+          : 'ring-1 ring-gray-200 hover:ring-gray-300 hover:shadow-md'
+      }`}
+    >
+      {/* Image/Gradient Header */}
+      <div className="relative h-32 overflow-hidden">
+        {project?.featuredImage ? (
+          <Image
+            src={project.featuredImage}
+            alt={title}
+            fill
+            className="object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-teal-500 to-emerald-600" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+
+        {/* Category Badge */}
+        {project?.category && (
+          <span className="absolute top-3 left-3 px-2.5 py-1 text-xs font-medium bg-white/90 backdrop-blur-sm rounded-full text-gray-700 capitalize">
+            {project.category}
+          </span>
+        )}
+
+        {/* Selected Check */}
+        {isSelected && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="absolute top-3 right-3 w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center"
+          >
+            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+            </svg>
+          </motion.div>
+        )}
+
+        {/* Title on Image */}
+        <div className="absolute bottom-3 left-3 right-3">
+          <h3 className="font-semibold text-white text-lg leading-tight line-clamp-2">
+            {isGeneralFund ? '🌍 ' : ''}{title}
+          </h3>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="p-4 bg-white">
+        <p className="text-sm text-gray-600 line-clamp-2 mb-4">{description}</p>
+
+        {/* Funding Progress (only for projects with goals) */}
+        {goal > 0 && (
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="font-medium text-gray-900">
+                {formatCurrency(raised)} <span className="text-gray-500 font-normal">{t('of')} {formatCurrency(goal)}</span>
+              </span>
+              <span className="text-teal-600 font-semibold">{progress.toFixed(0)}%</span>
+            </div>
+            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.8, ease: 'easeOut' }}
+                className="h-full bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full"
+              />
+            </div>
+            {remaining > 0 && (
+              <p className="text-xs text-gray-500">
+                {formatCurrency(remaining)} {t('remaining')}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* General Fund indicator */}
+        {isGeneralFund && (
+          <div className="flex items-center gap-2 text-sm text-teal-600">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+            <span className="font-medium">{t('generalFund.flexible')}</span>
+          </div>
+        )}
+      </div>
+    </motion.button>
+  )
+}
+
+// Donor Form Step Component
+function DonorForm({
+  donor,
+  setDonor,
+  onSubmit,
+  onBack,
+  isSubmitting,
+  error,
+  displayAmount,
+  selectedProject,
+  locale,
+}: {
+  donor: { name: string; email: string; phone: string; isAnonymous: boolean }
+  setDonor: (donor: { name: string; email: string; phone: string; isAnonymous: boolean }) => void
+  onSubmit: () => void
+  onBack: () => void
+  isSubmitting: boolean
+  error: string | null
+  displayAmount: number
+  selectedProject: Project | null
+  locale: string
+}) {
+  const t = useTranslations('donate')
+
+  const projectTitle = selectedProject
+    ? getLocalizedString(selectedProject.title, locale)
+    : t('generalFund.title')
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="space-y-6"
+    >
+      {/* Summary Header */}
+      <div className="flex items-center justify-between p-4 bg-gradient-to-r from-teal-50 to-emerald-50 rounded-xl border border-teal-100">
+        <div>
+          <p className="text-sm text-gray-600">{t('form.donatingTo')}</p>
+          <p className="font-semibold text-gray-900">{projectTitle}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-sm text-gray-600">{t('form.amount')}</p>
+          <p className="text-2xl font-bold text-teal-600">{formatCurrency(displayAmount)}</p>
+        </div>
+      </div>
+
+      {/* Error Message */}
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex items-start gap-3"
+        >
+          <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>{error}</span>
+        </motion.div>
+      )}
+
+      {/* Anonymous Toggle */}
+      <label className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-teal-200 hover:bg-teal-50/30 cursor-pointer transition-all">
+        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+          donor.isAnonymous ? 'bg-teal-500 border-teal-500' : 'border-gray-300'
+        }`}>
+          {donor.isAnonymous && (
+            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+            </svg>
+          )}
+        </div>
+        <input
+          type="checkbox"
+          className="hidden"
+          checked={donor.isAnonymous}
+          onChange={(e) => setDonor({ ...donor, isAnonymous: e.target.checked })}
+        />
+        <div className="flex-1">
+          <span className="font-medium text-gray-900">{t('form.anonymous')}</span>
+          <p className="text-sm text-gray-500">{t('form.anonymousDescription')}</p>
+        </div>
+      </label>
+
+      {/* Form Fields */}
+      {!donor.isAnonymous && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          className="space-y-4"
+        >
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t('form.name')} *</label>
+            <input
+              type="text"
+              className="w-full px-4 py-3.5 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none"
+              placeholder={t('form.namePlaceholder')}
+              value={donor.name}
+              onChange={(e) => setDonor({ ...donor, name: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t('form.email')} *</label>
+            <input
+              type="email"
+              className="w-full px-4 py-3.5 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none"
+              placeholder={t('form.emailPlaceholder')}
+              value={donor.email}
+              onChange={(e) => setDonor({ ...donor, email: e.target.value })}
+            />
+            <p className="mt-1.5 text-xs text-gray-500">{t('form.emailNote')}</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t('form.phone')}</label>
+            <input
+              type="tel"
+              className="w-full px-4 py-3.5 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none"
+              placeholder={t('form.phonePlaceholder')}
+              value={donor.phone}
+              onChange={(e) => setDonor({ ...donor, phone: e.target.value })}
+            />
+          </div>
+        </motion.div>
+      )}
+
+      {/* Email for anonymous (still needed for receipt) */}
+      {donor.isAnonymous && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">{t('form.email')} *</label>
+          <input
+            type="email"
+            className="w-full px-4 py-3.5 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none"
+            placeholder={t('form.emailPlaceholder')}
+            value={donor.email}
+            onChange={(e) => setDonor({ ...donor, email: e.target.value })}
+          />
+          <p className="mt-1.5 text-xs text-gray-500">{t('form.receiptEmail')}</p>
+        </div>
+      )}
+
+      {/* Action Buttons */}
+      <div className="flex gap-3 pt-4">
+        <button
+          onClick={onBack}
+          className="px-6 py-3.5 rounded-xl font-semibold text-gray-600 hover:bg-gray-100 transition-colors"
+        >
+          {t('back')}
+        </button>
+        <button
+          onClick={onSubmit}
+          disabled={isSubmitting || (!donor.isAnonymous && (!donor.name || !donor.email)) || (donor.isAnonymous && !donor.email)}
+          className="flex-1 py-3.5 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-xl font-bold text-lg hover:from-teal-700 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-teal-500/20 hover:shadow-xl hover:shadow-teal-500/30"
+        >
+          {isSubmitting ? (
+            <>
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <span>{t('form.processing')}</span>
+            </>
+          ) : (
+            <>
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <span>{t('form.paySecurely')}</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Trust Badges */}
+      <div className="flex items-center justify-center gap-6 pt-4 border-t border-gray-100">
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+          <span>{t('trust.secure')}</span>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+          </svg>
+          <span>FPX / {t('trust.cards')}</span>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <svg className="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <span>{t('trust.receipt')}</span>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+// Main Donate Content Component
+export default function DonateContent() {
+  const t = useTranslations('donate')
+  const locale = useLocale()
   const router = useRouter()
   const searchParams = useSearchParams()
-  
-  const heroRef = useRef<HTMLElement>(null)
-  const { scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ['start start', 'end start'],
-  })
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
-  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1])
 
-  // State
+  // Projects state
+  const [projects, setProjects] = useState<Project[]>([])
+  const [loadingProjects, setLoadingProjects] = useState(true)
+
+  // Form state
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null) // null = General Fund
   const [amount, setAmount] = useState<number>(100)
   const [customAmount, setCustomAmount] = useState<string>('')
-  const [program, setProgram] = useState(PROGRAMS[0].id)
-  const [frequency, setFrequency] = useState<'one-time' | 'monthly'>('one-time')
-  const [step, setStep] = useState<'amount' | 'details' | 'confirm'>('amount')
-  
-  // Donor Info
+  const [step, setStep] = useState<'select' | 'amount' | 'details'>('select')
   const [donor, setDonor] = useState({ name: '', email: '', phone: '', isAnonymous: false })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Check for cancelled payment
+  // Check for pre-selected project from URL
+  const preselectedProjectId = searchParams.get('project')
   const wasCancelled = searchParams.get('cancelled') === 'true'
 
-  // Computed
-  const currentImpact = IMPACT_TIERS.slice().reverse().find(t => amount >= t.threshold) || IMPACT_TIERS[0]
-  const displayAmount = customAmount ? parseFloat(customAmount) : amount
+  // Computed values
+  const displayAmount = customAmount ? parseFloat(customAmount) || 0 : amount
+  const selectedProject = useMemo(() =>
+    projects.find(p => p.id === selectedProjectId) || null,
+    [projects, selectedProjectId]
+  )
 
-  // Handlers
+  // Fetch projects with donation enabled
+  useEffect(() => {
+    async function fetchProjects() {
+      try {
+        const res = await fetch('/api/projects?donationEnabled=true&published=true')
+        if (res.ok) {
+          const data = await res.json()
+          setProjects(data)
+
+          // Pre-select project from URL if valid
+          if (preselectedProjectId) {
+            const exists = data.find((p: Project) => p.id === preselectedProjectId)
+            if (exists) {
+              setSelectedProjectId(preselectedProjectId)
+              setStep('amount')
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch projects:', err)
+      } finally {
+        setLoadingProjects(false)
+      }
+    }
+    fetchProjects()
+  }, [preselectedProjectId])
+
+  // Handle amount selection
   const handleAmountSelect = (val: number) => {
     setAmount(val)
     setCustomAmount('')
     setError(null)
   }
 
+  // Handle custom amount
   const handleCustomChange = (val: string) => {
-    setCustomAmount(val)
-    if (val) setAmount(parseFloat(val))
+    const numVal = val.replace(/[^0-9.]/g, '')
+    setCustomAmount(numVal)
+    if (numVal) setAmount(parseFloat(numVal) || 0)
     setError(null)
   }
 
+  // Handle form submission
   const handleSubmit = async () => {
     if (!displayAmount || displayAmount < 1) {
       setError(t('errors.invalidAmount'))
@@ -82,23 +449,30 @@ export default function DonateContent() {
       return
     }
 
+    if (donor.isAnonymous && !donor.email) {
+      setError(t('errors.emailRequired'))
+      return
+    }
+
     setIsSubmitting(true)
     setError(null)
 
     try {
       const response = await fetch('/api/donations', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: displayAmount,
           currency: 'MYR',
-          program: PROGRAMS.find(p => p.id === program)?.name || 'General Fund',
+          projectId: selectedProjectId,
+          program: selectedProject
+            ? getLocalizedString(selectedProject.title, locale)
+            : t('generalFund.title'),
           donorName: donor.isAnonymous ? 'Anonymous' : donor.name,
           donorEmail: donor.email,
+          donorPhone: donor.phone || undefined,
           isAnonymous: donor.isAnonymous,
-          donationType: frequency,
+          donationType: 'one-time',
         }),
       })
 
@@ -108,16 +482,10 @@ export default function DonateContent() {
         throw new Error(data.error || 'Failed to process donation')
       }
 
-      // If there's a redirect URL (payment gateway), go there
+      // Redirect to payment gateway or success page
       if (data.redirectUrl) {
-        if (data.paymentMethod === 'toyyibpay') {
-          window.location.href = data.redirectUrl
-        } else {
-          // For manual payment, go to success page with bank details
-          router.push(`/donate/success?ref=${data.paymentReference}&method=manual&amount=${displayAmount}`)
-        }
+        window.location.href = data.redirectUrl
       } else {
-        // Fallback to success page
         router.push(`/donate/success?ref=${data.paymentReference}&amount=${displayAmount}`)
       }
     } catch (err) {
@@ -126,389 +494,379 @@ export default function DonateContent() {
     }
   }
 
+  // Progress indicator
+  const progressSteps = [
+    { key: 'select', label: t('steps.select') },
+    { key: 'amount', label: t('steps.amount') },
+    { key: 'details', label: t('steps.details') },
+  ]
+  const currentStepIndex = progressSteps.findIndex(s => s.key === step)
+
   return (
-    <div className="min-h-screen bg-foundation-pearl selection:bg-teal-100 selection:text-teal-900">
-      
-      {/* Hero Background - Full Image with Premium Overlay */}
-      <section ref={heroRef} className="absolute inset-0 z-0 h-[85vh] w-full overflow-hidden">
-        <motion.div style={{ scale: heroScale }} className="absolute inset-0">
-          <Image
-            src="https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?q=80&w=2670"
-            alt="Helping hands"
-            fill
-            className="object-cover"
-            priority
-          />
-        </motion.div>
-        {/* Cinematic Overlay - ensuring nav visibility and text contrast */}
-        <div className="absolute inset-0 bg-gradient-to-b from-foundation-charcoal/80 via-foundation-charcoal/60 to-foundation-pearl" />
-        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.05] mix-blend-overlay" />
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      {/* Hero Section - Fixed, No Fading */}
+      <section className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 25% 25%, rgba(20, 184, 166, 0.3) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(16, 185, 129, 0.2) 0%, transparent 50%)' }} />
+        </div>
+
+        {/* Content */}
+        <div className="relative container mx-auto px-4 py-20 md:py-28">
+          <div className="max-w-3xl mx-auto text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-8"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500" />
+              </span>
+              <span className="text-sm font-medium text-teal-200 tracking-wide">{t('badge')}</span>
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight"
+            >
+              {t('heroTitle')}{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-400">
+                {t('heroTitleHighlight')}
+              </span>
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed"
+            >
+              {t('heroDescription')}
+            </motion.p>
+          </div>
+        </div>
+
+        {/* Wave Separator */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg className="w-full h-12 md:h-20 fill-gray-50" viewBox="0 0 1440 54" preserveAspectRatio="none">
+            <path d="M0 22L60 16.7C120 11 240 1.00001 360 0.700012C480 0.700012 600 11 720 16.7C840 22 960 22 1080 20.2C1200 18 1320 14 1380 12.2L1440 10V54H1380C1320 54 1200 54 1080 54C960 54 840 54 720 54C600 54 480 54 360 54C240 54 120 54 60 54H0V22Z" />
+          </svg>
+        </div>
       </section>
 
-      <motion.div style={{ opacity: heroOpacity }} className="relative z-10 container-wide pt-40 pb-20">
-        
-        {/* Header Section */}
-        <div className="text-center max-w-4xl mx-auto mb-20">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 shadow-sm mb-8"
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-            </span>
-            <span className="text-sm font-medium text-amber-100 tracking-wide uppercase">{t('badge')}</span>
-          </motion.div>
+      {/* Main Content */}
+      <section className="relative -mt-4 pb-20">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
 
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="heading-display text-6xl md:text-8xl mb-8 text-white tracking-tight"
-          >
-            {t('heroTitle')} <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-300 via-emerald-300 to-teal-300 animate-gradient-x">{t('heroTitleHighlight')}</span> {t('heroTitleEnd')}
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-2xl text-gray-200 leading-relaxed max-w-2xl mx-auto font-light"
-          >
-            {t('heroDescription')}
-          </motion.p>
-        </div>
-
-        <div className="grid lg:grid-cols-12 gap-8 items-start max-w-6xl mx-auto">
-          
-          {/* LEFT: Donation Interface */}
-          <motion.div 
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="lg:col-span-7"
-          >
-            <div className="bg-white rounded-[2rem] shadow-2xl shadow-black/20 border border-white/50 overflow-hidden relative backdrop-blur-xl">
-              
-              {/* Progress Bar */}
-              <div className="h-1 bg-gray-100 w-full">
-                <motion.div 
-                  className="h-full bg-teal-500"
-                  initial={{ width: '33%' }}
-                  animate={{ width: step === 'amount' ? '33%' : step === 'details' ? '66%' : '100%' }}
-                />
-              </div>
-
-              <div className="p-8 md:p-10">
-                <AnimatePresence mode="wait">
-                  
-                  {/* STEP 1: AMOUNT */}
-                  {step === 'amount' && (
-                    <motion.div
-                      key="step1"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      className="space-y-8"
-                    >
-                      {/* Frequency Toggle */}
-                      <div className="flex p-1 bg-gray-100/80 rounded-xl w-max mx-auto">
-                        {['one-time', 'monthly'].map((f) => (
-                          <button
-                            key={f}
-                            onClick={() => setFrequency(f as any)}
-                            className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-                              frequency === f
-                                ? 'bg-white text-teal-700 shadow-sm'
-                                : 'text-gray-500 hover:text-gray-700'
-                            }`}
-                          >
-                            {f === 'one-time' ? t('frequency.oneTime') : t('frequency.monthly')}
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* Main Amount Display */}
-                      <div className="text-center py-6">
-                        <div className="text-gray-400 font-medium mb-2 uppercase tracking-wider text-xs">{t('amount.label')}</div>
-                        <div className="flex items-baseline justify-center gap-2 font-display text-foundation-charcoal">
-                          <span className="text-4xl text-gray-300 font-light">RM</span>
-                          <input 
-                            type="number" 
-                            value={customAmount || amount}
-                            onChange={(e) => handleCustomChange(e.target.value)}
-                            className="text-7xl font-bold w-full max-w-[300px] text-center bg-transparent border-none focus:ring-0 p-0 placeholder-gray-200"
-                            placeholder="0"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Presets */}
-                      <div className="grid grid-cols-3 gap-3">
-                        {PRESET_AMOUNTS.map((val) => (
-                          <button
-                            key={val}
-                            onClick={() => handleAmountSelect(val)}
-                            className={`py-3 rounded-xl font-medium transition-all ${
-                              amount === val && !customAmount
-                                ? 'bg-teal-50 text-teal-700 ring-2 ring-teal-500 ring-offset-2'
-                                : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-                            }`}
-                          >
-                            RM {val}
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* Program Selector */}
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-3">{t('allocatedFund')}</label>
-                        <div className="grid sm:grid-cols-2 gap-3">
-                          {PROGRAMS.map((p) => (
-                            <button
-                              key={p.id}
-                              onClick={() => setProgram(p.id)}
-                              className={`p-3 rounded-xl border text-left flex items-center gap-3 transition-all ${
-                                program === p.id
-                                  ? 'border-teal-500 bg-teal-50/50'
-                                  : 'border-gray-200 hover:border-teal-200'
-                              }`}
-                            >
-                              <span className="text-2xl">{p.icon}</span>
-                              <div>
-                                <div className="font-semibold text-sm text-gray-900">{p.name}</div>
-                                <div className="text-xs text-gray-500">{p.description}</div>
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={() => setStep('details')}
-                        className="w-full py-4 bg-foundation-charcoal text-white rounded-xl font-bold text-lg hover:bg-black transition-all hover:scale-[1.01] active:scale-[0.99] shadow-lg shadow-gray-200"
-                      >
-                        {t('continue')}
-                      </button>
-                    </motion.div>
+            {/* Progress Steps */}
+            <div className="flex items-center justify-center gap-2 mb-10">
+              {progressSteps.map((s, i) => (
+                <div key={s.key} className="flex items-center">
+                  <div className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${
+                    i <= currentStepIndex
+                      ? 'bg-teal-500 text-white'
+                      : 'bg-gray-100 text-gray-400'
+                  }`}>
+                    <span className="w-6 h-6 flex items-center justify-center rounded-full bg-white/20 text-sm font-bold">
+                      {i + 1}
+                    </span>
+                    <span className="text-sm font-medium hidden sm:inline">{s.label}</span>
+                  </div>
+                  {i < progressSteps.length - 1 && (
+                    <div className={`w-8 h-0.5 mx-1 ${i < currentStepIndex ? 'bg-teal-500' : 'bg-gray-200'}`} />
                   )}
+                </div>
+              ))}
+            </div>
 
-                  {/* STEP 2: DETAILS */}
-                  {step === 'details' && (
-                    <motion.div
-                      key="step2"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      className="space-y-6"
+            {/* Cancelled Payment Warning */}
+            {wasCancelled && step === 'select' && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3"
+              >
+                <svg className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div>
+                  <p className="font-medium text-amber-800">{t('paymentCancelled.title')}</p>
+                  <p className="text-sm text-amber-700">{t('paymentCancelled.description')}</p>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Main Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden"
+            >
+              <AnimatePresence mode="wait">
+
+                {/* STEP 1: Select Project */}
+                {step === 'select' && (
+                  <motion.div
+                    key="step-select"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="p-6 md:p-10"
+                  >
+                    <div className="text-center mb-8">
+                      <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
+                        {t('selectProject.title')}
+                      </h2>
+                      <p className="text-gray-600">{t('selectProject.description')}</p>
+                    </div>
+
+                    {loadingProjects ? (
+                      <div className="flex items-center justify-center py-12">
+                        <div className="w-8 h-8 border-3 border-teal-500 border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    ) : (
+                      <div className="grid md:grid-cols-2 gap-4 mb-8">
+                        {/* General Fund - Always First */}
+                        <ProjectCard
+                          project={null}
+                          isSelected={selectedProjectId === null}
+                          onSelect={() => setSelectedProjectId(null)}
+                          locale={locale}
+                        />
+
+                        {/* Projects with Donation Enabled */}
+                        {projects.map((project) => (
+                          <ProjectCard
+                            key={project.id}
+                            project={project}
+                            isSelected={selectedProjectId === project.id}
+                            onSelect={() => setSelectedProjectId(project.id)}
+                            locale={locale}
+                          />
+                        ))}
+                      </div>
+                    )}
+
+                    <button
+                      onClick={() => setStep('amount')}
+                      className="w-full py-4 bg-gradient-to-r from-gray-900 to-gray-800 text-white rounded-xl font-bold text-lg hover:from-gray-800 hover:to-gray-700 transition-all shadow-lg"
                     >
-                      <div className="flex items-center justify-between mb-6">
-                        <h3 className="font-heading text-2xl font-bold">{t('form.title')}</h3>
-                        <button onClick={() => setStep('amount')} className="text-sm text-gray-500 hover:text-teal-600">{t('form.editAmount')}</button>
-                      </div>
+                      {t('continue')}
+                    </button>
+                  </motion.div>
+                )}
 
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                          <label className="text-sm font-semibold text-gray-700">{t('form.name')}</label>
-                          <input
-                            type="text"
-                            className="w-full px-4 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-teal-500 focus:ring-0 transition-all"
-                            placeholder={t('form.namePlaceholder')}
-                            value={donor.name}
-                            onChange={e => setDonor({...donor, name: e.target.value})}
+                {/* STEP 2: Choose Amount */}
+                {step === 'amount' && (
+                  <motion.div
+                    key="step-amount"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="p-6 md:p-10"
+                  >
+                    {/* Selected Project Summary */}
+                    <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl mb-8">
+                      <div className="w-12 h-12 rounded-lg overflow-hidden bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center flex-shrink-0">
+                        {selectedProject?.featuredImage ? (
+                          <Image
+                            src={selectedProject.featuredImage}
+                            alt=""
+                            width={48}
+                            height={48}
+                            className="w-full h-full object-cover"
                           />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-semibold text-gray-700">{t('form.email')}</label>
-                          <input
-                            type="email"
-                            className="w-full px-4 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-teal-500 focus:ring-0 transition-all"
-                            placeholder={t('form.emailPlaceholder')}
-                            value={donor.email}
-                            onChange={e => setDonor({...donor, email: e.target.value})}
-                          />
-                        </div>
+                        ) : (
+                          <span className="text-xl">🌍</span>
+                        )}
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-500">{t('donatingTo')}</p>
+                        <p className="font-semibold text-gray-900 truncate">
+                          {selectedProject
+                            ? getLocalizedString(selectedProject.title, locale)
+                            : t('generalFund.title')}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setStep('select')}
+                        className="text-sm text-teal-600 hover:text-teal-700 font-medium"
+                      >
+                        {t('change')}
+                      </button>
+                    </div>
 
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-gray-700">{t('form.phone')}</label>
+                    {/* Amount Display */}
+                    <div className="text-center py-8">
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wider block mb-4">
+                        {t('amount.enter')}
+                      </label>
+                      <div className="flex items-center justify-center gap-2">
+                        <span className="text-3xl text-gray-400 font-light">RM</span>
                         <input
-                          type="tel"
-                          className="w-full px-4 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-teal-500 focus:ring-0 transition-all"
-                          placeholder={t('form.phonePlaceholder')}
-                          value={donor.phone}
-                          onChange={e => setDonor({...donor, phone: e.target.value})}
+                          type="text"
+                          inputMode="decimal"
+                          value={customAmount || amount}
+                          onChange={(e) => handleCustomChange(e.target.value)}
+                          className="text-6xl md:text-7xl font-bold text-center bg-transparent border-none focus:ring-0 w-full max-w-xs outline-none text-gray-900"
+                          placeholder="0"
                         />
                       </div>
-
-                      <label className="flex items-center gap-3 p-4 rounded-xl border border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors">
-                        <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${donor.isAnonymous ? 'bg-teal-500 border-teal-500' : 'border-gray-300'}`}>
-                          {donor.isAnonymous && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
-                        </div>
-                        <input type="checkbox" className="hidden" checked={donor.isAnonymous} onChange={e => setDonor({...donor, isAnonymous: e.target.checked})} />
-                        <div>
-                          <div className="font-medium text-gray-900">{t('form.anonymous')}</div>
-                          <div className="text-xs text-gray-500">{t('form.anonymousDescription')}</div>
-                        </div>
-                      </label>
-
-                      <button
-                        onClick={() => setStep('confirm')}
-                        disabled={!donor.name || !donor.email}
-                        className="w-full py-4 bg-foundation-charcoal text-white rounded-xl font-bold text-lg hover:bg-black transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {t('form.reviewDonation')}
-                      </button>
-                    </motion.div>
-                  )}
-
-                  {/* STEP 3: CONFIRM */}
-                  {step === 'confirm' && (
-                    <motion.div
-                      key="step3"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      className="space-y-8"
-                    >
-                      <div className="text-center">
-                        <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
-                          🔒
-                        </div>
-                        <h3 className="font-heading text-2xl font-bold">{t('confirm.title')}</h3>
-                      </div>
-
-                      {/* Error Message */}
-                      {(error || wasCancelled) && (
-                        <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                          {error || t('confirm.paymentCancelled')}
-                        </div>
+                      {displayAmount >= 1 && (
+                        <p className="mt-3 text-sm text-gray-500">
+                          {displayAmount >= 2500 ? '💎 ' : displayAmount >= 1000 ? '⭐ ' : displayAmount >= 500 ? '🌟 ' : ''}
+                          {t('amount.thankYou')}
+                        </p>
                       )}
+                    </div>
 
-                      <div className="bg-gray-50 rounded-2xl p-6 space-y-4 text-sm">
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-500">{t('confirm.amount')}</span>
-                          <span className="font-bold text-xl text-gray-900">RM {displayAmount}</span>
+                    {/* Preset Amounts */}
+                    <div className="grid grid-cols-3 gap-3 mb-8">
+                      {PRESET_AMOUNTS.map((val) => (
+                        <button
+                          key={val}
+                          onClick={() => handleAmountSelect(val)}
+                          className={`py-3 px-4 rounded-xl font-semibold transition-all ${
+                            amount === val && !customAmount
+                              ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/30'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          RM {val.toLocaleString()}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Project Funding Progress (if applicable) */}
+                    {selectedProject && selectedProject.donationGoal && selectedProject.donationGoal > 0 && (
+                      <div className="p-4 bg-gradient-to-r from-teal-50 to-emerald-50 rounded-xl border border-teal-100 mb-8">
+                        <div className="flex justify-between text-sm mb-2">
+                          <span className="text-gray-600">{t('fundingProgress')}</span>
+                          <span className="font-semibold text-teal-700">
+                            {calculateProgress(selectedProject.donationRaised / 100, selectedProject.donationGoal / 100).toFixed(0)}% {t('funded')}
+                          </span>
                         </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-500">{t('confirm.frequency')}</span>
-                          <span className="font-medium capitalize">{frequency === 'one-time' ? t('frequency.oneTime') : t('frequency.monthly')}</span>
+                        <div className="h-3 bg-white rounded-full overflow-hidden shadow-inner">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${calculateProgress(selectedProject.donationRaised / 100, selectedProject.donationGoal / 100)}%` }}
+                            transition={{ duration: 1, ease: 'easeOut' }}
+                            className="h-full bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full"
+                          />
                         </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-500">{t('confirm.program')}</span>
-                          <span className="font-medium">{PROGRAMS.find(p => p.id === program)?.name}</span>
-                        </div>
-                        <div className="h-px bg-gray-200 my-2" />
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-500">{t('confirm.name')}</span>
-                          <span className="font-medium">{donor.name}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-500">{t('confirm.email')}</span>
-                          <span className="font-medium">{donor.email}</span>
+                        <div className="flex justify-between text-xs text-gray-500 mt-2">
+                          <span>{formatCurrency(selectedProject.donationRaised / 100)} {t('raised')}</span>
+                          <span>{t('goalOf')} {formatCurrency(selectedProject.donationGoal / 100)}</span>
                         </div>
                       </div>
+                    )}
 
+                    {/* Navigation Buttons */}
+                    <div className="flex gap-3">
                       <button
-                        onClick={handleSubmit}
-                        disabled={isSubmitting}
-                        className="w-full py-4 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-xl font-bold text-lg hover:shadow-lg hover:shadow-teal-500/20 transition-all flex items-center justify-center gap-2"
+                        onClick={() => setStep('select')}
+                        className="px-6 py-4 rounded-xl font-semibold text-gray-600 hover:bg-gray-100 transition-colors"
                       >
-                        {isSubmitting ? (
-                          <span className="animate-pulse">{t('confirm.processing')}</span>
-                        ) : (
-                          <>{t('confirm.paySecurely').replace('{amount}', String(displayAmount))}</>
-                        )}
+                        {t('back')}
                       </button>
-
-                      <button onClick={() => setStep('details')} className="w-full text-sm text-gray-400 hover:text-gray-600">
-                        {t('confirm.backToDetails')}
+                      <button
+                        onClick={() => {
+                          if (displayAmount < 1) {
+                            setError(t('errors.minimumAmount'))
+                            return
+                          }
+                          setError(null)
+                          setStep('details')
+                        }}
+                        disabled={displayAmount < 1}
+                        className="flex-1 py-4 bg-gradient-to-r from-gray-900 to-gray-800 text-white rounded-xl font-bold text-lg hover:from-gray-800 hover:to-gray-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                      >
+                        {t('continueToDetails')}
                       </button>
-                    </motion.div>
-                  )}
+                    </div>
 
-                </AnimatePresence>
-              </div>
-            </div>
-          </motion.div>
+                    {error && (
+                      <p className="mt-4 text-center text-sm text-red-600">{error}</p>
+                    )}
+                  </motion.div>
+                )}
 
-          {/* RIGHT: Impact Visualization & Trust */}
-          <motion.div 
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="lg:col-span-5 space-y-6"
-          >
-            {/* Dynamic Impact Card */}
-            <div className="bg-gradient-to-br from-amber-400 to-orange-500 rounded-[2rem] p-1 shadow-2xl text-white relative overflow-hidden group">
-              <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20" />
-              <div className="relative bg-white/10 backdrop-blur-md rounded-[1.8rem] p-8 h-full border border-white/20">
-                <div className="text-amber-100 text-sm font-semibold uppercase tracking-wider mb-2">{t('impact.title')}</div>
-                <div className="text-5xl mb-4 transform group-hover:scale-110 transition-transform duration-500">{currentImpact.emoji}</div>
-                <h3 className="font-heading text-3xl font-bold mb-3">{currentImpact.labelKey}</h3>
-                <p className="text-amber-50 text-xl leading-relaxed font-light">
-                  {t('impact.yourInvestment').replace('{amount}', String(displayAmount)).replace('{description}', currentImpact.descKey.toLowerCase())}
-                </p>
+                {/* STEP 3: Donor Details */}
+                {step === 'details' && (
+                  <motion.div
+                    key="step-details"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="p-6 md:p-10"
+                  >
+                    <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+                      {t('form.title')}
+                    </h2>
 
-                {/* Progress Visual */}
-                <div className="mt-8">
-                  <div className="flex justify-between text-xs font-medium text-amber-100 mb-2">
-                    <span>{t('impact.scaleLabel')}</span>
-                    <span>{t('impact.highImpact')}</span>
-                  </div>
-                  <div className="h-2 bg-black/10 rounded-full overflow-hidden">
-                    <motion.div 
-                      className="h-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${Math.min((displayAmount / 2500) * 100, 100)}%` }}
+                    <DonorForm
+                      donor={donor}
+                      setDonor={setDonor}
+                      onSubmit={handleSubmit}
+                      onBack={() => setStep('amount')}
+                      isSubmitting={isSubmitting}
+                      error={error}
+                      displayAmount={displayAmount}
+                      selectedProject={selectedProject}
+                      locale={locale}
                     />
-                  </div>
+                  </motion.div>
+                )}
+
+              </AnimatePresence>
+            </motion.div>
+
+            {/* Trust Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="mt-12 grid md:grid-cols-3 gap-6"
+            >
+              <div className="text-center p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
+                <div className="w-12 h-12 mx-auto mb-4 bg-teal-100 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
                 </div>
+                <h3 className="font-semibold text-gray-900 mb-2">{t('trust.secureTitle')}</h3>
+                <p className="text-sm text-gray-600">{t('trust.secureDescription')}</p>
               </div>
-            </div>
 
-            {/* Transparency Card */}
-            <div className="bg-white/80 backdrop-blur-lg rounded-[2rem] p-8 border border-white shadow-xl">
-              <h4 className="font-heading text-lg font-bold text-gray-900 mb-6">{t('transparency.title')}</h4>
-              <div className="space-y-4">
-                {[
-                  { labelKey: 'transparency.directAid', val: '85%', color: 'bg-teal-500' },
-                  { labelKey: 'transparency.operations', val: '10%', color: 'bg-blue-500' },
-                  { labelKey: 'transparency.fundraising', val: '5%', color: 'bg-amber-500' },
-                ].map((item) => (
-                  <div key={item.labelKey}>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-600 font-medium">{t(item.labelKey)}</span>
-                      <span className="font-bold text-gray-900">{item.val}</span>
-                    </div>
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div className={`h-full ${item.color}`} style={{ width: item.val }} />
-                    </div>
-                  </div>
-                ))}
+              <div className="text-center p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
+                <div className="w-12 h-12 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">{t('trust.transparentTitle')}</h3>
+                <p className="text-sm text-gray-600">{t('trust.transparentDescription')}</p>
               </div>
-              <p className="text-xs text-gray-500 mt-6 pt-6 border-t border-gray-100/50">
-                {t('transparency.auditNote')}
-              </p>
-            </div>
 
-            {/* Security Badges */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center gap-3 p-4 bg-white/80 backdrop-blur-sm rounded-2xl border border-white shadow-lg">
-                <span className="text-2xl">🔒</span>
-                <div className="text-xs font-medium text-gray-600">{t('security.ssl')}<br/>{t('security.encryption')}</div>
+              <div className="text-center p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
+                <div className="w-12 h-12 mx-auto mb-4 bg-amber-100 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">{t('trust.taxTitle')}</h3>
+                <p className="text-sm text-gray-600">{t('trust.taxDescription')}</p>
               </div>
-              <div className="flex items-center gap-3 p-4 bg-white/80 backdrop-blur-sm rounded-2xl border border-white shadow-lg">
-                <span className="text-2xl">🛡️</span>
-                <div className="text-xs font-medium text-gray-600">{t('security.taxReceipt')}<br/>{t('security.receipt')}</div>
-              </div>
-            </div>
+            </motion.div>
 
-          </motion.div>
+          </div>
         </div>
-      </motion.div>
+      </section>
     </div>
   )
 }
