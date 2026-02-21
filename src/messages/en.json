@@ -385,10 +385,25 @@
       "donateAgain": "Donate Again"
     },
     "failed": {
-      "title": "Donation Failed",
-      "description": "We're sorry, but your donation could not be processed. Please try again.",
+      "title": "Payment Not Completed",
+      "description": "We couldn't process your payment. This could be due to a cancelled transaction or a bank issue.",
+      "paymentDetails": "Payment Details",
+      "amount": "Amount",
+      "reference": "Reference",
       "tryAgain": "Try Again",
-      "contactSupport": "Contact Support"
+      "processing": "Processing...",
+      "startNew": "Start New Donation",
+      "needHelp": {
+        "title": "Need Help?",
+        "description": "If you continue to experience issues, please contact our support team. We're here to help!"
+      },
+      "commonIssues": {
+        "title": "Common Issues",
+        "insufficientFunds": "Insufficient funds - Check your account balance",
+        "timeout": "Transaction timeout - The session expired, try again",
+        "declined": "Bank declined - Contact your bank for more details",
+        "networkError": "Network error - Check your internet connection"
+      }
     },
     "notFound": {
       "title": "Donation Not Found",

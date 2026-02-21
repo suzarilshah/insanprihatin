@@ -6,6 +6,18 @@ import { ToyyibPayService, ToyyibPayError } from '@/lib/toyyibpay'
 import { headers } from 'next/headers'
 import { RateLimiters } from '@/lib/api-rate-limit'
 import { requireAuth } from '@/lib/auth/server'
+import { enforceTrustedOrigin } from '@/lib/security/request'
+import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
+import { donationLogger as logger } from '@/lib/logger'
+
+// Helper to get string from LocalizedString
+function getProjectTitle(title: unknown): string {
+  if (typeof title === 'string') return title
+  if (title && typeof title === 'object' && 'en' in title) {
+    return getLocalizedValue(title as LocalizedString, 'en')
+  }
+  return 'Project'
+}
 
 /**
  * Donation API Routes
@@ -68,7 +80,7 @@ async function logDonationEvent(
       userAgent: headersList?.get('user-agent') || 'unknown',
     })
   } catch (error) {
-    console.error('Failed to log donation event:', error)
+    logger.error('Failed to log donation event', { error: error instanceof Error ? error.message : 'Unknown error', donationId })
   }
 }
 
@@ -165,7 +177,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ error: 'Reference parameter required' }, { status: 400 })
   } catch (error) {
-    console.error('Donation fetch error:', error)
+    logger.error('Donation fetch error', { error: error instanceof Error ? error.message : 'Unknown error' })
     return NextResponse.json(
       { error: 'Failed to fetch donation' },
       { status: 500 }
@@ -175,25 +187,26 @@ export async function GET(request: NextRequest) {
 
 // POST - Create new donation and initiate payment
 export async function POST(request: NextRequest) {
+  const originCheck = enforceTrustedOrigin(request)
+  if (originCheck) return originCheck
+
   // SECURITY: Rate limit donation creation to prevent abuse
-  const rateLimitResponse = RateLimiters.donationCreate(request)
+  const rateLimitResponse = await RateLimiters.donationCreate(request)
   if (rateLimitResponse) {
     return rateLimitResponse
   }
 
   const requestId = `donation_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`
-  console.log(`\n${'='.repeat(60)}`)
-  console.log(`[Donation ${requestId}] New donation request received`)
-  console.log(`${'='.repeat(60)}`)
+  const operation = logger.startOperation('createDonation', { requestId })
 
   try {
     const body = await request.json()
-    console.log(`[Donation ${requestId}] Request body:`, {
+    logger.request(requestId, 'Processing donation request', {
       amount: body.amount,
       currency: body.currency,
       projectId: body.projectId,
       isAnonymous: body.isAnonymous,
-      donorEmail: body.donorEmail ? '***@***' : null,
+      hasEmail: !!body.donorEmail,
     })
     const {
       donorName,
@@ -337,14 +350,17 @@ export async function POST(request: NextRequest) {
     const baseUrl = getBaseUrl(request)
     const successUrl = `${baseUrl}/donate/success?ref=${paymentReference}`
     const failedUrl = `${baseUrl}/donate/failed?ref=${paymentReference}`
-    const callbackUrl = `${baseUrl}/api/donations/webhook`
+    const webhookSecret = process.env.TOYYIBPAY_WEBHOOK_SECRET
+    const callbackUrl = webhookSecret
+      ? `${baseUrl}/api/donations/webhook?token=${encodeURIComponent(webhookSecret)}`
+      : `${baseUrl}/api/donations/webhook`
 
     // Log the URLs being used for debugging
-    console.log('[Donation] Base URL configuration:', {
+    logger.debug('Base URL configuration', {
+      requestId,
       baseUrl,
       successUrl,
       callbackUrl,
-      timestamp: new Date().toISOString(),
     })
 
     // Check if ToyyibPay is configured
@@ -357,30 +373,33 @@ export async function POST(request: NextRequest) {
         }
 
         // Create bill name (max 30 chars)
-        const billName = project
-          ? `Donation: ${project.title}`.substring(0, 30)
+        const projectTitle = project ? getProjectTitle(project.title) : null
+        const billName = projectTitle
+          ? `Donation: ${projectTitle}`.substring(0, 30)
           : 'Donation to YIP'.substring(0, 30)
 
         // Create bill description (max 100 chars)
-        const billDescription = project
-          ? `Donation for ${project.title} - ${program || 'General'}`.substring(0, 100)
+        const billDescription = projectTitle
+          ? `Donation for ${projectTitle} - ${program || 'General'}`.substring(0, 100)
           : `Donation to Yayasan Insan Prihatin - ${program || 'General Fund'}`.substring(0, 100)
 
         // Create ToyyibPay bill
+        // For anonymous donations, use '0' for billPayorInfo to hide payer fields
+        // and provide placeholder values that ToyyibPay will accept
         const billCode = await ToyyibPayService.createBill({
           categoryCode,
           billName,
           billDescription,
           billPriceSetting: '1', // Fixed price
-          billPayorInfo: '1', // Require payer info
+          billPayorInfo: isAnonymous ? '0' : '1', // Hide payer info for anonymous
           billAmount: amountInCents, // Amount in cents
           billReturnUrl: successUrl,
           billCallbackUrl: callbackUrl,
           billExternalReferenceNo: paymentReference,
-          billTo: isAnonymous ? 'Anonymous Donor' : donorName,
-          billEmail: donorEmail || 'donor@yayasaninsanprihatin.org',
-          billPhone: donorPhone || '0000000000',
-          billContentEmail: `Thank you for your donation of RM ${amount.toFixed(2)} to Yayasan Insan Prihatin.${project ? ` This donation supports: ${project.title}` : ''}`,
+          billTo: isAnonymous ? 'Penderma' : donorName, // Use 'Penderma' (Donor in Malay) for anonymous
+          billEmail: donorEmail,
+          billPhone: donorPhone || '0123456789', // Use valid format placeholder
+          billContentEmail: `Thank you for your donation of RM ${amount.toFixed(2)} to Yayasan Insan Prihatin.${projectTitle ? ` This donation supports: ${projectTitle}` : ''}`,
           billPaymentChannel: '0', // FPX only
           billChargeToCustomer: '1', // Charge fee to customer
         })
@@ -401,10 +420,14 @@ export async function POST(request: NextRequest) {
         // Get payment URL
         const paymentUrl = ToyyibPayService.getPaymentUrl(billCode)
 
-        console.log(`[Donation ${requestId}] Bill created successfully`)
-        console.log(`[Donation ${requestId}] Bill code: ${billCode}`)
-        console.log(`[Donation ${requestId}] Payment URL: ${paymentUrl}`)
-        console.log(`${'='.repeat(60)}\n`)
+        operation.success('Bill created', { billCode, paymentUrl })
+        logger.info('Bill created successfully', {
+          requestId,
+          billCode,
+          paymentUrl,
+          amount,
+          isAnonymous,
+        })
 
         return NextResponse.json({
           success: true,
@@ -416,23 +439,42 @@ export async function POST(request: NextRequest) {
         })
 
       } catch (error) {
-        console.error(`[Donation ${requestId}] ToyyibPay error:`, error)
-        console.error(`[Donation ${requestId}] Error details:`, {
-          message: error instanceof Error ? error.message : 'Unknown error',
-          code: error instanceof ToyyibPayError ? error.code : 'UNKNOWN',
+        const errorCode = error instanceof ToyyibPayError ? error.code : 'UNKNOWN'
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+        const errorDetails = error instanceof ToyyibPayError ? error.details : undefined
+
+        operation.failure(error instanceof Error ? error : new Error(errorMessage))
+        logger.error('ToyyibPay error during donation', {
+          requestId,
+          errorCode,
+          errorMessage,
+          errorDetails: errorDetails ? String(errorDetails) : undefined,
         })
 
         // Log error
         await logDonationEvent(donation.id, 'error', {
-          error: error instanceof Error ? error.message : 'Unknown ToyyibPay error',
-          code: error instanceof ToyyibPayError ? error.code : 'UNKNOWN',
+          error: errorMessage,
+          code: errorCode,
+          details: errorDetails ? String(errorDetails) : undefined,
         }, request)
 
-        // Return error to user
+        // Provide specific error messages based on error code
+        let userMessage = 'Failed to initialize payment gateway. Please try again.'
+        if (errorCode === 'DATABASE_ERROR') {
+          userMessage = 'A temporary database error occurred. Please try again in a moment.'
+        } else if (errorCode === 'NOT_CONFIGURED') {
+          userMessage = 'Payment system is not configured. Please contact support.'
+        } else if (errorCode === 'CATEGORY_CREATE_FAILED' || errorCode === 'BILL_CREATE_FAILED') {
+          userMessage = 'Unable to create payment. Please try again or contact support.'
+        } else if (errorCode === 'API_ERROR') {
+          userMessage = 'Payment gateway returned an error. Please try again.'
+        }
+
         return NextResponse.json(
           {
-            error: 'Failed to initialize payment gateway. Please try again.',
-            details: error instanceof ToyyibPayError ? error.message : undefined,
+            error: userMessage,
+            details: error instanceof ToyyibPayError ? errorMessage : undefined,
+            code: errorCode,
           },
           { status: 500 }
         )
@@ -462,9 +504,10 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error(`[Donation] Error processing donation:`, error)
-    console.error(`[Donation] Error details:`, {
-      message: error instanceof Error ? error.message : 'Unknown error',
+    operation.failure(error instanceof Error ? error : new Error('Unknown error'))
+    logger.error('Error processing donation', {
+      requestId,
+      error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
     })
     return NextResponse.json(
@@ -476,6 +519,9 @@ export async function POST(request: NextRequest) {
 
 // PATCH - Update donation status (for admin)
 export async function PATCH(request: NextRequest) {
+  const originCheck = enforceTrustedOrigin(request)
+  if (originCheck) return originCheck
+
   // SECURITY: Require admin authentication for status updates
   try {
     await requireAuth()
@@ -560,7 +606,7 @@ export async function PATCH(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Donation update error:', error)
+    logger.error('Donation update error', { error: error instanceof Error ? error.message : 'Unknown error' })
     return NextResponse.json(
       { error: 'Failed to update donation' },
       { status: 500 }

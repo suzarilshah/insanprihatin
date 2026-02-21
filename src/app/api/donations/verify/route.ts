@@ -5,6 +5,7 @@ import { ToyyibPayService } from '@/lib/toyyibpay'
 import { generateReceiptNumber, getReceiptData } from '@/lib/receipt'
 import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
 import { sendDonationReceiptEmail } from '@/lib/email'
+import { webhookLogger as logger } from '@/lib/logger'
 
 /**
  * Payment Verification API
@@ -57,21 +58,22 @@ async function buildDonationResponse(donation: typeof donations.$inferSelect, ov
 }
 
 export async function GET(request: NextRequest) {
-  console.log('[Verify] Payment verification request received')
+  const requestId = `verify_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`
+  const operation = logger.startOperation('verifyPayment', { requestId })
 
   try {
     const { searchParams } = new URL(request.url)
     const reference = searchParams.get('reference')
 
     if (!reference) {
-      console.log('[Verify] Missing payment reference')
+      logger.warn('Missing payment reference', { requestId })
       return NextResponse.json(
         { error: 'Payment reference is required' },
         { status: 400 }
       )
     }
 
-    console.log(`[Verify] Looking up donation: ${reference}`)
+    logger.info('Looking up donation', { requestId, reference })
 
     // Find donation in database
     const donation = await db.query.donations.findFirst({
@@ -79,18 +81,18 @@ export async function GET(request: NextRequest) {
     })
 
     if (!donation) {
-      console.log(`[Verify] Donation not found: ${reference}`)
+      logger.warn('Donation not found', { requestId, reference })
       return NextResponse.json(
         { error: 'Donation not found' },
         { status: 404 }
       )
     }
 
-    console.log(`[Verify] Found donation: ${donation.id}, status: ${donation.paymentStatus}`)
+    logger.info('Found donation', { requestId, donationId: donation.id, status: donation.paymentStatus })
 
     // If already completed, return immediately
     if (donation.paymentStatus === 'completed') {
-      console.log(`[Verify] Donation already completed: ${reference}`)
+      logger.debug('Donation already completed', { requestId, reference })
       const donationData = await buildDonationResponse(donation)
       return NextResponse.json({
         success: true,
@@ -115,8 +117,12 @@ export async function GET(request: NextRequest) {
           // If ToyyibPay shows completed but our DB doesn't, the webhook might have failed
           // AUTO-RECOVERY: Update the payment status to completed
           if (mappedStatus === 'completed' && donation.paymentStatus !== 'completed') {
-            console.log(`[Verify] Auto-recovery triggered for ${reference}`)
-            console.log(`[Verify] ToyyibPay status: completed, DB status: ${donation.paymentStatus}`)
+            logger.info('Auto-recovery triggered', {
+              requestId,
+              reference,
+              toyyibpayStatus: 'completed',
+              dbStatus: donation.paymentStatus,
+            })
 
             // Generate receipt number
             const receiptNumber = await generateReceiptNumber()
@@ -140,7 +146,11 @@ export async function GET(request: NextRequest) {
                   donationRaised: sql`COALESCE(donation_raised, 0) + ${donation.amount}`,
                 })
                 .where(eq(projects.id, donation.projectId))
-              console.log(`[Verify] Updated project ${donation.projectId} raised amount: +${donation.amount / 100}`)
+              logger.info('Updated project raised amount', {
+                requestId,
+                projectId: donation.projectId,
+                amountAdded: donation.amount / 100,
+              })
             }
 
             // Log the auto-recovery
@@ -157,12 +167,12 @@ export async function GET(request: NextRequest) {
               },
             })
 
-            console.log(`[Verify] Auto-recovery successful for ${reference}, receipt: ${receiptNumber}`)
+            logger.info('Auto-recovery successful', { requestId, reference, receiptNumber })
 
             // Send receipt email (same logic as webhook handler)
             if (donation.donorEmail) {
               try {
-                console.log(`[Verify] Sending receipt email to ${donation.donorEmail}`)
+                logger.info('Sending receipt email', { requestId, email: donation.donorEmail })
                 const receiptData = await getReceiptData(reference)
 
                 if (receiptData) {
@@ -176,9 +186,12 @@ export async function GET(request: NextRequest) {
                     const element = React.createElement(ReceiptPDF as any, { data: receiptData })
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     pdfBuffer = await renderToBuffer(element as any)
-                    console.log(`[Verify] PDF generated, size: ${Math.round(pdfBuffer.length / 1024)}KB`)
+                    logger.debug('PDF generated', { requestId, sizeKB: Math.round(pdfBuffer.length / 1024) })
                   } catch (pdfError) {
-                    console.error('[Verify] Failed to generate PDF:', pdfError)
+                    logger.error('Failed to generate PDF', {
+                      requestId,
+                      error: pdfError instanceof Error ? pdfError.message : 'Unknown error',
+                    })
                   }
 
                   // Send email
@@ -213,9 +226,12 @@ export async function GET(request: NextRequest) {
                       },
                     })
 
-                    console.log(`[Verify] Receipt email sent successfully for ${reference}`)
+                    logger.info('Receipt email sent successfully', { requestId, reference })
                   } else {
-                    console.error(`[Verify] Failed to send receipt email: ${emailResult.error || emailResult.reason}`)
+                    logger.error('Failed to send receipt email', {
+                      requestId,
+                      error: emailResult.error || emailResult.reason,
+                    })
                     await db.insert(donationLogs).values({
                       donationId: donation.id,
                       eventType: 'receipt_email_failed',
@@ -227,7 +243,10 @@ export async function GET(request: NextRequest) {
                   }
                 }
               } catch (emailError) {
-                console.error('[Verify] Receipt email error:', emailError)
+                logger.error('Receipt email error', {
+                  requestId,
+                  error: emailError instanceof Error ? emailError.message : 'Unknown error',
+                })
                 await db.insert(donationLogs).values({
                   donationId: donation.id,
                   eventType: 'receipt_email_error',
@@ -261,7 +280,8 @@ export async function GET(request: NextRequest) {
             })
           }
 
-          console.log(`[Verify] ToyyibPay verification complete for ${reference}, status: ${mappedStatus}`)
+          operation.success('Auto-recovery completed', { status: mappedStatus, autoRecovered: true })
+          logger.info('ToyyibPay verification complete', { requestId, reference, status: mappedStatus })
 
           const donationData = await buildDonationResponse(donation)
           return NextResponse.json({
@@ -278,13 +298,17 @@ export async function GET(request: NextRequest) {
           })
         }
       } catch (error) {
-        console.error('[Verify] Failed to verify with ToyyibPay:', error)
+        logger.error('Failed to verify with ToyyibPay', {
+          requestId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        })
         // Continue with database status only
       }
     }
 
     // Return database status (not verified with ToyyibPay)
-    console.log(`[Verify] Returning DB status only for ${reference}: ${donation.paymentStatus}`)
+    operation.success('DB status returned', { status: donation.paymentStatus, verified: false })
+    logger.info('Returning DB status only', { requestId, reference, status: donation.paymentStatus })
     const donationData = await buildDonationResponse(donation)
     return NextResponse.json({
       success: true,
@@ -294,9 +318,10 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('[Verify] Payment verification error:', error)
-    console.error('[Verify] Error details:', {
-      message: error instanceof Error ? error.message : 'Unknown error',
+    operation.failure(error instanceof Error ? error : new Error('Payment verification failed'))
+    logger.error('Payment verification error', {
+      requestId,
+      error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
     })
     return NextResponse.json(

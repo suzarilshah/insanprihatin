@@ -12,6 +12,25 @@ interface DonationInfo {
   status?: string
 }
 
+// Static translations for non-locale routes
+const translations = {
+  title: 'Payment Not Completed',
+  description: "We couldn't process your payment. This could be due to a cancelled transaction or a bank issue.",
+  paymentDetails: 'Payment Details',
+  amount: 'Amount',
+  reference: 'Reference',
+  tryAgain: 'Try Again',
+  processing: 'Processing...',
+  startNew: 'Start New Donation',
+  needHelpTitle: 'Need Help?',
+  needHelpDescription: "If you continue to experience issues, please contact our support team. We're here to help!",
+  commonIssuesTitle: 'Common Issues',
+  insufficientFunds: 'Insufficient funds - Check your account balance',
+  timeout: 'Transaction timeout - The session expired, try again',
+  declined: 'Bank declined - Contact your bank for more details',
+  networkError: 'Network error - Check your internet connection',
+}
+
 export default function DonationFailedContent() {
   const searchParams = useSearchParams()
   const [donation, setDonation] = useState<DonationInfo | null>(null)
@@ -37,7 +56,7 @@ export default function DonationFailedContent() {
             setDonation({
               reference: data.donation.reference,
               amount: data.donation.amount,
-              failureReason: data.donation.failureReason || reason || 'Payment was not completed',
+              failureReason: data.donation.failureReason || reason || translations.description,
               status: data.donation.status,
             })
           }
@@ -112,11 +131,11 @@ export default function DonationFailedContent() {
 
           {/* Title */}
           <h1 className="font-heading text-3xl lg:text-4xl font-bold text-foundation-charcoal mb-4">
-            Payment Not Completed
+            {translations.title}
           </h1>
 
           <p className="text-lg text-gray-600 mb-8">
-            {donation?.failureReason || reason || "We couldn't process your payment. This could be due to a cancelled transaction or a bank issue."}
+            {donation?.failureReason || reason || translations.description}
           </p>
 
           {/* Error Message */}
@@ -133,17 +152,17 @@ export default function DonationFailedContent() {
           {/* Donation Details */}
           {donation && (
             <div className="bg-white rounded-2xl p-6 mb-8 shadow-lg border border-gray-100">
-              <h3 className="font-medium text-gray-900 mb-4">Payment Details</h3>
+              <h3 className="font-medium text-gray-900 mb-4">{translations.paymentDetails}</h3>
               <div className="space-y-3 text-sm">
                 {donation.amount && (
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Amount</span>
+                    <span className="text-gray-500">{translations.amount}</span>
                     <span className="font-semibold">RM {donation.amount.toLocaleString()}</span>
                   </div>
                 )}
                 {donation.reference && (
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Reference</span>
+                    <span className="text-gray-500">{translations.reference}</span>
                     <span className="font-mono text-xs">{donation.reference}</span>
                   </div>
                 )}
@@ -162,14 +181,14 @@ export default function DonationFailedContent() {
                 {isRetrying ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Processing...
+                    {translations.processing}
                   </>
                 ) : (
                   <>
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
-                    Try Again
+                    {translations.tryAgain}
                   </>
                 )}
               </button>
@@ -179,15 +198,15 @@ export default function DonationFailedContent() {
               href="/donate"
               className="px-8 py-4 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
             >
-              Start New Donation
+              {translations.startNew}
             </Link>
           </div>
 
           {/* Help Section */}
           <div className="mt-12 p-6 bg-amber-50 border border-amber-200 rounded-2xl">
-            <h3 className="font-medium text-amber-900 mb-2">Need Help?</h3>
+            <h3 className="font-medium text-amber-900 mb-2">{translations.needHelpTitle}</h3>
             <p className="text-sm text-amber-800 mb-4">
-              If you continue to experience issues, please contact our support team. We&apos;re here to help!
+              {translations.needHelpDescription}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center text-sm">
               <a
@@ -208,23 +227,23 @@ export default function DonationFailedContent() {
 
           {/* Common Issues */}
           <div className="mt-8 text-left bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-            <h3 className="font-medium text-gray-900 mb-4">Common Issues</h3>
+            <h3 className="font-medium text-gray-900 mb-4">{translations.commonIssuesTitle}</h3>
             <ul className="space-y-3 text-sm text-gray-600">
               <li className="flex items-start gap-2">
                 <span className="text-red-500 mt-0.5">•</span>
-                <span><strong>Insufficient funds</strong> - Check your account balance</span>
+                <span>{translations.insufficientFunds}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-red-500 mt-0.5">•</span>
-                <span><strong>Transaction timeout</strong> - The session expired, try again</span>
+                <span>{translations.timeout}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-red-500 mt-0.5">•</span>
-                <span><strong>Bank declined</strong> - Contact your bank for more details</span>
+                <span>{translations.declined}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-red-500 mt-0.5">•</span>
-                <span><strong>Network error</strong> - Check your internet connection</span>
+                <span>{translations.networkError}</span>
               </li>
             </ul>
           </div>

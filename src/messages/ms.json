@@ -385,10 +385,25 @@
       "donateAgain": "Derma Lagi"
     },
     "failed": {
-      "title": "Derma Gagal",
-      "description": "Maaf, derma anda tidak dapat diproses. Sila cuba lagi.",
+      "title": "Pembayaran Tidak Selesai",
+      "description": "Pembayaran anda tidak dapat diproses. Ini mungkin disebabkan oleh transaksi yang dibatalkan atau isu dengan bank.",
+      "paymentDetails": "Butiran Pembayaran",
+      "amount": "Jumlah",
+      "reference": "Rujukan",
       "tryAgain": "Cuba Lagi",
-      "contactSupport": "Hubungi Sokongan"
+      "processing": "Memproses...",
+      "startNew": "Mulakan Derma Baru",
+      "needHelp": {
+        "title": "Perlukan Bantuan?",
+        "description": "Jika anda terus menghadapi masalah, sila hubungi pasukan sokongan kami. Kami sedia membantu!"
+      },
+      "commonIssues": {
+        "title": "Isu Biasa",
+        "insufficientFunds": "Dana tidak mencukupi - Semak baki akaun anda",
+        "timeout": "Tamat masa transaksi - Sesi tamat, cuba lagi",
+        "declined": "Bank menolak - Hubungi bank anda untuk maklumat lanjut",
+        "networkError": "Ralat rangkaian - Semak sambungan internet anda"
+      }
     },
     "notFound": {
       "title": "Derma Tidak Dijumpai",

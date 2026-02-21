@@ -4,14 +4,28 @@ import { eq } from 'drizzle-orm'
 import { ToyyibPayService, ToyyibPayError } from '@/lib/toyyibpay'
 import { headers } from 'next/headers'
 import { RateLimiters } from '@/lib/api-rate-limit'
+import { enforceTrustedOrigin } from '@/lib/security/request'
+import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
+import { donationLogger as logger } from '@/lib/logger'
 
 /**
  * Payment Retry API
  *
- * SECURITY: Rate limited to prevent payment gateway abuse.
+ * SECURITY:
+ * - CSRF protection via origin validation
+ * - Rate limited to prevent payment gateway abuse
  * Allows users to retry a failed payment without re-entering all their information.
  * Creates a new ToyyibPay bill with the same donation details.
  */
+
+// Helper to get string from LocalizedString
+function getProjectTitle(title: unknown): string {
+  if (typeof title === 'string') return title
+  if (title && typeof title === 'object' && 'en' in title) {
+    return getLocalizedValue(title as LocalizedString, 'en')
+  }
+  return 'Project'
+}
 
 // Get base URL dynamically from request or environment
 function getBaseUrl(request?: NextRequest): string {
@@ -29,8 +43,12 @@ function getBaseUrl(request?: NextRequest): string {
 }
 
 export async function POST(request: NextRequest) {
+  // SECURITY: CSRF protection - verify request origin
+  const originCheck = enforceTrustedOrigin(request)
+  if (originCheck) return originCheck
+
   // SECURITY: Rate limit retry attempts to prevent payment gateway abuse
-  const rateLimitResponse = RateLimiters.donationCreate(request)
+  const rateLimitResponse = await RateLimiters.donationCreate(request)
   if (rateLimitResponse) {
     return rateLimitResponse
   }
@@ -112,37 +130,48 @@ export async function POST(request: NextRequest) {
     // Generate URLs dynamically
     const baseUrl = getBaseUrl(request)
     const successUrl = `${baseUrl}/donate/success?ref=${donation.paymentReference}`
-    const callbackUrl = `${baseUrl}/api/donations/webhook`
+    const webhookSecret = process.env.TOYYIBPAY_WEBHOOK_SECRET
+    const callbackUrl = webhookSecret
+      ? `${baseUrl}/api/donations/webhook?token=${encodeURIComponent(webhookSecret)}`
+      : `${baseUrl}/api/donations/webhook`
 
-    console.log('[Retry] Base URL configuration:', {
+    const requestId = `retry_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`
+    const operation = logger.startOperation('retryPayment', { requestId, reference: donation.paymentReference })
+
+    logger.info('Payment retry initiated', {
+      requestId,
       baseUrl,
       reference: donation.paymentReference,
       attemptNumber: (donation.paymentAttempts || 0) + 1,
+      isAnonymous: donation.isAnonymous,
     })
 
     try {
       // Create new ToyyibPay bill
-      const billName = project
-        ? `Donation: ${project.title}`.substring(0, 30)
+      const projectTitle = project ? getProjectTitle(project.title) : null
+      const billName = projectTitle
+        ? `Donation: ${projectTitle}`.substring(0, 30)
         : 'Donation to YIP'.substring(0, 30)
 
-      const billDescription = project
-        ? `Donation for ${project.title} (Retry)`.substring(0, 100)
+      const billDescription = projectTitle
+        ? `Donation for ${projectTitle} (Retry)`.substring(0, 100)
         : 'Donation to Yayasan Insan Prihatin (Retry)'.substring(0, 100)
 
+      // For anonymous donations, use '0' for billPayorInfo to hide payer fields
+      const isAnonymous = donation.isAnonymous || !donation.donorName
       const billCode = await ToyyibPayService.createBill({
         categoryCode,
         billName,
         billDescription,
         billPriceSetting: '1',
-        billPayorInfo: '1',
+        billPayorInfo: isAnonymous ? '0' : '1', // Hide payer info for anonymous
         billAmount: donation.amount,
         billReturnUrl: successUrl,
         billCallbackUrl: callbackUrl,
-        billExternalReferenceNo: donation.paymentReference || reference, // Use same reference
-        billTo: donation.donorName || 'Anonymous Donor',
+        billExternalReferenceNo: donation.paymentReference || reference,
+        billTo: isAnonymous ? 'Penderma' : (donation.donorName || 'Penderma'),
         billEmail: donation.donorEmail || 'donor@yayasaninsanprihatin.org',
-        billPhone: donation.donorPhone || '0000000000',
+        billPhone: donation.donorPhone || '0123456789', // Valid format placeholder
         billPaymentChannel: '0',
         billChargeToCustomer: '1',
       })
@@ -177,6 +206,14 @@ export async function POST(request: NextRequest) {
       // Get payment URL
       const paymentUrl = ToyyibPayService.getPaymentUrl(billCode)
 
+      operation.success('Retry bill created', { billCode, paymentUrl })
+      logger.info('Payment retry bill created successfully', {
+        requestId,
+        billCode,
+        paymentUrl,
+        attemptNumber: (donation.paymentAttempts || 0) + 1,
+      })
+
       return NextResponse.json({
         success: true,
         message: 'Payment retry initiated',
@@ -186,7 +223,12 @@ export async function POST(request: NextRequest) {
       })
 
     } catch (error) {
-      console.error('Retry bill creation error:', error)
+      operation.failure(error instanceof Error ? error : new Error('Retry bill creation failed'))
+      logger.error('Retry bill creation error', {
+        requestId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        code: error instanceof ToyyibPayError ? error.code : 'UNKNOWN',
+      })
 
       // Log error
       await db.insert(donationLogs).values({
@@ -208,7 +250,7 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Payment retry error:', error)
+    logger.error('Payment retry error', { error: error instanceof Error ? error.message : 'Unknown error' })
     return NextResponse.json(
       { error: 'Failed to process retry request' },
       { status: 500 }

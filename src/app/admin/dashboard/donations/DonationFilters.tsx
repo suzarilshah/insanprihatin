@@ -132,6 +132,7 @@ export default function DonationFilters({
             <option value="completed">Completed</option>
             <option value="pending">Pending</option>
             <option value="failed">Failed</option>
+            <option value="expired">Expired</option>
           </select>
           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3">
             <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

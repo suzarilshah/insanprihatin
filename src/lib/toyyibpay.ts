@@ -10,6 +10,7 @@
 
 import { db, siteSettings } from '@/db'
 import { eq } from 'drizzle-orm'
+import { toyyibpayLogger as logger } from '@/lib/logger'
 
 // ToyyibPay Configuration
 const TOYYIBPAY_URL = process.env.TOYYIBPAY_URL || 'https://dev.toyyibpay.com'
@@ -152,9 +153,16 @@ export class ToyyibPayService {
    * Categories are used to group bills (e.g., per project)
    */
   static async createCategory(params: CreateCategoryParams): Promise<string> {
+    const operation = logger.startOperation('createCategory', {
+      categoryName: params.catname,
+    })
+
     if (!this.isConfigured()) {
+      operation.failure(new Error('ToyyibPay is not configured'), { code: 'NOT_CONFIGURED' })
       throw new ToyyibPayError('ToyyibPay is not configured', 'NOT_CONFIGURED')
     }
+
+    const apiUrl = `${TOYYIBPAY_URL}/index.php/api/createCategory`
 
     try {
       const formData = new URLSearchParams({
@@ -163,7 +171,7 @@ export class ToyyibPayService {
         catdescription: params.catdescription,
       })
 
-      const response = await fetch(`${TOYYIBPAY_URL}/index.php/api/createCategory`, {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -175,21 +183,23 @@ export class ToyyibPayService {
 
       // ToyyibPay returns an array with a single object
       if (Array.isArray(result) && result[0]?.CategoryCode) {
-        return result[0].CategoryCode
+        const categoryCode = result[0].CategoryCode
+        operation.success('Category created', { categoryCode })
+        return categoryCode
       }
 
       // Check for error response
       if (result.error || result.msg) {
-        throw new ToyyibPayError(
-          result.msg || result.error || 'Failed to create category',
-          'CATEGORY_CREATE_FAILED',
-          result
-        )
+        const errorMsg = result.msg || result.error || 'Failed to create category'
+        operation.failure(new Error(errorMsg), { code: 'CATEGORY_CREATE_FAILED' })
+        throw new ToyyibPayError(errorMsg, 'CATEGORY_CREATE_FAILED', result)
       }
 
+      operation.failure(new Error('Unexpected response'), { code: 'UNEXPECTED_RESPONSE' })
       throw new ToyyibPayError('Unexpected response from ToyyibPay', 'UNEXPECTED_RESPONSE', result)
     } catch (error) {
       if (error instanceof ToyyibPayError) throw error
+      operation.failure(error as Error, { code: 'CONNECTION_ERROR' })
       throw new ToyyibPayError(
         'Failed to connect to ToyyibPay',
         'CONNECTION_ERROR',
@@ -203,37 +213,89 @@ export class ToyyibPayService {
    * This category is used for donations not tied to a specific project
    */
   static async getOrCreateGeneralFundCategory(): Promise<string> {
-    const SETTING_KEY = 'toyyibpay_general_fund_category'
+    // Use environment-specific key to avoid sandbox/production conflicts
+    const environment = this.getEnvironment()
+    const SETTING_KEY = `toyyibpay_general_fund_category_${environment}`
 
-    // Check if we already have a General Fund category
-    const existing = await db.query.siteSettings.findFirst({
-      where: eq(siteSettings.key, SETTING_KEY),
+    const operation = logger.startOperation('getOrCreateGeneralFundCategory', {
+      environment,
+      settingKey: SETTING_KEY,
+      baseUrl: TOYYIBPAY_URL,
+      configured: this.isConfigured(),
     })
 
+    // Step 1: Check database for existing category (environment-specific)
+    let existing
+    try {
+      logger.debug('Querying database for existing category')
+      existing = await db.query.siteSettings.findFirst({
+        where: eq(siteSettings.key, SETTING_KEY),
+      })
+      logger.debug('Database query completed', { found: !!existing })
+    } catch (dbError) {
+      operation.failure(dbError as Error, { step: 'database_query' })
+      throw new ToyyibPayError(
+        'Database error while fetching category',
+        'DATABASE_ERROR',
+        dbError
+      )
+    }
+
+    // Return existing category if found and matches current environment
     if (existing?.value) {
-      const categoryCode = (existing.value as { code: string })?.code
-      if (categoryCode) {
+      const storedData = existing.value as { code: string; environment?: string }
+      const categoryCode = storedData?.code
+      // Verify the stored category is for the current environment
+      if (categoryCode && (!storedData.environment || storedData.environment === environment)) {
+        operation.success('Using existing category', { categoryCode })
         return categoryCode
+      } else {
+        logger.info('Stored category is for different environment, creating new one')
       }
     }
 
-    // Create new General Fund category
-    const categoryCode = await this.createCategory({
-      catname: 'General Fund',
-      catdescription: 'General donations to Yayasan Insan Prihatin',
-    })
+    // Step 2: Create new category in ToyyibPay
+    logger.info('Creating new General Fund category')
+    let categoryCode: string
 
-    // Store the category code
-    await db.insert(siteSettings).values({
-      key: SETTING_KEY,
-      value: { code: categoryCode, createdAt: new Date().toISOString() },
-    }).onConflictDoUpdate({
-      target: siteSettings.key,
-      set: {
-        value: { code: categoryCode, createdAt: new Date().toISOString() },
-        updatedAt: new Date(),
-      },
-    })
+    try {
+      categoryCode = await this.createCategory({
+        catname: 'General Fund',
+        catdescription: 'General donations to Yayasan Insan Prihatin',
+      })
+      logger.info('Category created successfully', { categoryCode })
+    } catch (apiError) {
+      logger.error('Failed to create category', { step: 'api_call' }, apiError as Error)
+      throw apiError // Re-throw API errors as-is
+    }
+
+    // Step 3: Store the category code in database (with environment info)
+    try {
+      logger.debug('Storing category code in database')
+      const valueToStore = {
+        code: categoryCode,
+        environment,
+        createdAt: new Date().toISOString(),
+      }
+      await db.insert(siteSettings).values({
+        key: SETTING_KEY,
+        value: valueToStore,
+      }).onConflictDoUpdate({
+        target: siteSettings.key,
+        set: {
+          value: valueToStore,
+          updatedAt: new Date(),
+        },
+      })
+      operation.success('Category created and stored', { categoryCode, environment })
+    } catch (dbInsertError) {
+      logger.warn('Failed to store category code, proceeding anyway', {
+        categoryCode,
+        error: (dbInsertError as Error).message,
+      })
+      // Still return the category code - payment can proceed even if storage fails
+      // The category will be recreated on next request (ToyyibPay handles duplicates)
+    }
 
     return categoryCode
   }
@@ -243,7 +305,15 @@ export class ToyyibPayService {
    * Bills are invoices that customers pay
    */
   static async createBill(params: CreateBillParams): Promise<string> {
+    const operation = logger.startOperation('createBill', {
+      billName: params.billName,
+      amount: params.billAmount,
+      categoryCode: params.categoryCode,
+      reference: params.billExternalReferenceNo,
+    })
+
     if (!this.isConfigured()) {
+      operation.failure(new Error('ToyyibPay is not configured'), { code: 'NOT_CONFIGURED' })
       throw new ToyyibPayError('ToyyibPay is not configured', 'NOT_CONFIGURED')
     }
 
@@ -257,6 +327,8 @@ export class ToyyibPayService {
     if (!params.billAmount || params.billAmount < 100) { // Minimum RM 1.00
       throw new ToyyibPayError('Bill amount must be at least RM 1.00', 'INVALID_PARAMS')
     }
+
+    const apiUrl = `${TOYYIBPAY_URL}/index.php/api/createBill`
 
     try {
       const formData = new URLSearchParams({
@@ -278,7 +350,8 @@ export class ToyyibPayService {
         billChargeToCustomer: params.billChargeToCustomer || '1', // Charge FPX fee to customer
       })
 
-      const response = await fetch(`${TOYYIBPAY_URL}/index.php/api/createBill`, {
+      logger.debug('Calling ToyyibPay API', { url: apiUrl })
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -286,25 +359,49 @@ export class ToyyibPayService {
         body: formData.toString(),
       })
 
-      const result = await response.json()
+      logger.debug('API response received', { status: response.status })
+
+      // Get response as text first to handle non-JSON responses
+      const responseText = await response.text()
+
+      // Try to parse as JSON
+      let result
+      try {
+        result = JSON.parse(responseText)
+      } catch {
+        // ToyyibPay sometimes returns text error messages like "[CATEGORY-NOT-FOUND]"
+        logger.error('Non-JSON response from ToyyibPay', {
+          responseText: responseText.substring(0, 200),
+          status: response.status,
+        })
+        throw new ToyyibPayError(
+          `ToyyibPay error: ${responseText.trim()}`,
+          'API_ERROR',
+          { responseText, status: response.status }
+        )
+      }
+
+      logger.debug('API response parsed', { hasResult: !!result })
 
       // ToyyibPay returns an array with a single object containing BillCode
       if (Array.isArray(result) && result[0]?.BillCode) {
-        return result[0].BillCode
+        const billCode = result[0].BillCode
+        operation.success('Bill created', { billCode })
+        return billCode
       }
 
       // Check for error response
       if (result.error || result.msg) {
-        throw new ToyyibPayError(
-          result.msg || result.error || 'Failed to create bill',
-          'BILL_CREATE_FAILED',
-          result
-        )
+        const errorMsg = result.msg || result.error || 'Failed to create bill'
+        operation.failure(new Error(errorMsg), { code: 'BILL_CREATE_FAILED', result })
+        throw new ToyyibPayError(errorMsg, 'BILL_CREATE_FAILED', result)
       }
 
+      operation.failure(new Error('Unexpected response'), { code: 'UNEXPECTED_RESPONSE' })
       throw new ToyyibPayError('Unexpected response from ToyyibPay', 'UNEXPECTED_RESPONSE', result)
     } catch (error) {
       if (error instanceof ToyyibPayError) throw error
+      operation.failure(error as Error, { code: 'CONNECTION_ERROR' })
       throw new ToyyibPayError(
         'Failed to connect to ToyyibPay',
         'CONNECTION_ERROR',
