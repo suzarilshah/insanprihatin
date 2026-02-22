@@ -354,7 +354,14 @@
       "description": "Kami tidak menerima sumbangan pada masa ini. Terima kasih atas kemurahan hati dan pemahaman anda. Sila semak semula kemudian atau hubungi kami untuk maklumat lanjut.",
       "contactUs": "Hubungi Kami",
       "returnHome": "Kembali ke Utama",
-      "badge": "Tidak Tersedia Buat Sementara"
+      "badge": "Tidak Tersedia Buat Sementara",
+      "notifyTitle": "Dapatkan Pemberitahuan Apabila Dibuka Semula",
+      "notifyDescription": "Tinggalkan e-mel anda dan kami akan memberitahu anda apabila sumbangan dibuka semula.",
+      "notifyPlaceholder": "emel@anda.com",
+      "notifyButton": "Maklumkan Saya",
+      "notifySuccess": "Terima kasih! Kami akan memberitahu anda apabila sumbangan dibuka semula.",
+      "impactTitle": "Sokongan Anda Telah Membolehkan Ini",
+      "exploreProjects": "Terokai Projek Kami"
     },
     "success": {
       "title": "Terima Kasih Atas Kemurahan Hati Anda!",

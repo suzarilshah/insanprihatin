@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import { Header, Footer } from '@/components/layout'
 import AboutContent from './AboutContent'
 import { getTeamMembers } from '@/lib/actions/team'
-import { getAboutContent, getImpactStats } from '@/lib/actions/content'
+import { getAboutContent, getImpactStats, getLiveMetrics } from '@/lib/actions/content'
 
 export const metadata: Metadata = {
   title: 'About Us',
@@ -18,10 +18,11 @@ export const revalidate = 0
 
 export default async function AboutPage() {
   // Fetch data from database
-  const [teamMembers, aboutData, impactStatsData] = await Promise.all([
+  const [teamMembers, aboutData, impactStatsData, liveMetrics] = await Promise.all([
     getTeamMembers({ active: true, includeManagers: true }),
     getAboutContent(),
     getImpactStats(),
+    getLiveMetrics(),
   ])
 
   return (
@@ -32,6 +33,7 @@ export default async function AboutPage() {
           teamMembers={teamMembers}
           aboutData={aboutData || null}
           impactStats={impactStatsData}
+          liveMetrics={liveMetrics}
         />
       </main>
       <Footer />

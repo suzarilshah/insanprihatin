@@ -1,8 +1,8 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { db, heroContent, aboutContent, impactStats, siteSettings, faqs, pages } from '@/db'
-import { eq } from 'drizzle-orm'
+import { db, heroContent, aboutContent, impactStats, siteSettings, faqs, pages, donations, projects } from '@/db'
+import { eq, sql } from 'drizzle-orm'
 import { requireAuth } from '@/lib/auth/server'
 import { createVersion, logActivity } from '@/lib/versioning'
 import { type LocalizedString, getLocalizedValue } from '@/i18n/config'
@@ -184,6 +184,48 @@ export async function getImpactStats() {
     orderBy: (stats, { asc }) => [asc(stats.sortOrder)],
   })
   return stats
+}
+
+/**
+ * Get live metrics computed from actual database records.
+ * Used on the About page to show real-time stats.
+ */
+export async function getLiveMetrics() {
+  try {
+    const [donationStats, projectStats, donorStats] = await Promise.all([
+      // Total funds raised (completed production donations only)
+      db.select({
+        totalRaised: sql<number>`COALESCE(SUM(CASE WHEN payment_status = 'completed' AND environment = 'production' THEN amount ELSE 0 END), 0)`,
+        totalCompleted: sql<number>`COUNT(*) FILTER (WHERE payment_status = 'completed' AND environment = 'production')`,
+      }).from(donations),
+      // Active/published projects
+      db.select({
+        totalProjects: sql<number>`COUNT(*)`,
+        totalBeneficiaries: sql<number>`COALESCE(SUM(beneficiaries), 0)`,
+      }).from(projects).where(eq(projects.isPublished, true)),
+      // Unique donors (by email, completed production only)
+      db.select({
+        uniqueDonors: sql<number>`COUNT(DISTINCT donor_email) FILTER (WHERE payment_status = 'completed' AND environment = 'production')`,
+      }).from(donations),
+    ])
+
+    return {
+      totalRaised: Number(donationStats[0].totalRaised) / 100, // stored in cents
+      totalDonations: Number(donationStats[0].totalCompleted),
+      totalProjects: Number(projectStats[0].totalProjects),
+      totalBeneficiaries: Number(projectStats[0].totalBeneficiaries),
+      uniqueDonors: Number(donorStats[0].uniqueDonors),
+    }
+  } catch (error) {
+    console.error('Failed to get live metrics:', error)
+    return {
+      totalRaised: 0,
+      totalDonations: 0,
+      totalProjects: 0,
+      totalBeneficiaries: 0,
+      uniqueDonors: 0,
+    }
+  }
 }
 
 export async function createImpactStat(data: {

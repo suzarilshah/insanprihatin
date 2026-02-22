@@ -17,6 +17,19 @@ export const metadata: Metadata = {
   },
 }
 
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'DonateAction',
+  name: 'Donate to Yayasan Insan Prihatin',
+  description: 'Support community empowerment through education, healthcare, and development programs in Malaysia.',
+  recipient: {
+    '@type': 'NGO',
+    name: 'Yayasan Insan Prihatin',
+    url: process.env.NEXT_PUBLIC_SITE_URL || 'https://insanprihatin.org',
+  },
+  actionStatus: 'https://schema.org/PotentialActionStatus',
+}
+
 function DonateLoading() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-foundation-pearl">
@@ -33,6 +46,10 @@ export default async function DonatePage() {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Header />
       <main>
         <Suspense fallback={<DonateLoading />}>

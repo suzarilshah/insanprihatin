@@ -99,7 +99,7 @@ export default function DonationToggle({
 
       {/* Toast Message */}
       {message && (
-        <div className={`fixed top-4 right-4 z-50 max-w-md p-4 rounded-xl shadow-lg border animate-in fade-in slide-in-from-top-2 ${
+        <div className={`fixed top-4 right-4 z-50 max-w-md p-4 rounded-xl shadow-lg border ${
           message.type === 'success'
             ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
             : 'bg-red-50 border-red-200 text-red-800'
@@ -125,42 +125,6 @@ export default function DonationToggle({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-          </div>
-        </div>
-      )}
-
-      {/* Closed Info Banner (shown when donations are closed) */}
-      {isClosed && (
-        <div className="mt-4 -mx-0 p-4 bg-red-50 border border-red-200 rounded-xl">
-          <div className="flex items-start gap-3">
-            <svg className="w-5 h-5 flex-shrink-0 mt-0.5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-            </svg>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-red-800">
-                Donations are currently closed
-              </p>
-              <p className="text-xs text-red-600 mt-1">
-                The public donation page is showing a closure notice to visitors.
-                {lastClosedBy && (
-                  <span> Closed by <strong>{lastClosedBy}</strong></span>
-                )}
-                {lastClosedAt && (
-                  <span> on {new Date(lastClosedAt).toLocaleDateString('en-MY', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}</span>
-                )}
-              </p>
-              {initialReason && (initialReason.en || initialReason.ms) && (
-                <p className="text-xs text-red-600 mt-1">
-                  Reason: {initialReason.en || initialReason.ms}
-                </p>
-              )}
-            </div>
           </div>
         </div>
       )}

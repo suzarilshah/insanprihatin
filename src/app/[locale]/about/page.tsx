@@ -3,7 +3,7 @@ import { setRequestLocale, getTranslations } from 'next-intl/server'
 import { Header, Footer } from '@/components/layout'
 import AboutContent from './AboutContent'
 import { getTeamMembers } from '@/lib/actions/team'
-import { getAboutContent, getImpactStats } from '@/lib/actions/content'
+import { getAboutContent, getImpactStats, getLiveMetrics } from '@/lib/actions/content'
 import { type Locale } from '@/i18n/config'
 
 export async function generateMetadata({
@@ -49,10 +49,11 @@ export default async function AboutPage({
   setRequestLocale(locale)
 
   // Fetch data from database
-  const [teamMembers, aboutData, impactStatsData] = await Promise.all([
+  const [teamMembers, aboutData, impactStatsData, liveMetrics] = await Promise.all([
     getTeamMembers({ active: true, includeManagers: true }),
     getAboutContent(),
     getImpactStats(),
+    getLiveMetrics(),
   ])
 
   return (
@@ -63,6 +64,7 @@ export default async function AboutPage({
           teamMembers={teamMembers}
           aboutData={aboutData || null}
           impactStats={impactStatsData}
+          liveMetrics={liveMetrics}
           locale={locale as Locale}
         />
       </main>

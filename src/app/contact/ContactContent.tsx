@@ -20,7 +20,33 @@ const colorClasses: Record<string, { bg: string; icon: string; border: string }>
 export default function ContactContent({ contactSettings }: ContactContentProps) {
   const t = useTranslations('contact')
 
-  // Define contact info with translations
+  // Build contact info from admin settings (dynamic) with translation labels
+  const addressLines = contactSettings?.primaryAddress?.lines ?? [
+    'D-G-05 Jalan PKAK 2',
+    'Pusat Komersil Ayer Keroh',
+    '75450 Ayer Keroh',
+    'Melaka, Malaysia',
+  ]
+
+  const emailLines = contactSettings?.emails?.length
+    ? contactSettings.emails.map(e => e.address)
+    : ['admin@insanprihatin.org']
+
+  const phoneLines = contactSettings?.phones?.length
+    ? contactSettings.phones.map(p => p.number)
+    : ['+60 12-345 6789']
+
+  const officeHoursLines = contactSettings?.officeHours
+    ? [
+        contactSettings.officeHours.weekdays,
+        contactSettings.officeHours.weekdayHours,
+        ...(contactSettings.officeHours.saturdayHours
+          ? [`${contactSettings.officeHours.saturday ?? 'Saturday'}: ${contactSettings.officeHours.saturdayHours}`]
+          : []),
+        ...(contactSettings.officeHours.note ? [contactSettings.officeHours.note] : []),
+      ]
+    : [t('info.weekdays'), t('info.weekdayHours'), t('info.saturdayHours')]
+
   const contactInfo = [
     {
       icon: (
@@ -30,12 +56,7 @@ export default function ContactContent({ contactSettings }: ContactContentProps)
         </svg>
       ),
       title: t('info.visitUs'),
-      lines: [
-        'Level 15, Menara Yayasan',
-        'Jalan Sultan Ismail',
-        '50250 Kuala Lumpur',
-        'Malaysia',
-      ],
+      lines: addressLines,
       color: 'teal',
     },
     {
@@ -45,7 +66,7 @@ export default function ContactContent({ contactSettings }: ContactContentProps)
         </svg>
       ),
       title: t('info.emailUs'),
-      lines: ['info@insanprihatin.org', 'donations@insanprihatin.org'],
+      lines: emailLines,
       color: 'amber',
     },
     {
@@ -55,7 +76,7 @@ export default function ContactContent({ contactSettings }: ContactContentProps)
         </svg>
       ),
       title: t('info.callUs'),
-      lines: ['+60 3-1234 5678', '+60 3-8765 4321'],
+      lines: phoneLines,
       color: 'sky',
     },
     {
@@ -65,7 +86,7 @@ export default function ContactContent({ contactSettings }: ContactContentProps)
         </svg>
       ),
       title: t('info.officeHours'),
-      lines: [t('info.weekdays'), t('info.weekdayHours'), t('info.saturdayHours')],
+      lines: officeHoursLines,
       color: 'emerald',
     },
   ]
@@ -495,12 +516,12 @@ export default function ContactContent({ contactSettings }: ContactContentProps)
                         {t('map.title')}
                       </h3>
                       <p className="text-gray-600 text-sm mb-6 leading-relaxed">
-                        Level 15, Menara Yayasan<br />
-                        Jalan Sultan Ismail<br />
-                        50250 Kuala Lumpur
+                        {addressLines.map((line, i) => (
+                          <span key={i}>{line}{i < addressLines.length - 1 && <br />}</span>
+                        ))}
                       </p>
                       <a
-                        href="https://maps.google.com"
+                        href={contactSettings?.primaryAddress?.googleMapsUrl || `https://maps.google.com/?q=${encodeURIComponent(addressLines.join(', '))}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 px-6 py-3 bg-white rounded-full shadow-md text-teal-700 font-bold hover:shadow-lg hover:-translate-y-1 transition-all"

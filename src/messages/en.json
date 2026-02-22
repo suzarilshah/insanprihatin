@@ -354,7 +354,14 @@
       "description": "We are not accepting donations at this time. Thank you for your generosity and understanding. Please check back later or contact us for more information.",
       "contactUs": "Contact Us",
       "returnHome": "Return Home",
-      "badge": "Temporarily Unavailable"
+      "badge": "Temporarily Unavailable",
+      "notifyTitle": "Get Notified When We Reopen",
+      "notifyDescription": "Leave your email and we will let you know as soon as donations are open again.",
+      "notifyPlaceholder": "your@email.com",
+      "notifyButton": "Notify Me",
+      "notifySuccess": "Thank you! We will notify you when donations reopen.",
+      "impactTitle": "Your Past Support Made This Possible",
+      "exploreProjects": "Explore Our Projects"
     },
     "success": {
       "title": "Thank You for Your Generosity!",

@@ -252,7 +252,7 @@ export default async function DonationsManagement({
           </p>
         </div>
 
-        {/* Actions: Toggle + Export */}
+        {/* Actions: Toggle + Export + Preview */}
         <div className="flex flex-col items-end gap-3">
           <div className="flex items-center gap-3">
             <DonationToggle
@@ -263,8 +263,49 @@ export default async function DonationsManagement({
             />
             <ExportButton environment={currentEnv} />
           </div>
+          <a
+            href="/donate"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-teal-600 transition-colors font-medium"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+            Preview Public Page
+          </a>
         </div>
       </div>
+
+      {/* Donation Closed Alert Banner */}
+      {(donationClosedSetting?.closed) && (
+        <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-2xl">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-bold text-red-900">Donations are currently closed</h3>
+              <p className="text-sm text-red-700 mt-0.5">
+                The public donation page is displaying a closure notice. No new donations can be processed.
+              </p>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-red-600">
+                {donationClosedSetting.closedBy && (
+                  <span>Closed by: <strong>{donationClosedSetting.closedBy}</strong></span>
+                )}
+                {donationClosedSetting.closedAt && (
+                  <span>on {new Date(donationClosedSetting.closedAt).toLocaleString('en-MY', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                )}
+                {donationClosedSetting.reason?.en && (
+                  <span className="italic">&ldquo;{donationClosedSetting.reason.en}&rdquo;</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Environment Comparison Cards - Only show when viewing all */}
       {currentEnv === 'all' && hasSandboxDonations && (
