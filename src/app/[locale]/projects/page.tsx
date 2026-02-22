@@ -3,7 +3,6 @@ import { setRequestLocale, getTranslations } from 'next-intl/server'
 import { Header, Footer } from '@/components/layout'
 import ProjectsContent from './ProjectsContent'
 import { getProjects } from '@/lib/actions/projects'
-import { type Locale } from '@/i18n/config'
 
 export async function generateMetadata({
   params,

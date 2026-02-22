@@ -60,10 +60,19 @@ type ImpactStat = {
   updatedAt: Date
 }
 
+type LiveMetrics = {
+  totalRaised: number
+  totalDonations: number
+  totalProjects: number
+  totalBeneficiaries: number
+  uniqueDonors: number
+}
+
 interface AboutContentProps {
   teamMembers: TeamMember[]
   aboutData: AboutData
   impactStats: ImpactStat[]
+  liveMetrics?: LiveMetrics
   locale?: Locale
 }
 
@@ -94,11 +103,60 @@ const timeline = [
   },
 ]
 
+function buildLiveStats(metrics: LiveMetrics, locale: string): { value: string; label: string; description: string }[] {
+  const stats: { value: string; label: string; description: string }[] = []
+
+  if (metrics.totalRaised > 0) {
+    const formatted = metrics.totalRaised >= 1000
+      ? `RM ${(metrics.totalRaised / 1000).toFixed(metrics.totalRaised >= 10000 ? 0 : 1)}K`
+      : `RM ${metrics.totalRaised.toLocaleString()}`
+    stats.push({
+      value: formatted,
+      label: locale === 'ms' ? 'Dana Terkumpul' : 'Funds Raised',
+      description: locale === 'ms' ? 'Sumbangan yang berjaya' : 'From completed donations',
+    })
+  }
+
+  if (metrics.totalProjects > 0) {
+    stats.push({
+      value: String(metrics.totalProjects),
+      label: locale === 'ms' ? 'Projek Aktif' : 'Active Projects',
+      description: locale === 'ms' ? 'Memberi impak kepada komuniti' : 'Impacting communities',
+    })
+  }
+
+  if (metrics.uniqueDonors > 0) {
+    stats.push({
+      value: String(metrics.uniqueDonors),
+      label: locale === 'ms' ? 'Penderma' : 'Donors',
+      description: locale === 'ms' ? 'Penyokong yang bermurah hati' : 'Generous supporters',
+    })
+  }
+
+  if (metrics.totalBeneficiaries > 0) {
+    stats.push({
+      value: metrics.totalBeneficiaries.toLocaleString(),
+      label: locale === 'ms' ? 'Penerima Manfaat' : 'Beneficiaries',
+      description: locale === 'ms' ? 'Kehidupan yang disentuh' : 'Lives touched',
+    })
+  }
+
+  // If we have some stats but less than 4, fill with established year
+  if (stats.length > 0 && stats.length < 4) {
+    stats.push({
+      value: '2025',
+      label: locale === 'ms' ? 'Ditubuhkan' : 'Established',
+      description: locale === 'ms' ? 'Memulakan perjalanan kami' : 'Beginning our journey',
+    })
+  }
+
+  return stats
+}
+
 const defaultImpactStats = [
-  { value: 'New', label: 'Organization', description: 'Fresh perspective on charity' },
+  { value: '2025', label: 'Established', description: 'Beginning our journey' },
   { value: '100%', label: 'Commitment', description: 'Dedicated to transparency' },
   { value: 'Growing', label: 'Community', description: 'Join our movement' },
-  { value: '2025', label: 'Established', description: 'Beginning our journey' },
 ]
 
 // Three main objectives from Trust Deed
@@ -163,7 +221,7 @@ const objectives = {
   ],
 }
 
-export default function AboutContent({ teamMembers, aboutData, impactStats, locale = 'en' }: AboutContentProps) {
+export default function AboutContent({ teamMembers, aboutData, impactStats, liveMetrics, locale = 'en' }: AboutContentProps) {
   const heroRef = useRef<HTMLElement>(null)
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -177,14 +235,16 @@ export default function AboutContent({ teamMembers, aboutData, impactStats, loca
     return getLocalizedValue(value as LocalizedString, locale)
   }
 
-  // Use database impact stats if available, otherwise fallback to defaults
+  // Priority: 1) Admin-managed impact stats from DB, 2) Live computed metrics, 3) Defaults
   const displayImpactStats = impactStats.length > 0
     ? impactStats.map(stat => ({
         value: stat.value + l(stat.suffix),
         label: l(stat.label),
         description: l(stat.label),
       }))
-    : defaultImpactStats
+    : liveMetrics && (liveMetrics.totalRaised > 0 || liveMetrics.totalProjects > 0)
+      ? buildLiveStats(liveMetrics, locale)
+      : defaultImpactStats
 
   // Use about data if available with localization
   const mission = l(aboutData?.mission) || (locale === 'ms'
@@ -486,7 +546,7 @@ export default function AboutContent({ teamMembers, aboutData, impactStats, loca
             >
               <h3 className="font-display text-2xl font-bold text-foundation-charcoal mb-8 text-center">Core Values</h3>
               <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                {(Array.isArray(values) ? values : ['Compassion', 'Integrity', 'Excellence', 'Collaboration', 'Innovation']).map((value, i) => (
+                {(Array.isArray(values) ? values : ['Compassion', 'Integrity', 'Excellence', 'Collaboration', 'Innovation']).map((value) => (
                   <motion.div
                     key={String(value)}
                     whileHover={{ y: -5 }}

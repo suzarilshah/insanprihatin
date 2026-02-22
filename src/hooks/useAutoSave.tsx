@@ -13,6 +13,7 @@ interface AutoSaveState {
   status: 'idle' | 'saving' | 'saved' | 'error'
   lastSaved: Date | null
   error: string | null
+  hasUnsavedChanges: boolean
 }
 
 export function useAutoSave<T>({
@@ -25,6 +26,7 @@ export function useAutoSave<T>({
     status: 'idle',
     lastSaved: null,
     error: null,
+    hasUnsavedChanges: false,
   })
 
   const dataRef = useRef(data)
@@ -32,9 +34,12 @@ export function useAutoSave<T>({
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const isMountedRef = useRef(true)
 
-  // Update data ref when data changes
+  // Update data ref when data changes and track unsaved changes
   useEffect(() => {
     dataRef.current = data
+    const currentData = JSON.stringify(data)
+    const hasChanges = currentData !== lastSavedDataRef.current
+    setState((prev) => ({ ...prev, hasUnsavedChanges: hasChanges }))
   }, [data])
 
   // Cleanup on unmount
@@ -69,6 +74,7 @@ export function useAutoSave<T>({
           status: 'saved',
           lastSaved: new Date(),
           error: null,
+          hasUnsavedChanges: false,
         })
 
         // Reset to idle after 3 seconds
@@ -80,14 +86,14 @@ export function useAutoSave<T>({
       }
     } catch (error) {
       if (isMountedRef.current) {
-        setState({
+        setState((prev) => ({
+          ...prev,
           status: 'error',
-          lastSaved: state.lastSaved,
           error: error instanceof Error ? error.message : 'Failed to save',
-        })
+        }))
       }
     }
-  }, [enabled, onSave, state.lastSaved])
+  }, [enabled, onSave])
 
   // Auto-save interval
   useEffect(() => {
@@ -140,7 +146,6 @@ export function useAutoSave<T>({
   return {
     ...state,
     save: () => save(true), // Force save
-    hasUnsavedChanges: JSON.stringify(data) !== lastSavedDataRef.current,
   }
 }
 

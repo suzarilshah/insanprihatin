@@ -1,7 +1,6 @@
 import { setRequestLocale } from 'next-intl/server'
 import { Header, Footer } from '@/components/layout'
 import DonationFailedContent from './DonationFailedContent'
-import { type Locale } from '@/i18n/config'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0

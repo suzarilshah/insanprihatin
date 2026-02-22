@@ -13,5 +13,10 @@ export default getRequestConfig(async ({ requestLocale }) => {
   return {
     locale,
     messages: (await import(`@/messages/${locale}.json`)).default,
+    // Set timezone to avoid ENVIRONMENT_FALLBACK warnings during build
+    // See: https://next-intl.dev/docs/configuration#time-zone
+    timeZone: 'Asia/Kuala_Lumpur',
+    // Provide a default 'now' value for build time
+    now: new Date(),
   }
 })

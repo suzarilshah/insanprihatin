@@ -42,10 +42,6 @@ export default function TranslationsPage() {
     notes: '',
   })
 
-  useEffect(() => {
-    loadData()
-  }, [])
-
   const loadData = async () => {
     setLoading(true)
     try {
@@ -64,6 +60,11 @@ export default function TranslationsPage() {
     }
     setLoading(false)
   }
+
+  useEffect(() => {
+    loadData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleSearch = async () => {
     const terms = await getGlossaryTerms({ search: searchTerm || undefined, context: contextFilter || undefined })

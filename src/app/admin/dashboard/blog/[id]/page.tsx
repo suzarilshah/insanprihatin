@@ -131,67 +131,7 @@ export default function BlogPostEditor({ params }: { params: Promise<{ id: strin
     }
   }, [isNew, resolvedParams.id])
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const isMod = e.metaKey || e.ctrlKey
-
-      // Save: Cmd/Ctrl + S
-      if (isMod && e.key === 's') {
-        e.preventDefault()
-        handleSave()
-      }
-
-      // Publish: Cmd/Ctrl + Enter
-      if (isMod && e.key === 'Enter') {
-        e.preventDefault()
-        handleSave(true)
-      }
-
-      // Preview: Cmd/Ctrl + P
-      if (isMod && e.key === 'p' && formData.slug) {
-        e.preventDefault()
-        window.open(`/blog/${formData.slug}`, '_blank')
-      }
-
-      // Show shortcuts: Cmd/Ctrl + /
-      if (isMod && e.key === '/') {
-        e.preventDefault()
-        setShowShortcuts(!showShortcuts)
-      }
-    }
-
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [formData.slug, showShortcuts])
-
-  const handleTitleChange = (lang: 'en' | 'ms', value: string) => {
-    const newTitle = { ...formData.title, [lang]: value }
-    setFormData({
-      ...formData,
-      title: newTitle,
-      slug: isNew ? generateSlug(getEnglishValue(newTitle)) : formData.slug,
-    })
-  }
-
-  const handleAddTag = () => {
-    if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
-      setFormData({
-        ...formData,
-        tags: [...formData.tags, tagInput.trim()],
-      })
-      setTagInput('')
-    }
-  }
-
-  const handleRemoveTag = (tag: string) => {
-    setFormData({
-      ...formData,
-      tags: formData.tags.filter(t => t !== tag),
-    })
-  }
-
-  const handleSave = (publish?: boolean) => {
+  const handleSave = useCallback((publish?: boolean) => {
     const titleValue = getEnglishValue(formData.title)
     const contentValue = getEnglishValue(formData.content)
 
@@ -243,6 +183,66 @@ export default function BlogPostEditor({ params }: { params: Promise<{ id: strin
         console.error('Failed to save:', error)
         setMessage({ type: 'error', text: 'Failed to save post. Please try again.' })
       }
+    })
+  }, [formData, isNew, router, resolvedParams.id, startTransition])
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMod = e.metaKey || e.ctrlKey
+
+      // Save: Cmd/Ctrl + S
+      if (isMod && e.key === 's') {
+        e.preventDefault()
+        handleSave()
+      }
+
+      // Publish: Cmd/Ctrl + Enter
+      if (isMod && e.key === 'Enter') {
+        e.preventDefault()
+        handleSave(true)
+      }
+
+      // Preview: Cmd/Ctrl + P
+      if (isMod && e.key === 'p' && formData.slug) {
+        e.preventDefault()
+        window.open(`/blog/${formData.slug}`, '_blank')
+      }
+
+      // Show shortcuts: Cmd/Ctrl + /
+      if (isMod && e.key === '/') {
+        e.preventDefault()
+        setShowShortcuts(!showShortcuts)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [formData.slug, showShortcuts, handleSave])
+
+  const handleTitleChange = (lang: 'en' | 'ms', value: string) => {
+    const newTitle = { ...formData.title, [lang]: value }
+    setFormData({
+      ...formData,
+      title: newTitle,
+      slug: isNew ? generateSlug(getEnglishValue(newTitle)) : formData.slug,
+    })
+  }
+
+  const handleAddTag = () => {
+    if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
+      setFormData({
+        ...formData,
+        tags: [...formData.tags, tagInput.trim()],
+      })
+      setTagInput('')
+    }
+  }
+
+  const handleRemoveTag = (tag: string) => {
+    setFormData({
+      ...formData,
+      tags: formData.tags.filter(t => t !== tag),
     })
   }
 

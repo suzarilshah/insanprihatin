@@ -3,7 +3,6 @@ import { Suspense } from 'react'
 import { setRequestLocale, getTranslations } from 'next-intl/server'
 import { Header, Footer } from '@/components/layout'
 import DonateContent from './DonateContent'
-import { type Locale } from '@/i18n/config'
 import { getSiteSetting } from '@/lib/actions/content'
 
 export async function generateMetadata({
@@ -61,8 +60,30 @@ export default async function DonatePage({
     reason: { en: string; ms: string } | null
   } | null
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://insanprihatin.org'
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'DonateAction',
+    name: locale === 'ms'
+      ? 'Derma kepada Yayasan Insan Prihatin'
+      : 'Donate to Yayasan Insan Prihatin',
+    description: locale === 'ms'
+      ? 'Sokong pemerkasaan komuniti melalui program pendidikan, kesihatan, dan pembangunan di Malaysia.'
+      : 'Support community empowerment through education, healthcare, and development programs in Malaysia.',
+    recipient: {
+      '@type': 'NGO',
+      name: 'Yayasan Insan Prihatin',
+      url: baseUrl,
+    },
+    actionStatus: 'https://schema.org/PotentialActionStatus',
+  }
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Header />
       <main>
         <Suspense fallback={<DonateLoading />}>

@@ -270,7 +270,9 @@ export default function OrgChart({
       const timer = setTimeout(calculateDottedLines, 500)
       return () => clearTimeout(timer)
     } else {
-      setDottedLines([])
+      // Clear lines when not in tree view (use timeout to avoid synchronous setState warning)
+      const timer = setTimeout(() => setDottedLines([]), 0)
+      return () => clearTimeout(timer)
     }
   }, [viewMode, calculateDottedLines, treeData])
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -71,18 +71,13 @@ export default function RichMarkdownEditor({
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [viewMode, setViewMode] = useState<'write' | 'preview' | 'split'>('write')
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null)
-  const [wordCount, setWordCount] = useState(0)
-  const [charCount, setCharCount] = useState(0)
-  const [readingTime, setReadingTime] = useState(0)
 
-  // Calculate stats
-  useEffect(() => {
+  // Calculate stats using useMemo to avoid setState in effect
+  const { wordCount, charCount, readingTime } = useMemo(() => {
     const words = value.trim() ? value.trim().split(/\s+/).length : 0
     const chars = value.length
     const time = Math.ceil(words / 200) // Average reading speed
-    setWordCount(words)
-    setCharCount(chars)
-    setReadingTime(time)
+    return { wordCount: words, charCount: chars, readingTime: time }
   }, [value])
 
   // Get selection range
