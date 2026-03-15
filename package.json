@@ -50,7 +50,7 @@
     "rehype-raw": "^7.0.0",
     "rehype-sanitize": "^6.0.0",
     "remark-gfm": "^4.0.1",
-    "resend": "^6.9.1",
+    "resend": "^6.9.3",
     "unsplash-js": "^7.0.20"
   },
   "overrides": {
