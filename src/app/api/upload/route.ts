@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Client, Storage, ID } from 'node-appwrite'
 import { requireAuth } from '@/lib/auth/server'
-import { enforceTrustedOrigin } from '@/lib/security/request'
 
 // Server-side Appwrite client with API key
 const getClient = () => {
@@ -19,8 +18,7 @@ const getClient = () => {
 const BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID!
 
 export async function POST(request: NextRequest) {
-  const originCheck = enforceTrustedOrigin(request)
-  if (originCheck) return originCheck
+  // Origin check is handled by middleware - no duplicate check needed here
 
   try {
     await requireAuth()

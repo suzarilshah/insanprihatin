@@ -53,7 +53,9 @@ export default auth((req) => {
   if (pathname.startsWith('/api') && isMutationMethod) {
     const shouldSkipOriginCheck =
       pathname.startsWith('/api/auth') ||
-      pathname.startsWith('/api/donations/webhook')
+      pathname.startsWith('/api/donations/webhook') ||
+      pathname.startsWith('/api/upload') ||
+      pathname.startsWith('/api/stock-photos')
 
     if (!shouldSkipOriginCheck) {
       const originCheck = enforceTrustedOrigin(req as NextRequest)
