@@ -6,8 +6,30 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createBlogPost, updateBlogPost } from '@/lib/actions/blog'
 import ImageUpload from '@/components/admin/ImageUpload'
-import RichMarkdownEditor from '@/components/admin/RichMarkdownEditor'
+import dynamic from 'next/dynamic'
 import SEOPreview from '@/components/admin/SEOPreview'
+
+// Dynamically import BlockNoteEditor to prevent SSR issues
+const BlockNoteEditor = dynamic(
+  () => import('@/components/admin/BlockNoteEditor'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm">
+        <div className="border-b border-gray-100 bg-gray-50/50 px-4 py-3">
+          <div className="h-8 w-32 bg-gray-200 rounded animate-pulse" />
+        </div>
+        <div className="p-4" style={{ minHeight: '500px' }}>
+          <div className="space-y-4">
+            <div className="h-4 bg-gray-100 rounded w-3/4 animate-pulse" />
+            <div className="h-4 bg-gray-100 rounded w-1/2 animate-pulse" />
+            <div className="h-4 bg-gray-100 rounded w-5/6 animate-pulse" />
+          </div>
+        </div>
+      </div>
+    ),
+  }
+)
 import PublishScheduler from '@/components/admin/PublishScheduler'
 import { useAutoSave, AutoSaveIndicator } from '@/hooks/useAutoSave'
 import { type LocalizedString } from '@/i18n/config'
@@ -514,22 +536,28 @@ export default function BlogPostEditor({ params }: { params: Promise<{ id: strin
             {/* Content Editor Card */}
             <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <label className="block text-sm font-medium text-gray-700">
-                  Content <span className="text-red-500">*</span>
-                </label>
-                <span className="text-xs text-gray-400">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Content <span className="text-red-500">*</span>
+                  </label>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Use &quot;/&quot; for commands, click &quot;Add Image&quot; to insert images between paragraphs, drag blocks to reorder
+                  </p>
+                </div>
+                <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-lg">
                   {activeTab === 'en' ? 'English' : 'Malay'} version
                 </span>
               </div>
-              <RichMarkdownEditor
+              <BlockNoteEditor
+                key={`editor-${activeTab}`}
                 value={formData.content[activeTab]}
                 onChange={(value) => setFormData({
                   ...formData,
                   content: { ...formData.content, [activeTab]: value }
                 })}
                 placeholder={activeTab === 'en'
-                  ? 'Start writing your content...\n\nUse the toolbar or keyboard shortcuts for formatting.'
-                  : 'Mula menulis kandungan anda...\n\nGunakan bar alat atau pintasan papan kekunci untuk pemformatan.'
+                  ? 'Start writing your content...\n\nType "/" for commands or click "Add Image" to insert images.'
+                  : 'Mula menulis kandungan anda...\n\nTaip "/" untuk arahan atau klik "Tambah Gambar" untuk sisipkan gambar.'
                 }
                 minHeight="500px"
                 autoFocus={isNew}

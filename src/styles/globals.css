@@ -810,3 +810,161 @@ body {
     box-shadow: none !important;
   }
 }
+
+/* BlockNote Editor Styles */
+.bn-container {
+  font-family: var(--font-sans) !important;
+}
+
+.bn-editor {
+  font-family: var(--font-sans) !important;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.bn-block-outer {
+  transition: background-color 0.15s ease;
+}
+
+.bn-block-outer:hover {
+  background-color: rgba(0, 156, 166, 0.03);
+}
+
+.bn-block-outer[data-is-selected="true"] {
+  background-color: rgba(0, 156, 166, 0.05);
+}
+
+/* BlockNote Image Blocks */
+.bn-image-block-content-wrapper {
+  margin: 1.5rem 0 !important;
+}
+
+.bn-image-block-content-wrapper img {
+  border-radius: 0.75rem !important;
+  box-shadow: var(--shadow-elegant) !important;
+}
+
+/* BlockNote Side Menu */
+.bn-side-menu {
+  opacity: 0.4;
+  transition: opacity 0.2s ease !important;
+}
+
+.bn-block-outer:hover .bn-side-menu,
+.bn-side-menu:hover {
+  opacity: 1;
+}
+
+/* BlockNote Drag Handle */
+.bn-drag-handle {
+  cursor: grab !important;
+}
+
+.bn-drag-handle:active {
+  cursor: grabbing !important;
+}
+
+/* BlockNote Slash Menu */
+.bn-slash-menu {
+  background: white !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 1rem !important;
+  box-shadow: var(--shadow-elevated) !important;
+  padding: 0.5rem !important;
+}
+
+.bn-slash-menu-item {
+  border-radius: 0.5rem !important;
+  padding: 0.625rem 0.75rem !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.bn-slash-menu-item:hover,
+.bn-slash-menu-item[data-is-selected="true"] {
+  background-color: rgba(0, 156, 166, 0.08) !important;
+}
+
+/* BlockNote Toolbar */
+.bn-toolbar {
+  background: white !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 0.75rem !important;
+  box-shadow: var(--shadow-elevated) !important;
+}
+
+.bn-toolbar button {
+  border-radius: 0.375rem !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.bn-toolbar button:hover {
+  background-color: rgba(0, 156, 166, 0.08) !important;
+}
+
+.bn-toolbar button[data-is-selected="true"] {
+  background-color: var(--color-teal-500) !important;
+  color: white !important;
+}
+
+/* BlockNote Placeholder */
+.bn-block-content[data-is-empty-and-focused="true"]::before {
+  color: #9ca3af !important;
+  font-style: normal !important;
+}
+
+/* BlockNote Link */
+.bn-link {
+  color: var(--color-teal-600) !important;
+  text-decoration: underline !important;
+  text-underline-offset: 2px !important;
+}
+
+/* BlockNote Headings */
+[data-content-type="heading"][data-level="1"] .bn-inline-content {
+  font-family: var(--font-heading) !important;
+  font-size: 2rem !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  color: var(--color-foundation-charcoal) !important;
+}
+
+[data-content-type="heading"][data-level="2"] .bn-inline-content {
+  font-family: var(--font-heading) !important;
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  line-height: 1.3 !important;
+  color: var(--color-foundation-charcoal) !important;
+}
+
+[data-content-type="heading"][data-level="3"] .bn-inline-content {
+  font-family: var(--font-heading) !important;
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  color: #374151 !important;
+}
+
+/* BlockNote Quote */
+[data-content-type="quote"] {
+  border-left: 4px solid var(--color-teal-400) !important;
+  padding-left: 1rem !important;
+  margin-left: 0 !important;
+}
+
+[data-content-type="quote"] .bn-inline-content {
+  color: #4b5563 !important;
+  font-style: italic !important;
+}
+
+/* BlockNote Code Block */
+[data-content-type="codeBlock"] {
+  background-color: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 0.75rem !important;
+  padding: 1rem !important;
+}
+
+[data-content-type="codeBlock"] code {
+  font-family: var(--font-mono) !important;
+  font-size: 0.875rem !important;
+}
